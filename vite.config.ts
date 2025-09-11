@@ -1,22 +1,9 @@
-import { defineConfig, Plugin } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
-
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-    fs: {
-      // Allow access to both the current directory (.) and the client subdirectory
-      allow: [".", "./client"],
-      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
-    },
-  },
-  build: {
-    outDir: "dist/spa",
-  },
+export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
@@ -24,4 +11,16 @@ export default defineConfig(({ mode }) => ({
       "@shared": path.resolve(__dirname, "./shared"),
     },
   },
-}));
+  build: {
+    outDir: "dist", // Vite's default output directory
+  },
+  server: {
+    host: "::",
+    port: 8080,
+    fs: {
+      // The `allow` option is now more concise as you don't need to specify client directory
+      // since the dev server's root is the project root by default
+      allow: ["."],
+    },
+  },
+});
