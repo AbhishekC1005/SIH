@@ -2,54 +2,129 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export default function Recipes(){
-  const [query, setQuery] = useState("high protein, easy to digest");
-  const [cards, setCards] = useState<{title:string; kcal:number; tags:string[]; steps:string[]}[]>([]);
-
-  const generate = () => {
-    setCards([
-      { title:"Moong Oats Khichdi", kcal:420, tags:["Sattvic","Light","Warm"], steps:["Rinse moong & oats","Cook with cumin, ginger","Finish with ghee"] },
-      { title:"Spiced Millet Bowl", kcal:460, tags:["Warm","Grounding"], steps:["Cook millet","Saute veg with spices","Combine & serve"] },
-    ]);
+export default function Recipes() {
+  const [mealName, setMealName] = useState("");
+  
+  type Recipe = {
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    vitamins: string[];
+    ayur: { rasa: string; virya: string; vipaka: string; guna: string[] };
+    ingredients: string[];
+    steps: string[];
   };
 
-  const exportText = (card: {title:string; steps:string[]}) => {
-    const blob = new Blob([`${card.title}\n\n${card.steps.map((s,i)=>`${i+1}. ${s}`).join("\n")}`],{type:"text/plain"});
-    const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href=url; a.download=`${card.title}.txt`; a.click(); URL.revokeObjectURL(url);
-  }
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+
+  const macros = (kcal: number) => ({
+    protein: Math.round((kcal * 0.2) / 4),
+    carbs: Math.round((kcal * 0.55) / 4),
+    fat: Math.round((kcal * 0.25) / 9),
+  });
+
+  const generateSingle = (meal: string): Recipe => {
+    const base = 400 + Math.floor(Math.random() * 300);
+    return {
+      name: meal,
+      calories: base,
+      ...macros(base),
+      vitamins: ["A", "B", "C"],
+      ayur: {
+        rasa: "Madhura",
+        virya: "Ushna",
+        vipaka: "Madhura",
+        guna: ["Sattvic", "Light"],
+      },
+      ingredients: [
+        `${meal} base ingredient`,
+        "Seasonal vegetables",
+        "Spices (cumin, turmeric, coriander)",
+        "Ghee or oil",
+        "Herbs (coriander/parsley)",
+      ],
+      steps: [
+        "Prepare and wash ingredients.",
+        "Heat pan and temper spices.",
+        `Add ingredients to create ${meal}.`,
+        "Simmer until cooked and flavors blend.",
+        "Garnish and serve warm.",
+      ],
+    };
+  };
+
+  const onGenerate = () => {
+    if (!mealName.trim()) return;
+    setRecipe(generateSingle(mealName.trim()));
+  };
 
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader><CardTitle>Recipe Generator</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>User Recipe Generator</CardTitle>
+        </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row">
-          <Input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Ingredients or constraints" />
-          <Button onClick={generate}>Generate</Button>
+          <Input
+            placeholder="Enter Meal Name (e.g., Moong Dal Khichdi)"
+            value={mealName}
+            onChange={(e) => setMealName(e.target.value)}
+          />
+          <Button onClick={onGenerate}>Generate Recipe</Button>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {cards.map((c,i)=> (
-          <Card key={i} className="overflow-hidden">
-            <img src="/placeholder.svg" alt="recipe" className="h-36 w-full object-cover" />
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-lg font-semibold">{c.title}</div>
-                  <div className="text-xs text-muted-foreground">Approx {c.kcal} kcal</div>
-                </div>
-                <div className="flex gap-1">{c.tags.map((t,j)=>(<Badge key={j} variant="secondary">{t}</Badge>))}</div>
-              </div>
-              <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">
-                {c.steps.map((s,j)=>(<li key={j}>{s}</li>))}
-              </ol>
-              <Button className="mt-3" variant="outline" onClick={()=>exportText(c)}>Export (mock)</Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {recipe && (
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-base">{recipe.name}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border mb-3">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Calories</TableHead>
+                    <TableHead>Protein</TableHead>
+                    <TableHead>Carbs</TableHead>
+                    <TableHead>Fat</TableHead>
+                    <TableHead>Vitamins</TableHead>
+                    <TableHead>Ayurveda</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>{recipe.calories} kcal</TableCell>
+                    <TableCell>{recipe.protein} g</TableCell>
+                    <TableCell>{recipe.carbs} g</TableCell>
+                    <TableCell>{recipe.fat} g</TableCell>
+                    <TableCell>{recipe.vitamins.join(", ")}</TableCell>
+                    <TableCell>
+                      Rasa {recipe.ayur.rasa}, Virya {recipe.ayur.virya}, Vipaka {recipe.ayur.vipaka}, Guna {recipe.ayur.guna.join(", ")}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+            <div className="mb-2 font-medium">Ingredients</div>
+            <ul className="mb-3 list-disc pl-6 text-sm">
+              {recipe.ingredients.map((ing, idx) => (
+                <li key={idx}>{ing}</li>
+              ))}
+            </ul>
+            <div className="mb-2 font-medium">Steps</div>
+            <ol className="list-decimal pl-6 text-sm space-y-1">
+              {recipe.steps.map((s, idx) => (
+                <li key={idx}>{s}</li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

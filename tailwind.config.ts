@@ -1,9 +1,9 @@
 import type { Config } from "tailwindcss";
+import animatePlugin from "tailwindcss-animate";
 
-export default {
+const config: Config = {
   darkMode: ["class"],
-  content: ["./client/**/*.{ts,tsx}"],
-  prefix: "",
+  content: ["./client/**/*.{ts,tsx}", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
     container: {
       center: true,
@@ -65,20 +65,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
@@ -87,5 +79,7 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+  plugins: [animatePlugin],
+};
+
+export default config;

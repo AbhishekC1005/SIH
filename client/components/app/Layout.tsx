@@ -1,9 +1,22 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarRail, SidebarSeparator, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarSeparator,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { MessageCircle, Salad, ScanLine, Stethoscope, ChefHat, BarChart3, LayoutDashboard, LogOut, Users } from "lucide-react";
 import React from "react";
@@ -32,25 +45,34 @@ export const AppLayout: React.FC = () => {
 
   return (
     <SidebarProvider>
-      <Sidebar className="border-r">
-        <SidebarHeader className="px-4">
-          <div className="flex items-center gap-2 py-1.5">
-            <div className="h-8 w-8 rounded-md bg-[#0FA36B]" />
+      <Sidebar className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm w-64">
+        <SidebarHeader className="px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-md bg-emerald-500" />
             <div>
-              <div className="text-sm font-semibold tracking-tight">AyurWell</div>
-              <div className="text-xs text-muted-foreground">Holistic Nutrition</div>
+              <div className="text-lg font-bold text-gray-900">AyurWell</div>
+              <div className="text-xs text-gray-500">Holistic Nutrition</div>
             </div>
           </div>
-          <SidebarSeparator />
+          <SidebarSeparator className="my-3 border-gray-200" />
         </SidebarHeader>
+
         <SidebarContent>
           <SidebarGroup>
             <SidebarMenu>
               {menu.map((item) => (
                 <SidebarMenuItem key={item.to}>
                   <SidebarMenuButton asChild isActive={location.pathname === item.to}>
-                    <NavLink to={item.to} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-3 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition-all",
+                          isActive ? "bg-gray-100 font-semibold text-gray-900" : ""
+                        )
+                      }
+                    >
+                      <item.icon className="h-5 w-5 text-gray-600" />
                       <span>{item.label}</span>
                     </NavLink>
                   </SidebarMenuButton>
@@ -59,36 +81,40 @@ export const AppLayout: React.FC = () => {
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
+
+        <SidebarFooter className="border-t border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-9 w-9 bg-gray-200">
                 <AvatarFallback>
                   {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
                 </AvatarFallback>
               </Avatar>
-              <div className="leading-tight">
-                <div className="text-sm font-medium">{currentUser?.name || "Guest"}</div>
-                <div className="text-xs text-muted-foreground">{currentUser?.role ?? "unauthenticated"}</div>
+              <div>
+                <div className="text-sm font-medium text-gray-900">{currentUser?.name || "Guest"}</div>
+                <div className="text-xs text-gray-500">{currentUser?.role ?? "unauthenticated"}</div>
               </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
+              className="hover:bg-gray-100 hover:text-gray-900"
               onClick={() => {
                 setCurrentUser(null);
                 navigate("/");
               }}
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-5 w-5 text-gray-600" />
             </Button>
           </div>
         </SidebarFooter>
-        <SidebarRail />
+
+        <SidebarRail className="bg-gray-50" />
       </Sidebar>
+
       <SidebarInset>
         <Topbar />
-        <div className="px-4 pb-8 pt-4">
+        <div className="px-6 py-6 bg-gray-50 min-h-screen">
           <Outlet />
         </div>
       </SidebarInset>
@@ -99,22 +125,26 @@ export const AppLayout: React.FC = () => {
 const Topbar: React.FC = () => {
   const { currentUser } = useAppState();
   return (
-    <div className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background px-4">
-      <SidebarTrigger />
-      <Separator orientation="vertical" className="mx-2 h-6" />
-      <div className="font-semibold">{currentUser?.role === "doctor" ? "Doctor Dashboard" : "AyurWell"}</div>
-      <div className="ml-auto flex items-center gap-2">
+    <div className="sticky top-0 z-20 flex h-14 items-center justify-between bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 shadow-sm">
+      <div className="flex items-center gap-3">
+        <SidebarTrigger className="text-gray-600 hover:text-gray-900 transition-all" />
+        <div className="text-lg font-semibold text-gray-900">
+          {currentUser?.role === "doctor" ? "Doctor Dashboard" : "AyurWell"}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
         <Sheet>
           <SheetTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-2">
+            <Button size="sm" variant="outline" className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400">
               <MessageCircle className="h-4 w-4" /> Assistant
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[420px]">
+          <SheetContent side="right" className="w-[420px] bg-white/80 backdrop-blur-sm border border-gray-200">
             <SheetHeader>
               <SheetTitle>Assistant</SheetTitle>
             </SheetHeader>
-            <div className="py-4 text-sm text-muted-foreground">
+            <div className="py-4 text-sm text-gray-500">
               Use the floating chat bubble to interact. This panel can host future settings.
             </div>
           </SheetContent>
