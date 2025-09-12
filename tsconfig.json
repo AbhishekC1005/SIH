@@ -36,7 +36,7 @@
     "client/**/*",
     "shared/**/*",
     "vite.config.ts"
-  ],
+, "archieve/DoctorDietGenerator.tsx"  ],
   "exclude": [
     "node_modules",
     "dist"

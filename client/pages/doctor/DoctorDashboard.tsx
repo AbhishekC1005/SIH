@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppState } from "@/context/app-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,13 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,8 +24,18 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
+
+type MealInfo = { name: string; kcal: number; tags: string[]; icon: string };
+type WeeklyPlan = {
+  day: string;
+  breakfast: MealInfo;
+  lunch: MealInfo;
+  dinner: MealInfo;
+  snacks: MealInfo;
+}[];
+
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
 export default function DoctorDashboard() {
   const {
@@ -41,9 +46,14 @@ export default function DoctorDashboard() {
     conversations,
     addMessage,
   } = useAppState();
+
+  // Toggle full-page Add Patient form view
+  const [showAddPatient, setShowAddPatient] = useState(false);
+
   const [videoOpen, setVideoOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [draft, setDraft] = useState("");
+
   const defaultPlan = [
     { time: "08:00", name: "Warm Spiced Oats", calories: 320, waterMl: 250 },
     { time: "12:30", name: "Moong Dal Khichdi", calories: 450, waterMl: 300 },
@@ -51,19 +61,83 @@ export default function DoctorDashboard() {
   ];
   const [plan, setPlan] = useState(defaultPlan);
   const [selected, setSelected] = useState<string | null>(null);
-  const [addPatientOpen, setAddPatientOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-  type MealInfo = { name: string; kcal: number; tags: string[]; icon: string };
-  type WeeklyPlan = {
-    day: string;
-    breakfast: MealInfo;
-    lunch: MealInfo;
-    dinner: MealInfo;
-    snacks: MealInfo;
-  }[];
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan | null>(null);
+
+  const getDoctorProfileId = () => {
+    const key = `app:doctor-map:${currentUser?.id || "anon"}`;
+    let mapped = localStorage.getItem(key);
+    if (!mapped) {
+      mapped = doctors[0]?.id || "d1";
+      localStorage.setItem(key, mapped);
+    }
+    return mapped;
+  };
+  const doctorProfileId = getDoctorProfileId();
+
+  const accept = (id: string) =>
+    setRequests(
+      requests.map((r) => (r.id === id ? { ...r, status: "accepted" } : r)),
+    );
+  const reject = (id: string) =>
+    setRequests(
+      requests.map((r) => (r.id === id ? { ...r, status: "rejected" } : r)),
+    );
+
+  const selectedReq = useMemo(
+    () => requests.find((r) => r.id === selected) || null,
+    [requests, selected],
+  );
+
+  useEffect(() => {
+    const open = searchParams.get("open");
+    if (open && !selected) {
+      const exists = requests.some((r) => r.id === open);
+      if (exists) setSelected(open);
+    }
+  }, [searchParams, requests]);
+
+  useEffect(() => {
+    if (selectedReq) {
+      setPlan(
+        selectedReq.plan && selectedReq.plan.length
+          ? selectedReq.plan
+          : defaultPlan.map((item) => ({
+              ...item,
+              waterMl: item.waterMl === undefined ? 0 : item.waterMl,
+            })),
+      );
+    }
+  }, [selectedReq?.id]);
+
+  useEffect(() => {
+    if (selectedReq?.id) markViewed(selectedReq.id);
+  }, [selectedReq?.id]);
+
+  const pendingForMe = useMemo(
+    () =>
+      requests.filter(
+        (r) => r.doctorId === doctorProfileId && r.status === "pending",
+      ),
+    [requests, doctorProfileId],
+  );
+  const myPatients = useMemo(
+    () =>
+      requests.filter(
+        (r) => r.doctorId === doctorProfileId && r.status === "accepted",
+      ),
+    [requests, doctorProfileId],
+  );
+
+  const lvKey = `app:patients:lastViewed:${doctorProfileId}`;
+  const markViewed = (id: string) => {
+    try {
+      const m = JSON.parse(localStorage.getItem(lvKey) || "{}");
+      m[id] = Date.now();
+      localStorage.setItem(lvKey, JSON.stringify(m));
+    } catch {}
+  };
 
   const generateWeekly = () => {
     const dosha = selectedReq?.patientDosha || "Kapha";
@@ -166,75 +240,58 @@ export default function DoctorDashboard() {
     URL.revokeObjectURL(url);
   };
 
-  const getDoctorProfileId = () => {
-    const key = `app:doctor-map:${currentUser?.id || "anon"}`;
-    let mapped = localStorage.getItem(key);
-    if (!mapped) {
-      mapped = doctors[0]?.id || "d1";
-      localStorage.setItem(key, mapped);
-    }
-    return mapped;
-  };
-  const doctorProfileId = getDoctorProfileId();
-
-  const accept = (id: string) =>
-    setRequests(
-      requests.map((r) => (r.id === id ? { ...r, status: "accepted" } : r)),
+  // ——— Standalone Add Patient View (no background image) ———
+  if (showAddPatient) {
+    return (
+      <div className="mx-auto max-w-3xl p-4 sm:p-6">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Add New Patient</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <AddPatientForm
+              onCancel={() => setShowAddPatient(false)}
+              onCreate={(payload) => {
+                const newId = `req_${Date.now()}`;
+                const newUserId = `u_${Date.now()}`;
+                const newReq = {
+                  id: newId,
+                  userId: newUserId,
+                  doctorId: doctorProfileId,
+                  status: "accepted" as const,
+                  createdAt: new Date().toISOString(),
+                  patientName: payload.name,
+                  patientDosha: payload.dosha,
+                  plan: defaultPlan,
+                  patientProfile: {
+                    whatsapp: payload.whatsapp,
+                    dob: payload.dob,
+                    address: payload.address,
+                    gender: payload.gender,
+                    heightCm: payload.heightCm,
+                    weightKg: payload.weightKg,
+                    allergies: payload.allergies,
+                    conditions: payload.conditions,
+                    medications: payload.medications,
+                    habits: payload.habits,
+                    sleepPattern: payload.sleepPattern,
+                    digestion: payload.digestion,
+                    notes: payload.notes,
+                    hasPdf: !!payload.medicalDoc,
+                  },
+                };
+                setRequests([newReq, ...requests]);
+                setSelected(newId);
+                setShowAddPatient(false);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
     );
-  const reject = (id: string) =>
-    setRequests(
-      requests.map((r) => (r.id === id ? { ...r, status: "rejected" } : r)),
-    );
+  }
 
-  const selectedReq = useMemo(
-    () => requests.find((r) => r.id === selected) || null,
-    [requests, selected],
-  );
-
-  useEffect(() => {
-    const open = searchParams.get("open");
-    if (open && !selected) {
-      const exists = requests.some(r => r.id === open);
-      if (exists) setSelected(open);
-    }
-  }, [searchParams, requests]);
-  useEffect(() => {
-    if (selectedReq) {
-      setPlan(
-        selectedReq.plan && selectedReq.plan.length
-          ? selectedReq.plan
-          : defaultPlan,
-      );
-    }
-  }, [selectedReq?.id]);
-  useEffect(() => {
-    if (selectedReq?.id) markViewed(selectedReq.id);
-  }, [selectedReq?.id]);
-
-  const pendingForMe = useMemo(
-    () =>
-      requests.filter(
-        (r) => r.doctorId === doctorProfileId && r.status === "pending",
-      ),
-    [requests, doctorProfileId],
-  );
-  const myPatients = useMemo(
-    () =>
-      requests.filter(
-        (r) => r.doctorId === doctorProfileId && r.status === "accepted",
-      ),
-    [requests, doctorProfileId],
-  );
-
-  const lvKey = `app:patients:lastViewed:${doctorProfileId}`;
-  const markViewed = (id: string) => {
-    try {
-      const m = JSON.parse(localStorage.getItem(lvKey) || "{}");
-      m[id] = Date.now();
-      localStorage.setItem(lvKey, JSON.stringify(m));
-    } catch {}
-  };
-
+  // ——— Summary dashboard when no patient is open ———
   if (!selectedReq) {
     return (
       <div className="space-y-4">
@@ -276,49 +333,9 @@ export default function DoctorDashboard() {
             <div className="rounded-lg border">
               <div className="flex items-center justify-between flex-wrap gap-2 border-b p-2 text-sm">
                 <div className="font-medium">Requests</div>
-                <Dialog open={addPatientOpen} onOpenChange={setAddPatientOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">Add Patient</Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle>Add New Patient</DialogTitle>
-                    </DialogHeader>
-                    <AddPatientForm
-                      onCancel={() => setAddPatientOpen(false)}
-                      onCreate={(payload) => {
-                        const newId = `req_${Date.now()}`;
-                        const newUserId = `u_${Date.now()}`;
-                        const newReq = {
-                          id: newId,
-                          userId: newUserId,
-                          doctorId: doctorProfileId,
-                          status: "accepted" as const,
-                          createdAt: new Date().toISOString(),
-                          patientName: payload.name,
-                          patientDosha: payload.dosha,
-                          plan: defaultPlan,
-                          patientProfile: {
-                            age: payload.age,
-                            gender: payload.gender,
-                            heightCm: payload.heightCm,
-                            weightKg: payload.weightKg,
-                            allergies: payload.allergies,
-                            conditions: payload.conditions,
-                            medications: payload.medications,
-                            habits: payload.habits,
-                            sleepPattern: payload.sleepPattern,
-                            digestion: payload.digestion,
-                            notes: payload.notes,
-                          },
-                        };
-                        setRequests([newReq, ...requests]);
-                        setAddPatientOpen(false);
-                        setSelected(newId);
-                      }}
-                    />
-                  </DialogContent>
-                </Dialog>
+                <Button size="sm" onClick={() => setShowAddPatient(true)}>
+                  Add Patient
+                </Button>
               </div>
               <div className="p-3">
                 <div>
@@ -372,7 +389,15 @@ export default function DoctorDashboard() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => { setSelected(r.id); markViewed(r.id); setSearchParams(prev => { const p = new URLSearchParams(prev); p.set("open", r.id); return p; }); }}
+                              onClick={() => {
+                                setSelected(r.id);
+                                markViewed(r.id);
+                                setSearchParams((prev) => {
+                                  const p = new URLSearchParams(prev);
+                                  p.set("open", r.id);
+                                  return p;
+                                });
+                              }}
                             >
                               Open
                             </Button>
@@ -390,6 +415,7 @@ export default function DoctorDashboard() {
     );
   }
 
+  // ——— Patient open view ———
   const patient = {
     id: selectedReq.userId,
     name: selectedReq.patientName || `Patient ${selectedReq.userId}`,
@@ -404,7 +430,10 @@ export default function DoctorDashboard() {
     setDraft("");
     setTimeout(
       () =>
-        addMessage(selectedReq.id, { from: "patient", text: "Thanks, noted!" }),
+        addMessage(selectedReq.id, {
+          from: "patient",
+          text: "Thanks, noted!",
+        }),
       300,
     );
   };
@@ -437,7 +466,17 @@ export default function DoctorDashboard() {
           {!isApproved && (
             <Button onClick={() => accept(selectedReq.id)}>Approve</Button>
           )}
-          <Button variant="outline" onClick={() => { setSelected(null); setSearchParams(prev => { const p = new URLSearchParams(prev); p.delete("open"); return p; }); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSelected(null);
+              setSearchParams((prev) => {
+                const p = new URLSearchParams(prev);
+                p.delete("open");
+                return p;
+              });
+            }}
+          >
             Back
           </Button>
         </div>
@@ -566,130 +605,134 @@ export default function DoctorDashboard() {
             >
               Save Plan
             </Button>
-            <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" disabled={!isApproved}>
-                  Video Call
+
+            {/* Inline mock video/chat */}
+            <Button
+              variant="outline"
+              disabled={!isApproved}
+              onClick={() => setVideoOpen(true)}
+            >
+              Video Call
+            </Button>
+            <Button disabled={!isApproved} onClick={() => setChatOpen(true)}>
+              Chat
+            </Button>
+          </div>
+
+          {videoOpen && (
+            <div className="mt-4 rounded-md border p-4">
+              <div className="font-medium mb-2">Mock Video Consult</div>
+              <div className="aspect-video w-full rounded-md bg-black/80" />
+              <div className="text-center text-sm text-muted-foreground mt-1">
+                Simulated video frame
+              </div>
+              <div className="mt-3 text-right">
+                <Button variant="outline" onClick={() => setVideoOpen(false)}>
+                  Close
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Mock Video Consult</DialogTitle>
-                </DialogHeader>
-                <div className="aspect-video w-full rounded-md bg-black/80" />
-                <div className="text-center text-sm text-muted-foreground">
-                  Simulated video frame
+              </div>
+            </div>
+          )}
+
+          {chatOpen && (
+            <div className="mt-4 rounded-md border bg-background">
+              <div className="flex h-96 flex-col">
+                <div className="border-b px-4 py-2 text-xs text-muted-foreground">
+                  Secure consultation chat (mock)
                 </div>
-              </DialogContent>
-            </Dialog>
-            <Dialog open={chatOpen} onOpenChange={setChatOpen}>
-              <DialogTrigger asChild>
-                <Button disabled={!isApproved}>Chat</Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Chat with {patient.name}</DialogTitle>
-                </DialogHeader>
-                <div className="h-96 rounded-md border bg-background">
-                  <div className="flex h-full flex-col">
-                    <div className="border-b px-4 py-2 text-xs text-muted-foreground">
-                      Secure consultation chat (mock)
+                <div
+                  id="chat-scroll"
+                  className="flex-1 space-y-3 overflow-y-auto p-3 text-sm"
+                >
+                  {(!conversations[selectedReq.id] ||
+                    conversations[selectedReq.id].length === 0) && (
+                    <div className="text-center text-xs text-muted-foreground">
+                      No messages yet. Say hello 👋
                     </div>
+                  )}
+                  {(conversations[selectedReq.id] || []).map((m, i) => (
                     <div
-                      id="chat-scroll"
-                      className="flex-1 space-y-3 overflow-y-auto p-3 text-sm"
+                      key={m.id || i}
+                      className={
+                        m.from === "doctor"
+                          ? "flex justify-end"
+                          : m.from === "patient"
+                          ? "flex justify-start"
+                          : "flex justify-center"
+                      }
                     >
-                      {(!conversations[selectedReq.id] ||
-                        conversations[selectedReq.id].length === 0) && (
-                        <div className="text-center text-xs text-muted-foreground">
-                          No messages yet. Say hello 👋
-                        </div>
-                      )}
-                      {(conversations[selectedReq.id] || []).map((m, i) => (
+                      <div className="max-w-[75%]">
                         <div
-                          key={m.id || i}
                           className={
                             m.from === "doctor"
-                              ? "flex justify-end"
-                              : m.from === "patient"
-                                ? "flex justify-start"
-                                : "flex justify-center"
+                              ? "text-right text-[10px] text-muted-foreground"
+                              : "text-[10px] text-muted-foreground"
                           }
                         >
-                          <div className="max-w-[75%]">
-                            <div
-                              className={
-                                m.from === "doctor"
-                                  ? "text-right text-[10px] text-muted-foreground"
-                                  : "text-[10px] text-muted-foreground"
-                              }
-                            >
-                              {new Date(m.ts).toLocaleTimeString()}
-                            </div>
-                            <div
-                              className={
-                                m.from === "doctor"
-                                  ? "rounded-2xl bg-primary px-3 py-2 text-primary-foreground shadow-sm"
-                                  : m.from === "patient"
-                                    ? "rounded-2xl bg-muted px-3 py-2 shadow-sm"
-                                    : "rounded-md bg-secondary px-3 py-1 text-xs text-secondary-foreground"
-                              }
-                            >
-                              {m.text}
-                            </div>
-                          </div>
+                          {new Date(m.ts).toLocaleTimeString()}
                         </div>
-                      ))}
-                    </div>
-                    <div className="border-t p-2">
-                      <div className="mb-2 flex flex-wrap gap-2 text-xs">
-                        <button
-                          className="rounded-full border px-2 py-1"
-                          onClick={() =>
-                            setDraft(
-                              "Please follow the plan and hydrate 250ml now.",
-                            )
+                        <div
+                          className={
+                            m.from === "doctor"
+                              ? "rounded-2xl bg-primary px-3 py-2 text-primary-foreground shadow-sm"
+                              : m.from === "patient"
+                              ? "rounded-2xl bg-muted px-3 py-2 shadow-sm"
+                              : "rounded-md bg-secondary px-3 py-1 text-xs text-secondary-foreground"
                           }
                         >
-                          Hydration
-                        </button>
-                        <button
-                          className="rounded-full border px-2 py-1"
-                          onClick={() =>
-                            setDraft("How are you feeling after lunch?")
-                          }
-                        >
-                          Check-in
-                        </button>
-                        <button
-                          className="rounded-full border px-2 py-1"
-                          onClick={() =>
-                            setDraft("Schedule a follow-up for tomorrow 5pm.")
-                          }
-                        >
-                          Schedule
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          placeholder="Type a message"
-                          value={draft}
-                          onChange={(e) => setDraft(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              send();
-                            }
-                          }}
-                        />
-                        <Button onClick={send}>Send</Button>
+                          {m.text}
+                        </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+                <div className="border-t p-2">
+                  <div className="mb-2 flex flex-wrap gap-2 text-xs">
+                    <button
+                      className="rounded-full border px-2 py-1"
+                      onClick={() =>
+                        setDraft("Please follow the plan and hydrate 250ml now.")
+                      }
+                    >
+                      Hydration
+                    </button>
+                    <button
+                      className="rounded-full border px-2 py-1"
+                      onClick={() => setDraft("How are you feeling after lunch?")}
+                    >
+                      Check-in
+                    </button>
+                    <button
+                      className="rounded-full border px-2 py-1"
+                      onClick={() =>
+                        setDraft("Schedule a follow-up for tomorrow 5pm.")
+                      }
+                    >
+                      Schedule
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      placeholder="Type a message"
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          send();
+                        }
+                      }}
+                    />
+                    <Button onClick={send}>Send</Button>
+                    <Button variant="outline" onClick={() => setChatOpen(false)}>
+                      Close
+                    </Button>
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+              </div>
+            </div>
+          )}
+
           {!isApproved && (
             <div className="mt-2 text-xs text-muted-foreground">
               Approve the request to enable chat, video, and editing.
@@ -776,8 +819,10 @@ const AddPatientForm: React.FC<{
   onCreate: (p: {
     name: string;
     dosha: "Vata" | "Pitta" | "Kapha" | null;
-    age?: number;
+    whatsapp?: string;
+    dob?: string;
     gender?: "Male" | "Female" | "Other";
+    address?: { city?: string; state?: string; country?: string };
     heightCm?: number;
     weightKg?: number;
     allergies?: string;
@@ -787,11 +832,20 @@ const AddPatientForm: React.FC<{
     sleepPattern?: string;
     digestion?: "Poor" | "Normal" | "Strong" | string;
     notes?: string;
+    medicalDoc?: File | undefined;
   }) => void;
 }> = ({ onCancel, onCreate }) => {
   const [name, setName] = useState("");
   const [dosha, setDosha] = useState<"Vata" | "Pitta" | "Kapha" | null>(null);
-  const [age, setAge] = useState<number | undefined>(undefined);
+
+  // New/changed fields
+  const [whatsapp, setWhatsapp] = useState("");
+  const [dob, setDob] = useState<string>("");
+  const [addressCity, setAddressCity] = useState("");
+  const [addressState, setAddressState] = useState("");
+  const [addressCountry, setAddressCountry] = useState("");
+  const [medicalDoc, setMedicalDoc] = useState<File | undefined>(undefined);
+
   const [gender, setGender] = useState<"Male" | "Female" | "Other" | undefined>(
     undefined,
   );
@@ -809,11 +863,22 @@ const AddPatientForm: React.FC<{
 
   const submit = () => {
     if (!name.trim()) return;
+    if (whatsapp && !/^\d{10}$/.test(whatsapp)) return;
+
     onCreate({
       name: name.trim(),
       dosha,
-      age,
+      whatsapp: whatsapp || undefined,
+      dob: dob || undefined,
       gender,
+      address:
+        addressCity || addressState || addressCountry
+          ? {
+              city: addressCity || undefined,
+              state: addressState || undefined,
+              country: addressCountry || undefined,
+            }
+          : undefined,
       heightCm,
       weightKg,
       allergies: allergies.trim() || undefined,
@@ -823,6 +888,7 @@ const AddPatientForm: React.FC<{
       sleepPattern: sleepPattern.trim() || undefined,
       digestion,
       notes: notes.trim() || undefined,
+      medicalDoc,
     });
   };
 
@@ -842,6 +908,7 @@ const AddPatientForm: React.FC<{
                 placeholder="Patient full name"
               />
             </div>
+
             <div>
               <Label>Dosha</Label>
               <Select
@@ -858,17 +925,27 @@ const AddPatientForm: React.FC<{
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label>Age</Label>
+              <Label>WhatsApp Number</Label>
               <Input
-                type="number"
-                value={age ?? ""}
-                onChange={(e) =>
-                  setAge(e.target.value ? parseInt(e.target.value) : undefined)
-                }
-                placeholder="Years"
+                inputMode="numeric"
+                pattern="\d*"
+                placeholder="10-digit number"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
               />
             </div>
+
+            <div>
+              <Label>Date of Birth</Label>
+              <Input
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+              />
+            </div>
+
             <div>
               <Label>Gender</Label>
               <Select
@@ -885,6 +962,7 @@ const AddPatientForm: React.FC<{
                 </SelectContent>
               </Select>
             </div>
+
             <div>
               <Label>Height (cm)</Label>
               <Input
@@ -897,6 +975,7 @@ const AddPatientForm: React.FC<{
                 }
               />
             </div>
+
             <div>
               <Label>Weight (kg)</Label>
               <Input
@@ -907,6 +986,40 @@ const AddPatientForm: React.FC<{
                     e.target.value ? parseInt(e.target.value) : undefined,
                   )
                 }
+              />
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Address
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label>City</Label>
+              <Input
+                value={addressCity}
+                onChange={(e) => setAddressCity(e.target.value)}
+                placeholder="City"
+              />
+            </div>
+            <div>
+              <Label>State</Label>
+              <Input
+                value={addressState}
+                onChange={(e) => setAddressState(e.target.value)}
+                placeholder="State"
+              />
+            </div>
+            <div>
+              <Label>Country</Label>
+              <Input
+                value={addressCountry}
+                onChange={(e) => setAddressCountry(e.target.value)}
+                placeholder="Country"
               />
             </div>
           </div>
@@ -941,6 +1054,17 @@ const AddPatientForm: React.FC<{
                 value={medications}
                 onChange={(e) => setMedications(e.target.value)}
                 placeholder="Current medications"
+              />
+            </div>
+            <div>
+              <Label>Medical Document (PDF)</Label>
+              <Input
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => {
+                  const file = e.currentTarget.files?.[0] || undefined;
+                  setMedicalDoc(file);
+                }}
               />
             </div>
           </div>

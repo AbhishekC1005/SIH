@@ -237,7 +237,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
         doctorId: "d1",
         status: "accepted",
         createdAt: new Date(Date.now() - 3600000).toISOString(),
-        patientName: "Neha Gupta",
+        patientName: "Nehal Gupta",
         patientDosha: "Kapha",
         plan: makePlan([
           { time: "08:30", name: "Warm Oats", calories: 320, waterMl: 250 },

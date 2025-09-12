@@ -22,8 +22,6 @@ export const AppLayout: React.FC = () => {
         { to: "/doctor/generator/diet", label: "Diet Plan Generator", icon: Salad },
         { to: "/doctor/generator/recipes", label: "Recipe Generator", icon: ChefHat },
         { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
-         { to: "/diet-plan", label: "Diet Plan", icon: Salad },
-         { to: "/recipes", label: "Recipes", icon: ChefHat },
       ]
     : [
         { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },

@@ -4,28 +4,38 @@ import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import Index from "./pages/Index";
-import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import Dashboard from "./pages/Dashboard";
-import DoctorDashboard from "./pages/DoctorDashboard";
-import DoctorPatients from "./pages/DoctorPatients";
-import DoctorPatientView from "./pages/DoctorPatientView";
-import DoctorDietGenerator from "./pages/DoctorDietGenerator";
-import Placeholder from "./pages/Placeholder";
-import DoctorRecipeGenerator from "./pages/DoctorRecipeGenerator";
-import DietPlanPage from "./pages/DietPlan";
-import Tracking from "./pages/Tracking";
-import Recipes from "./pages/Recipes";
-import Scan from "./pages/Scan";
+import Dashboard from "./pages/user/Dashboard.tsx";
+import DoctorDashboard from "./pages/doctor/DoctorDashboard.tsx";
+import DoctorPatients from "./pages/doctor/DoctorPatients.tsx";
+import DoctorPatientView from "./pages/doctor/DoctorPatientView.tsx";
+import DoctorDietGenerator from "../archieve/DoctorDietGenerator.tsx";
+import DoctorRecipeGenerator from "./pages/doctor/DoctorRecipeGenerator.tsx";
+import Tracking from "./pages/user/Tracking.tsx";
+import Recipes from "./pages/user/Recipes.tsx";
+import Scan from "./pages/user/Scan.tsx";
 import { AppLayout } from "./components/app/Layout";
 import { AppStateProvider, useAppState } from "@/context/app-state";
 import { lazy, Suspense } from "react";
-import RegisterUser from "./pages/RegisterUser";
-const DoctorMessagesLazy = lazy(() => import("./pages/DoctorMessages"));
+import RegisterUser from "./pages/auth/RegisterUser.tsx";
+import RegisterDoctor from "./pages/auth/RegisterDoctor.tsx";
+import Login from "./pages/auth/Login.tsx";
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const DoctorMessagesLazy = lazy(
+  () => import("./pages/doctor/DoctorMessages.tsx"),
+);
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { currentUser } = useAppState();
   if (!currentUser) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -39,7 +49,8 @@ const UserGuard: React.FC = () => {
 
 const DoctorGuard: React.FC = () => {
   const { currentUser } = useAppState();
-  if (currentUser?.role !== "doctor") return <Navigate to="/dashboard" replace />;
+  if (currentUser?.role !== "doctor")
+    return <Navigate to="/dashboard" replace />;
   return <Outlet />;
 };
 
@@ -47,7 +58,7 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
     <Route path="/login" element={<Login />} />
-    <Route path="/register" element={<RegisterUser />} />
+    <Route path="/register-user" element={<RegisterUser />} />
     <Route
       element={
         <ProtectedRoute>
@@ -57,7 +68,6 @@ const AppRoutes = () => (
     >
       <Route element={<UserGuard />}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/diet-plan" element={<DietPlanPage />} />
         <Route path="/tracking" element={<Tracking />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/scan" element={<Scan />} />
@@ -66,9 +76,22 @@ const AppRoutes = () => (
         <Route path="/doctor" element={<DoctorDashboard />} />
         <Route path="/doctor/patients" element={<DoctorPatients />} />
         <Route path="/doctor/patients/:id" element={<DoctorPatientView />} />
-        <Route path="/doctor/generator/diet" element={<DoctorDietGenerator />} />
-        <Route path="/doctor/generator/recipes" element={<DoctorRecipeGenerator />} />
-        <Route path="/doctor/messages" element={<Suspense fallback={null}><DoctorMessagesLazy /></Suspense>} />
+        <Route
+          path="/doctor/generator/diet"
+          element={<DoctorDietGenerator />}
+        />
+        <Route
+          path="/doctor/generator/recipes"
+          element={<DoctorRecipeGenerator />}
+        />
+        <Route
+          path="/doctor/messages"
+          element={
+            <Suspense fallback={null}>
+              <DoctorMessagesLazy />
+            </Suspense>
+          }
+        />
       </Route>
     </Route>
     <Route path="*" element={<NotFound />} />
