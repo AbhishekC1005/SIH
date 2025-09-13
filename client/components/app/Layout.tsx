@@ -141,13 +141,8 @@ const Topbar: React.FC = () => {
               <MessageCircle className="h-4 w-4" /> Assistant
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[420px] bg-white/80 backdrop-blur-sm border border-gray-200">
-            <SheetHeader>
-              <SheetTitle>Assistant</SheetTitle>
-            </SheetHeader>
-            <div className="py-2">
-              <ChatWidget mode="panel" />
-            </div>
+          <SheetContent side="right" className="w-[480px] p-0 bg-white/80 backdrop-blur-sm border border-gray-200">
+            <ChatWidget mode="panel" />
           </SheetContent>
         </Sheet>
       </div>
