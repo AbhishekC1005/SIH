@@ -144,8 +144,8 @@ const Topbar: React.FC = () => {
             <SheetHeader>
               <SheetTitle>Assistant</SheetTitle>
             </SheetHeader>
-            <div className="py-4 text-sm text-gray-500">
-              Use the floating chat bubble to interact. This panel can host future settings.
+            <div className="py-2">
+              <ChatWidget mode="panel" />
             </div>
           </SheetContent>
         </Sheet>
