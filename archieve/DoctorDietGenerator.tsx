@@ -73,6 +73,13 @@ export default function DoctorDietGenerator() {
     if (pid) setPatientId(pid);
   }, [pid]);
 
+  useEffect(() => {
+    if (pid && patientId && !fetchedName && !fetchError) {
+      fetchPatient();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pid, patientId]);
+
   const [fetchedName, setFetchedName] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
