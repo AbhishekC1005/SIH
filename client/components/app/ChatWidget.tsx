@@ -157,7 +157,7 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({ mode = "
   );
 
   const Body = (
-    <div className="max-h-96 space-y-2 overflow-y-auto p-3 text-sm">
+    <div className="flex-1 space-y-2 overflow-y-auto p-3 text-sm bg-gray-50/60">
       {messages.map((m, i) => (
         <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
           <div className="max-w-[80%]">
@@ -175,19 +175,25 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({ mode = "
   );
 
   const Composer = (
-    <div className="border-t p-2">
+    <div className="border-t p-3">
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" onClick={()=>setInput("I drank water")}>+250ml Water</Button>
         <Button size="sm" variant="outline" onClick={()=>setInput("I ate my lunch")}>I ate lunch</Button>
-
         <label className="inline-flex cursor-pointer items-center gap-2 text-xs">
           <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e)=>{ const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const dataUrl = String(reader.result || ""); setMessages((m)=>m.concat({ role:"user", image: dataUrl, ts: Date.now()})); setTimeout(()=> setMessages((m)=>m.concat({ role:"bot", text:"Looks good! I can scan barcodes or estimate ingredients from photos.", ts: Date.now()})), 500); }; reader.readAsDataURL(file); }} />
           <span className="rounded-md border px-2 py-1">Upload</span>
         </label>
+      </div>
 
-        <Button size="sm" variant="outline" onClick={() => cameraOn ? stopCamera() : startCamera()} className={cn(cameraOn && "bg-accent text-accent-foreground")}>
-          <Camera className="h-4 w-4" /> {cameraOn ? "Stop Camera" : "Camera"}
-        </Button>
+      <div className="relative">
+        <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type a message... e.g., I drank water" className="mb-2 h-20 pr-24" />
+        <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-2">
+          <div className="pointer-events-auto">
+            <Button size="sm" variant="secondary" onClick={() => cameraOn ? stopCamera() : startCamera()} className={cn(cameraOn && "bg-accent text-accent-foreground")}>
+              <Camera className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {cameraOn && (
@@ -199,14 +205,13 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({ mode = "
         </div>
       )}
 
-      <Textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type a message... e.g., I drank water" className="mb-2 h-16" />
       <Button className="w-full" onClick={handleSend}>Send</Button>
     </div>
   );
 
   if (!isFloating) {
     return (
-      <Card className="w-full border-[#0FA36B]/50">
+      <Card className="w-full h-svh flex flex-col rounded-none border-0 bg-white/80 backdrop-blur-sm">
         {Header}
         {Body}
         {Composer}
