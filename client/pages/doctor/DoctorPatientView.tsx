@@ -16,6 +16,54 @@ export default function DoctorPatientView() {
   const { requests, setRequests, generateMockPlan } = useAppState();
   const req = useMemo(() => requests.find(r => r.id === id), [requests, id]);
 
+  // Normalize patient profile coming from different sources/shapes
+  const profile = useMemo(() => {
+    const p: any = req?.patientProfile || {};
+    const parseIntOrNull = (v: any) => {
+      const n = typeof v === "string" ? parseInt(v, 10) : v;
+      return Number.isFinite(n) ? n : null;
+    };
+    const fromDob = (dob?: string | Date | null): number | null => {
+      if (!dob) return null;
+      try {
+        const d = new Date(dob as any);
+        if (Number.isNaN(d.getTime())) return null;
+        const today = new Date();
+        let age = today.getFullYear() - d.getFullYear();
+        const m = today.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+        return age;
+      } catch { return null; }
+    };
+
+    if (!req) return null;
+    const height = p.height ?? p.heightCm ?? null;
+    const weight = p.weight ?? p.weightKg ?? null;
+    const age = p.age ?? fromDob(p.dob) ?? null;
+
+    return {
+      id: p.id || req.userId,
+      name: p.name || req.patientName || `Patient ${req.userId}`,
+      dosha: p.dosha || req.patientDosha || null,
+      age,
+      gender: p.gender ?? null,
+      phone: p.phone || p.whatsapp || "",
+      address: p.address || "",
+      height: parseIntOrNull(height),
+      weight: parseIntOrNull(weight),
+      lifestyle: p.lifestyle || "",
+      medicalHistory: p.medicalHistory || "",
+      allergies: p.allergies || "",
+      conditions: p.conditions || "",
+      medications: p.medications || "",
+      habits: p.habits || "",
+      sleepPattern: p.sleepPattern || "",
+      digestion: p.digestion ?? null,
+      emergencyContact: p.emergencyContact || "",
+      notes: p.notes || "",
+    } as const;
+  }, [req]);
+
   type Meal = { time: string; type: "Breakfast"|"Lunch"|"Snack"|"Dinner"; name: string; calories: number; waterMl?: number; properties?: string[]; dosha?: string; rasa?: string; protein?: number; carbs?: number; fat?: number };
   type DayPlan = { date: string; meals: Meal[] };
   type WeeklyPlan = { days: DayPlan[] };
@@ -136,52 +184,51 @@ export default function DoctorPatientView() {
           <CardTitle>Patient Details</CardTitle>
         </CardHeader>
         <CardContent>
-          {req.patientProfile ? (
+          {profile ? (
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
               <div>
                 <div className="text-xs text-muted-foreground">Name</div>
-                <div className="font-medium">{req.patientProfile.name}</div>
+                <div className="font-medium">{profile.name}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Age</div>
-                <div className="font-medium">{req.patientProfile.age ?? "—"}</div>
+                <div className="font-medium">{profile.age ?? "—"}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Gender</div>
-                <div className="font-medium">{req.patientProfile.gender ?? "—"}</div>
+                <div className="font-medium">{profile.gender ?? "—"}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Dosha</div>
-                <div className="font-medium">{req.patientProfile.dosha ?? "—"}</div>
+                <div className="font-medium">{profile.dosha ?? "—"}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Height</div>
-                <div className="font-medium">{req.patientProfile.height ?? "—"} {req.patientProfile.height ? "cm" : ""}</div>
+                <div className="font-medium">{profile.height ?? "—"} {profile.height ? "cm" : ""}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Weight</div>
-                <div className="font-medium">{req.patientProfile.weight ?? "—"} {req.patientProfile.weight ? "kg" : ""}</div>
+                <div className="font-medium">{profile.weight ?? "—"} {profile.weight ? "kg" : ""}</div>
               </div>
               <div className="sm:col-span-2 md:col-span-3">
                 <div className="text-xs text-muted-foreground">Lifestyle</div>
-                <div className="font-medium">{req.patientProfile.lifestyle || "—"}</div>
+                <div className="font-medium">{profile.lifestyle || "—"}</div>
               </div>
               <div className="sm:col-span-2 md:col-span-3">
                 <div className="text-xs text-muted-foreground">Medical History</div>
-                <div className="font-medium">{req.patientProfile.medicalHistory || "—"}</div>
+                <div className="font-medium">{profile.medicalHistory || "—"}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Allergies</div>
-                <div className="font-medium">{req.patientProfile.allergies || "—"}</div>
+                <div className="font-medium">{profile.allergies || "—"}</div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Conditions</div>
-                <div className="font-medium">{req.patientProfile.conditions || "—"}</div>
+                <div className="font-medium">{profile.conditions || "—"}</div>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Show basic patient info even without full profile */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <div className="text-xs text-muted-foreground">Name</div>
