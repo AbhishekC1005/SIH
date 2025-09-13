@@ -345,9 +345,10 @@ export default function DoctorDietGenerator() {
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
             <Input
-              placeholder="Enter Patient ID"
+              placeholder="Enter Patient ID or Name"
               value={patientId}
               onChange={(e) => setPatientId(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') fetchPatient(); }}
               disabled={step >= 2}
             />
             <Button onClick={fetchPatient} disabled={!patientId || step >= 2}>
