@@ -328,7 +328,7 @@ export default function DoctorDietGenerator() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Diet Plan Generator</h1>
             <p className="text-muted-foreground">
-              Generate personalized 7-day meal plans with nutritional guidance
+              Search by Patient ID or Name to verify the patient, then proceed.
             </p>
           </div>
           <div className="w-48">
