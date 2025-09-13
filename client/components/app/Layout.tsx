@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { MessageCircle, Salad, ScanLine, Stethoscope, ChefHat, BarChart3, LayoutDashboard, LogOut, Users } from "lucide-react";
 import React from "react";
 import { useAppState } from "@/context/app-state";
+import { ChatWidget } from "@/components/app/ChatWidget";
 
 export const AppLayout: React.FC = () => {
   const { currentUser, setCurrentUser } = useAppState();
