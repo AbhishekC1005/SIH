@@ -27,6 +27,13 @@ export default function PatientVerification({ requests, patientId, setPatientId,
     }
   };
 
+  useEffect(() => {
+    if (patientId && !fetchedName && !fetchError) {
+      fetchPatient();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId]);
+
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
