@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -25,6 +26,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useSearchParams } from "react-router-dom";
+
+// New imports for the polished form
+import { useForm, FormProvider } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarIcon } from "lucide-react";
 
 type MealInfo = { name: string; kcal: number; tags: string[]; icon: string };
 type WeeklyPlan = {
@@ -261,7 +268,7 @@ export default function DoctorDashboard() {
                   status: "accepted" as const,
                   createdAt: new Date().toISOString(),
                   patientName: payload.name,
-                  patientDosha: payload.dosha,
+                  patientDosha: (payload as any).dosha || null,
                   plan: defaultPlan,
                   patientProfile: {
                     whatsapp: payload.whatsapp,
@@ -304,7 +311,7 @@ export default function DoctorDashboard() {
               {pendingForMe.length}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Active Patients</CardTitle>
             </CardHeader>
@@ -312,7 +319,7 @@ export default function DoctorDashboard() {
               {myPatients.length}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Total Requests</CardTitle>
             </CardHeader>
@@ -439,358 +446,162 @@ export default function DoctorDashboard() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle>Patient Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <div>
-                <div className="text-xs text-muted-foreground">ID</div>
-                <div className="font-mono">{patient.id}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Name</div>
-                <div className="font-medium">{patient.name}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Dosha</div>
-                <div className="font-medium">{patient.dosha || "-"}</div>
-              </div>
+    <div className="space-y-6">
+  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+    {/* Patient Card */}
+    <Card className="flex-1 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          🧑 Patient Details
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* ID */}
+          <div>
+            <div className="text-xs text-gray-500">ID</div>
+            <div className="font-mono">{patient?.id || "P-2025001"}</div>
+          </div>
+
+          {/* Name */}
+          <div>
+            <div className="text-xs text-gray-500">Name</div>
+            <div className="font-medium">{patient?.name || "John Doe"}</div>
+          </div>
+
+          {/* Dosha */}
+          <div>
+            <div className="text-xs text-gray-500">Dosha</div>
+            <div className="font-medium">{patient?.dosha || "Pitta"}</div>
+          </div>
+
+          {/* Age */}
+          <div>
+            <div className="text-xs text-gray-500">Age</div>
+            <div className="font-medium">{patient?.age || "32"}</div>
+          </div>
+
+          {/* Gender */}
+          <div>
+            <div className="text-xs text-gray-500">Gender</div>
+            <div className="font-medium">{patient?.gender || "Male"}</div>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <div className="text-xs text-gray-500">Contact</div>
+            <div className="font-medium">
+              {patient?.phone || "+91 98765 43210"}
             </div>
-          </CardContent>
-        </Card>
-        <div className="ml-3 flex gap-2">
-          {!isApproved && (
-            <Button onClick={() => accept(selectedReq.id)}>Approve</Button>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSelected(null);
-              setSearchParams((prev) => {
-                const p = new URLSearchParams(prev);
-                p.delete("open");
-                return p;
-              });
-            }}
-          >
-            Back
-          </Button>
+          </div>
+
+          {/* Address */}
+          <div className="sm:col-span-2">
+            <div className="text-xs text-gray-500">Address</div>
+            <div className="font-medium">
+              {patient?.address || "123, MG Road, Bengaluru, India"}
+            </div>
+          </div>
+
+          {/* Medical History */}
+          <div className="sm:col-span-2">
+            <div className="text-xs text-gray-500">Medical History</div>
+            <div className="font-medium">
+              {patient?.medicalHistory ||
+                "Hypertension, seasonal allergies, mild acidity"}
+            </div>
+          </div>
+
+          {/* Allergies */}
+          <div>
+            <div className="text-xs text-gray-500">Allergies</div>
+            <div className="font-medium">
+              {patient?.allergies || "Penicillin"}
+            </div>
+          </div>
+
+          {/* Weight */}
+          <div>
+            <div className="text-xs text-gray-500">Weight</div>
+            <div className="font-medium">
+              {patient?.weight ? `${patient.weight} kg` : "72 kg"}
+            </div>
+          </div>
+
+          {/* Height */}
+          <div>
+            <div className="text-xs text-gray-500">Height</div>
+            <div className="font-medium">
+              {patient?.height ? `${patient.height} cm` : "178 cm"}
+            </div>
+          </div>
+
+          {/* Lifestyle */}
+          <div className="sm:col-span-2">
+            <div className="text-xs text-gray-500">Lifestyle</div>
+            <div className="font-medium">
+              {patient?.lifestyle ||
+                "Non-smoker, occasional alcohol, daily yoga, vegetarian diet"}
+            </div>
+          </div>
+
+          {/* Emergency Contact */}
+          <div>
+            <div className="text-xs text-gray-500">Emergency Contact</div>
+            <div className="font-medium">
+              {patient?.emergencyContact || "Jane Doe (+91 91234 56789)"}
+            </div>
+          </div>
         </div>
-      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Editable Diet Plan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>Meal</TableHead>
-                <TableHead>Calories</TableHead>
-                <TableHead>Water (ml)</TableHead>
-                <TableHead className="w-24 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {plan.map((row, idx) => (
-                <TableRow key={idx}>
-                  <TableCell>
-                    <Input
-                      disabled={!isApproved}
-                      value={row.time}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setPlan((p) =>
-                          p.map((r, i) => (i === idx ? { ...r, time: v } : r)),
-                        );
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      disabled={!isApproved}
-                      value={row.name}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setPlan((p) =>
-                          p.map((r, i) => (i === idx ? { ...r, name: v } : r)),
-                        );
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      disabled={!isApproved}
-                      type="number"
-                      value={row.calories}
-                      onChange={(e) => {
-                        const v = parseInt(e.target.value || "0");
-                        setPlan((p) =>
-                          p.map((r, i) =>
-                            i === idx ? { ...r, calories: v } : r,
-                          ),
-                        );
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      disabled={!isApproved}
-                      type="number"
-                      value={row.waterMl ?? 0}
-                      onChange={(e) => {
-                        const v = parseInt(e.target.value || "0");
-                        setPlan((p) =>
-                          p.map((r, i) =>
-                            i === idx ? { ...r, waterMl: v } : r,
-                          ),
-                        );
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={!isApproved}
-                      onClick={() =>
-                        setPlan((p) => p.filter((_, i) => i !== idx))
-                      }
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="mt-3 flex gap-2">
-            <Button
-              disabled={!isApproved}
-              onClick={() =>
-                setPlan((p) => [
-                  ...p,
-                  {
-                    time: "16:00",
-                    name: "Herbal Tea",
-                    calories: 60,
-                    waterMl: 200,
-                  },
-                ])
-              }
-            >
-              Add Row
-            </Button>
-            <Button
-              disabled={!isApproved}
-              onClick={() => {
-                setRequests(
-                  requests.map((r) =>
-                    r.id === selectedReq.id ? { ...r, plan } : r,
-                  ),
-                );
-                const kcal = plan.reduce((s, p) => s + (p.calories || 0), 0);
-                const water = plan.reduce((s, p) => s + (p.waterMl || 0), 0);
-                addMessage(selectedReq.id, {
-                  from: "system",
-                  text: `Diet plan updated • ${plan.length} items • ${kcal} kcal • ${water} ml water.`,
-                });
-              }}
-            >
-              Save Plan
-            </Button>
-
-            {/* Inline mock video/chat */}
-            <Button
-              variant="outline"
-              disabled={!isApproved}
-              onClick={() => setVideoOpen(true)}
-            >
-              Video Call
-            </Button>
-            <Button disabled={!isApproved} onClick={() => setChatOpen(true)}>
-              Chat
-            </Button>
+        {/* Medical Documents */}
+        <div className="mt-6">
+          <div className="text-xs text-gray-500 mb-2">Medical Documents</div>
+          <div className="space-y-2">
+            {(patient?.documents || [
+              { name: "Blood Test Report.pdf", url: "/mock/blood-test.pdf" },
+              { name: "X-Ray Scan.pdf", url: "/mock/xray.pdf" },
+              { name: "Prescription.pdf", url: "/mock/prescription.pdf" },
+            ]).map((doc, idx) => (
+              <Button
+                key={idx}
+                variant="outline"
+                size="sm"
+                className="w-full justify-start bg-white hover:bg-sky-50 text-gray-700"
+                onClick={() => window.open(doc.url, "_blank")}
+              >
+                📄 {doc.name}
+              </Button>
+            ))}
           </div>
+        </div>
+      </CardContent>
+    </Card>
 
-          {videoOpen && (
-            <div className="mt-4 rounded-md border p-4">
-              <div className="font-medium mb-2">Mock Video Consult</div>
-              <div className="aspect-video w-full rounded-md bg-black/80" />
-              <div className="text-center text-sm text-muted-foreground mt-1">
-                Simulated video frame
-              </div>
-              <div className="mt-3 text-right">
-                <Button variant="outline" onClick={() => setVideoOpen(false)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {chatOpen && (
-            <div className="mt-4 rounded-md border bg-background">
-              <div className="flex h-96 flex-col">
-                <div className="border-b px-4 py-2 text-xs text-muted-foreground">
-                  Secure consultation chat (mock)
-                </div>
-                <div
-                  id="chat-scroll"
-                  className="flex-1 space-y-3 overflow-y-auto p-3 text-sm"
-                >
-                  {(!conversations[selectedReq.id] ||
-                    conversations[selectedReq.id].length === 0) && (
-                    <div className="text-center text-xs text-muted-foreground">
-                      No messages yet. Say hello 👋
-                    </div>
-                  )}
-                  {(conversations[selectedReq.id] || []).map((m, i) => (
-                    <div
-                      key={m.id || i}
-                      className={
-                        m.from === "doctor"
-                          ? "flex justify-end"
-                          : m.from === "patient"
-                          ? "flex justify-start"
-                          : "flex justify-center"
-                      }
-                    >
-                      <div className="max-w-[75%]">
-                        <div
-                          className={
-                            m.from === "doctor"
-                              ? "text-right text-[10px] text-muted-foreground"
-                              : "text-[10px] text-muted-foreground"
-                          }
-                        >
-                          {new Date(m.ts).toLocaleTimeString()}
-                        </div>
-                        <div
-                          className={
-                            m.from === "doctor"
-                              ? "rounded-2xl bg-primary px-3 py-2 text-primary-foreground shadow-sm"
-                              : m.from === "patient"
-                              ? "rounded-2xl bg-muted px-3 py-2 shadow-sm"
-                              : "rounded-md bg-secondary px-3 py-1 text-xs text-secondary-foreground"
-                          }
-                        >
-                          {m.text}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t p-2">
-                  <div className="mb-2 flex flex-wrap gap-2 text-xs">
-                    <button
-                      className="rounded-full border px-2 py-1"
-                      onClick={() =>
-                        setDraft("Please follow the plan and hydrate 250ml now.")
-                      }
-                    >
-                      Hydration
-                    </button>
-                    <button
-                      className="rounded-full border px-2 py-1"
-                      onClick={() => setDraft("How are you feeling after lunch?")}
-                    >
-                      Check-in
-                    </button>
-                    <button
-                      className="rounded-full border px-2 py-1"
-                      onClick={() =>
-                        setDraft("Schedule a follow-up for tomorrow 5pm.")
-                      }
-                    >
-                      Schedule
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      placeholder="Type a message"
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          send();
-                        }
-                      }}
-                    />
-                    <Button onClick={send}>Send</Button>
-                    <Button variant="outline" onClick={() => setChatOpen(false)}>
-                      Close
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!isApproved && (
-            <div className="mt-2 text-xs text-muted-foreground">
-              Approve the request to enable chat, video, and editing.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="print:shadow-none print:border-0">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>Weekly 7-Day Plan</CardTitle>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={exportWeeklyCsv}>
-              Export CSV
-            </Button>
-            <Button variant="outline" onClick={() => window.print()}>
-              Print
-            </Button>
-            <Button onClick={generateWeekly}>Generate 7-Day Plan</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {weeklyPlan ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Day</TableHead>
-                    <TableHead>Breakfast</TableHead>
-                    <TableHead>Lunch</TableHead>
-                    <TableHead>Dinner</TableHead>
-                    <TableHead>Snacks</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {weeklyPlan.map((r, idx) => (
-                    <TableRow
-                      key={r.day}
-                      className={idx % 2 ? "bg-muted/30" : undefined}
-                    >
-                      <TableCell className="font-medium">{r.day}</TableCell>
-                      <WeeklyMealCell m={r.breakfast} />
-                      <WeeklyMealCell m={r.lunch} />
-                      <WeeklyMealCell m={r.dinner} />
-                      <WeeklyMealCell m={r.snacks} />
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              Generate a personalized 7-day plan based on the patient’s dosha.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    {/* Right Side Buttons */}
+    <div className="flex gap-2 lg:ml-3">
+      {!isApproved && (
+        <Button className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => accept(selectedReq.id)}>
+          Approve
+        </Button>
+      )}
+      <Button
+        variant="outline"
+        onClick={() => {
+          setSelected(null);
+          setSearchParams((prev) => {
+            const p = new URLSearchParams(prev);
+            p.delete("open");
+            return p;
+          });
+        }}
+      >
+        Back
+      </Button>
     </div>
+  </div>
+</div>
+
   );
 }
 
@@ -814,317 +625,214 @@ const WeeklyMealCell: React.FC<{
   );
 };
 
-const AddPatientForm: React.FC<{
+/* -------------------------
+   Polished AddPatientForm (inlined)
+   Uses react-hook-form + zod for validation
+   ------------------------- */
+
+const patientSchema = z.object({
+  name: z.string().min(2, "Full name is required"),
+  gender: z.enum(["male", "female", "other"], { required_error: "Gender is required" }),
+  dob: z.string().min(1, "Date of birth is required"),
+  whatsapp: z.string().regex(/^\d{10}$/, "Must be 10 digits").optional(),
+  address: z.string().min(3, "Address is required").optional(),
+  heightCm: z.string().optional(),
+  weightKg: z.string().optional(),
+  allergies: z.string().optional(),
+  conditions: z.string().optional(),
+  medications: z.string().optional(),
+  habits: z.string().optional(),
+  sleepPattern: z.string().optional(),
+  digestion: z.string().optional(),
+  notes: z.string().optional(),
+  medicalDoc: z.any().optional(),
+});
+
+type PatientFormValues = z.infer<typeof patientSchema>;
+
+function AddPatientForm({
+  onCancel,
+  onCreate,
+}: {
   onCancel: () => void;
-  onCreate: (p: {
-    name: string;
-    dosha: "Vata" | "Pitta" | "Kapha" | null;
-    whatsapp?: string;
-    dob?: string;
-    gender?: "Male" | "Female" | "Other";
-    address?: { city?: string; state?: string; country?: string };
-    heightCm?: number;
-    weightKg?: number;
-    allergies?: string;
-    conditions?: string;
-    medications?: string;
-    habits?: string;
-    sleepPattern?: string;
-    digestion?: "Poor" | "Normal" | "Strong" | string;
-    notes?: string;
-    medicalDoc?: File | undefined;
-  }) => void;
-}> = ({ onCancel, onCreate }) => {
-  const [name, setName] = useState("");
-  const [dosha, setDosha] = useState<"Vata" | "Pitta" | "Kapha" | null>(null);
+  onCreate: (payload: PatientFormValues) => void;
+}) {
+  const methods = useForm<PatientFormValues>({
+    resolver: zodResolver(patientSchema),
+    defaultValues: {
+      name: "",
+      gender: "male",
+      dob: "",
+      whatsapp: "",
+      address: "",
+      heightCm: "",
+      weightKg: "",
+      allergies: "",
+      conditions: "",
+      medications: "",
+      habits: "",
+      sleepPattern: "",
+      digestion: "",
+      notes: "",
+      medicalDoc: undefined,
+    },
+    mode: "onTouched",
+  });
 
-  // New/changed fields
-  const [whatsapp, setWhatsapp] = useState("");
-  const [dob, setDob] = useState<string>("");
-  const [addressCity, setAddressCity] = useState("");
-  const [addressState, setAddressState] = useState("");
-  const [addressCountry, setAddressCountry] = useState("");
-  const [medicalDoc, setMedicalDoc] = useState<File | undefined>(undefined);
+  const { register, handleSubmit, setValue, formState } = methods;
+  const { errors } = formState;
 
-  const [gender, setGender] = useState<"Male" | "Female" | "Other" | undefined>(
-    undefined,
-  );
-  const [heightCm, setHeightCm] = useState<number | undefined>(undefined);
-  const [weightKg, setWeightKg] = useState<number | undefined>(undefined);
-  const [allergies, setAllergies] = useState("");
-  const [conditions, setConditions] = useState("");
-  const [medications, setMedications] = useState("");
-  const [habits, setHabits] = useState("");
-  const [sleepPattern, setSleepPattern] = useState("");
-  const [digestion, setDigestion] = useState<
-    "Poor" | "Normal" | "Strong" | string
-  >("Normal");
-  const [notes, setNotes] = useState("");
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    setValue("medicalDoc", file);
+  };
 
-  const submit = () => {
-    if (!name.trim()) return;
-    if (whatsapp && !/^\d{10}$/.test(whatsapp)) return;
-
-    onCreate({
-      name: name.trim(),
-      dosha,
-      whatsapp: whatsapp || undefined,
-      dob: dob || undefined,
-      gender,
-      address:
-        addressCity || addressState || addressCountry
-          ? {
-              city: addressCity || undefined,
-              state: addressState || undefined,
-              country: addressCountry || undefined,
-            }
-          : undefined,
-      heightCm,
-      weightKg,
-      allergies: allergies.trim() || undefined,
-      conditions: conditions.trim() || undefined,
-      medications: medications.trim() || undefined,
-      habits: habits.trim() || undefined,
-      sleepPattern: sleepPattern.trim() || undefined,
-      digestion,
-      notes: notes.trim() || undefined,
-      medicalDoc,
-    });
+  const submit = (data: PatientFormValues) => {
+    // Normalize address into the shape your dashboard expects (optional:
+    // you can capture structured address fields if you prefer)
+    onCreate(data);
   };
 
   return (
-    <div className="relative max-h-[75vh] overflow-y-auto">
-      <div className="space-y-5 p-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Basic Details
-          </div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label>Name</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Patient full name"
-              />
-            </div>
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(submit)} className="w-full">
+        <div className="p-6">
+          <Card className="rounded-2xl shadow-md border">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Add New Patient</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Personal Information */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Personal Information</h3>
+                  <div className="text-sm text-muted-foreground">Required</div>
+                </div>
 
-            <div>
-              <Label>Dosha</Label>
-              <Select
-                value={dosha ?? undefined}
-                onValueChange={(v) => setDosha(v as any)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select dosha" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Vata">Vata</SelectItem>
-                  <SelectItem value="Pitta">Pitta</SelectItem>
-                  <SelectItem value="Kapha">Kapha</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Full Name</Label>
+                    <Input {...register("name")} placeholder="John Doe" />
+                    {errors.name && <p className="text-xs text-destructive mt-1">{String(errors.name.message)}</p>}
+                  </div>
 
-            <div>
-              <Label>WhatsApp Number</Label>
-              <Input
-                inputMode="numeric"
-                pattern="\d*"
-                placeholder="10-digit number"
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-              />
-            </div>
+                  <div>
+                    <Label>Gender</Label>
+                    <select {...register("gender")} className="w-full rounded-md border px-3 py-2">
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                    {errors.gender && <p className="text-xs text-destructive mt-1">{String(errors.gender.message)}</p>}
+                  </div>
 
-            <div>
-              <Label>Date of Birth</Label>
-              <Input
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-              />
-            </div>
+                  <div>
+                    <Label>Date of birth</Label>
+                    <div className="relative">
+                      <CalendarIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <Input type="date" className="pl-9" {...register("dob")} />
+                    </div>
+                    {errors.dob && <p className="text-xs text-destructive mt-1">{String(errors.dob.message)}</p>}
+                  </div>
 
-            <div>
-              <Label>Gender</Label>
-              <Select
-                value={gender ?? undefined}
-                onValueChange={(v) => setGender(v as any)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                  <div>
+                    <Label>WhatsApp (optional)</Label>
+                    <Input placeholder="9876543210" {...register("whatsapp")} />
+                    {errors.whatsapp && <p className="text-xs text-destructive mt-1">{String(errors.whatsapp.message)}</p>}
+                  </div>
 
-            <div>
-              <Label>Height (cm)</Label>
-              <Input
-                type="number"
-                value={heightCm ?? ""}
-                onChange={(e) =>
-                  setHeightCm(
-                    e.target.value ? parseInt(e.target.value) : undefined,
-                  )
-                }
-              />
-            </div>
+                  <div className="md:col-span-2">
+                    <Label>Address</Label>
+                    <Textarea placeholder="Street, City, State, Country" {...register("address")} />
+                    {errors.address && <p className="text-xs text-destructive mt-1">{String(errors.address.message)}</p>}
+                  </div>
+                </div>
+              </div>
 
-            <div>
-              <Label>Weight (kg)</Label>
-              <Input
-                type="number"
-                value={weightKg ?? ""}
-                onChange={(e) =>
-                  setWeightKg(
-                    e.target.value ? parseInt(e.target.value) : undefined,
-                  )
-                }
-              />
-            </div>
-          </div>
+              <Separator />
+
+              {/* Medical Details */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Medical Details</h3>
+                  <div className="text-sm text-muted-foreground">Optional</div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Height (cm)</Label>
+                    <Input type="number" placeholder="e.g. 170" {...register("heightCm")} />
+                  </div>
+                  <div>
+                    <Label>Weight (kg)</Label>
+                    <Input type="number" placeholder="e.g. 65" {...register("weightKg")} />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label>Allergies</Label>
+                    <Input placeholder="e.g. peanuts, pollen" {...register("allergies")} />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label>Medical Conditions</Label>
+                    <Textarea placeholder="e.g. diabetes, hypertension" {...register("conditions")} />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label>Medications</Label>
+                    <Textarea placeholder="Current medications" {...register("medications")} />
+                  </div>
+
+                  <div>
+                    <Label>Upload Medical Document (PDF)</Label>
+                    <Input type="file" accept="application/pdf" onChange={handleFileChange} />
+                    {errors.medicalDoc && <p className="text-xs text-destructive mt-1">{String(errors.medicalDoc.message)}</p>}
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Lifestyle */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Lifestyle & Notes</h3>
+                  <div className="text-sm text-muted-foreground">Optional</div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Habits</Label>
+                    <Input placeholder="e.g. smoking, alcohol" {...register("habits")} />
+                  </div>
+                  <div>
+                    <Label>Sleep Pattern</Label>
+                    <Input placeholder="e.g. 7-8 hrs" {...register("sleepPattern")} />
+                  </div>
+                  <div>
+                    <Label>Digestion</Label>
+                    <Input placeholder="e.g. normal, weak" {...register("digestion")} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Additional Notes</Label>
+                    <Textarea placeholder="Any extra notes..." {...register("notes")} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-6">
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="px-6">
+                  Create Patient
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-        <Separator />
-
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Address
-          </div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <div>
-              <Label>City</Label>
-              <Input
-                value={addressCity}
-                onChange={(e) => setAddressCity(e.target.value)}
-                placeholder="City"
-              />
-            </div>
-            <div>
-              <Label>State</Label>
-              <Input
-                value={addressState}
-                onChange={(e) => setAddressState(e.target.value)}
-                placeholder="State"
-              />
-            </div>
-            <div>
-              <Label>Country</Label>
-              <Input
-                value={addressCountry}
-                onChange={(e) => setAddressCountry(e.target.value)}
-                placeholder="Country"
-              />
-            </div>
-          </div>
-        </div>
-
-        <Separator />
-
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Medical History
-          </div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label>Allergies</Label>
-              <Textarea
-                value={allergies}
-                onChange={(e) => setAllergies(e.target.value)}
-                placeholder="e.g., peanuts, lactose"
-              />
-            </div>
-            <div>
-              <Label>Conditions</Label>
-              <Textarea
-                value={conditions}
-                onChange={(e) => setConditions(e.target.value)}
-                placeholder="e.g., diabetes, hypertension"
-              />
-            </div>
-            <div>
-              <Label>Medications</Label>
-              <Textarea
-                value={medications}
-                onChange={(e) => setMedications(e.target.value)}
-                placeholder="Current medications"
-              />
-            </div>
-            <div>
-              <Label>Medical Document (PDF)</Label>
-              <Input
-                type="file"
-                accept="application/pdf"
-                onChange={(e) => {
-                  const file = e.currentTarget.files?.[0] || undefined;
-                  setMedicalDoc(file);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <Separator />
-
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Lifestyle
-          </div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label>Lifestyle / Habits</Label>
-              <Textarea
-                value={habits}
-                onChange={(e) => setHabits(e.target.value)}
-                placeholder="Diet, exercise, smoking, alcohol"
-              />
-            </div>
-            <div>
-              <Label>Sleep Pattern</Label>
-              <Input
-                value={sleepPattern}
-                onChange={(e) => setSleepPattern(e.target.value)}
-                placeholder="e.g., 7h, disturbed"
-              />
-            </div>
-            <div>
-              <Label>Digestion</Label>
-              <Select value={digestion} onValueChange={(v) => setDigestion(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Poor">Poor</SelectItem>
-                  <SelectItem value="Normal">Normal</SelectItem>
-                  <SelectItem value="Strong">Strong</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="sm:col-span-2">
-              <Label>Notes</Label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Additional observations"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="border-t bg-background px-4 py-3 flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button onClick={submit} disabled={!name.trim()}>
-          Create Patient
-        </Button>
-      </div>
-    </div>
+      </form>
+    </FormProvider>
   );
-};
+}

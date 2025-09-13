@@ -27,7 +27,7 @@ export type Meal = {
   time: string;
   name: string;
   calories: number;
-  properties: string[]; // e.g., ["Hot", "Rasa: Madhura"]
+  properties: string[];
 };
 
 export type DietPlan = {
@@ -44,18 +44,79 @@ export type Doctor = {
 };
 
 export type PatientProfile = {
-  age?: number;
-  gender?: "Male" | "Female" | "Other";
-  heightCm?: number;
-  weightKg?: number;
-  allergies?: string;
-  conditions?: string;
-  medications?: string;
-  habits?: string;
-  sleepPattern?: string;
-  digestion?: "Poor" | "Normal" | "Strong" | string;
-  notes?: string;
+  id: string;
+  name: string;
+  dosha: "Vata" | "Pitta" | "Kapha" | null;
+  age: number | null;
+  gender: "Male" | "Female" | "Other" | null;
+  phone: string;
+  address: string;
+  height: number | null;
+  weight: number | null;
+  lifestyle: string;
+  medicalHistory: string;
+  allergies: string;
+  conditions: string;
+  medications: string;
+  habits: string;
+  sleepPattern: string;
+  digestion: "Poor" | "Normal" | "Strong" | string | null;
+  emergencyContact: string;
+  notes: string;
+  documents?: { name: string; url: string; type?: "pdf" | "image" }[];
 };
+
+// Keep this for reference but don't use it as a fallback
+export const samplePatientProfile: PatientProfile = {
+  id: "P-2025001",
+  name: "John Doe",
+  dosha: "Pitta",
+  age: 32,
+  gender: "Male",
+  phone: "+91 98765 43210",
+  address: "123, MG Road, Bengaluru, India",
+  height: 178,
+  weight: 72,
+  lifestyle: "Non-smoker, occasional alcohol, daily yoga, vegetarian diet",
+  medicalHistory: "Hypertension, seasonal allergies, mild acidity",
+  allergies: "Penicillin",
+  conditions: "",
+  medications: "",
+  habits: "",
+  sleepPattern: "",
+  digestion: null,
+  emergencyContact: "Jane Doe (+91 91234 56789)",
+  notes: "",
+  documents: [
+    { name: "Blood Test Report.pdf", url: "/mock/blood-test.pdf", type: "pdf" },
+    { name: "X-Ray Scan.pdf", url: "/mock/xray.pdf", type: "pdf" },
+    { name: "Prescription.pdf", url: "/mock/prescription.pdf", type: "pdf" },
+  ],
+};
+
+// Helper function to create a basic patient profile from minimal data
+const createBasicPatientProfile = (id: string, name: string, dosha?: "Vata" | "Pitta" | "Kapha" | null): PatientProfile => ({
+  id: id,
+  name: name,
+  dosha: dosha || null,
+  age: null,
+  gender: null,
+  phone: "",
+  address: "",
+  height: null,
+  weight: null,
+  lifestyle: "",
+  medicalHistory: "",
+  allergies: "",
+  conditions: "",
+  medications: "",
+  habits: "",
+  sleepPattern: "",
+  digestion: null,
+  emergencyContact: "",
+  notes: "",
+  documents: [],
+});
 
 export type ConsultRequest = {
   id: string;
@@ -65,8 +126,8 @@ export type ConsultRequest = {
   createdAt: string;
   patientName?: string;
   patientDosha?: User["dosha"];
-  plan?: { time: string; name: string; calories: number; waterMl?: number }[];
   patientProfile?: PatientProfile;
+  plan?: { time: string; name: string; calories: number; waterMl?: number }[];
 };
 
 export type Notification = {
@@ -136,24 +197,9 @@ function makePlan(
   return meals && Array.isArray(meals) && meals.length
     ? (meals as any)
     : [
-        {
-          time: "08:00",
-          name: "Warm Spiced Oats",
-          calories: 320,
-          waterMl: 250,
-        },
-        {
-          time: "12:30",
-          name: "Moong Dal Khichdi",
-          calories: 450,
-          waterMl: 300,
-        },
-        {
-          time: "19:30",
-          name: "Steamed Veg + Ghee",
-          calories: 420,
-          waterMl: 250,
-        },
+        { time: "08:00", name: "Warm Spiced Oats", calories: 320, waterMl: 250 },
+        { time: "12:30", name: "Moong Dal Khichdi", calories: 450, waterMl: 300 },
+        { time: "19:30", name: "Steamed Veg + Ghee", calories: 420, waterMl: 250 },
       ];
 }
 
@@ -175,140 +221,129 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
     load<DietPlan | null>("app:dietPlan", null),
   );
   const [doctors] = useState<Doctor[]>([
-    {
-      id: "d1",
-      name: "Dr. Anaya Verma",
-      specialty: "Ayurvedic Diet",
-      rating: 4.9,
-    },
-    {
-      id: "d2",
-      name: "Dr. Rohan Mehta",
-      specialty: "Digestive Health",
-      rating: 4.7,
-    },
-    {
-      id: "d3",
-      name: "Dr. Kavya Iyer",
-      specialty: "Metabolic Care",
-      rating: 4.8,
-    },
+    { id: "d1", name: "Dr. Anaya Verma", specialty: "Ayurvedic Diet", rating: 4.9 },
+    { id: "d2", name: "Dr. Rohan Mehta", specialty: "Digestive Health", rating: 4.7 },
+    { id: "d3", name: "Dr. Kavya Iyer", specialty: "Metabolic Care", rating: 4.8 },
   ]);
+
   const [requests, setRequests] = useState<ConsultRequest[]>(() => {
     const loaded = load<ConsultRequest[]>("app:requests", []);
     if (loaded && loaded.length) return loaded;
+
+    // Create seed data with multiple patients, each with their own profile
     const seed: ConsultRequest[] = [
       {
         id: "req_1001",
         userId: "u1001",
         doctorId: "d1",
         status: "accepted",
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        createdAt: new Date().toISOString(),
         patientName: "Riya Sharma",
         patientDosha: "Pitta",
-        plan: makePlan([
-          {
-            time: "08:00",
-            name: "Lemon Ginger Tea",
-            calories: 40,
-            waterMl: 200,
-          },
-          { time: "13:00", name: "Veg Khichdi", calories: 420, waterMl: 300 },
-          {
-            time: "19:30",
-            name: "Steamed Veg + Ghee",
-            calories: 400,
-            waterMl: 250,
-          },
-        ]),
+        patientProfile: {
+          ...createBasicPatientProfile("P-1001", "Riya Sharma", "Pitta"),
+          age: 29,
+          gender: "Female",
+          phone: "+91 98765 00001",
+          address: "Delhi, India",
+          height: 165,
+          weight: 58,
+          allergies: "Peanuts",
+          conditions: "Acid reflux",
+          lifestyle: "Early riser, yoga 5 days a week",
+          medicalHistory: "Acidity issues",
+          sleepPattern: "7 hrs/night, deep sleep",
+          digestion: "Normal",
+          notes: "Often feels acidity post lunch",
+        },
+        plan: makePlan(),
       },
       {
         id: "req_1002",
         userId: "u1002",
-        doctorId: "d1",
+        doctorId: "d2",
         status: "pending",
-        createdAt: new Date().toISOString(),
-        patientName: "Aarav Patel",
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        patientName: "Neha Gupta",
         patientDosha: "Vata",
+        patientProfile: {
+          ...createBasicPatientProfile("P-1002", "Neha Gupta", "Vata"),
+          age: 25,
+          gender: "Female",
+          phone: "+91 98765 00002",
+          address: "Mumbai, India",
+          height: 160,
+          weight: 52,
+          allergies: "Shellfish",
+          conditions: "Anxiety, Insomnia",
+          lifestyle: "Software engineer, irregular schedule",
+          medicalHistory: "Anxiety disorders, sleep issues",
+          sleepPattern: "5-6 hrs/night, disturbed sleep",
+          digestion: "Poor",
+          notes: "High stress levels, poor eating habits",
+        },
       },
       {
         id: "req_1003",
         userId: "u1003",
-        doctorId: "d1",
+        doctorId: "d3",
         status: "accepted",
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        patientName: "Nehal Gupta",
+        createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+        patientName: "Arjun Patel",
         patientDosha: "Kapha",
-        plan: makePlan([
-          { time: "08:30", name: "Warm Oats", calories: 320, waterMl: 250 },
-          {
-            time: "12:45",
-            name: "Moong Dal Soup",
-            calories: 380,
-            waterMl: 300,
-          },
-          {
-            time: "19:00",
-            name: "Millet Roti + Veg",
-            calories: 450,
-            waterMl: 250,
-          },
-        ]),
+        patientProfile: {
+          ...createBasicPatientProfile("P-1003", "Arjun Patel", "Kapha"),
+          age: 35,
+          gender: "Male",
+          phone: "+91 98765 00003",
+          address: "Ahmedabad, India",
+          height: 175,
+          weight: 85,
+          allergies: "Dairy",
+          conditions: "Obesity, Pre-diabetes",
+          lifestyle: "Sedentary job, minimal exercise",
+          medicalHistory: "Family history of diabetes",
+          sleepPattern: "8-9 hrs/night, heavy sleep",
+          digestion: "Slow",
+          notes: "Weight management needed, low energy",
+        },
+        plan: makePlan(),
+      },
+      {
+        id: "req_1004",
+        userId: "u1004",
+        doctorId: "d1",
+        status: "rejected",
+        createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+        patientName: "Priya Singh",
+        patientDosha: "Pitta",
+        patientProfile: {
+          ...createBasicPatientProfile("P-1004", "Priya Singh", "Pitta"),
+          age: 28,
+          gender: "Female",
+          phone: "+91 98765 00004",
+          address: "Bangalore, India",
+          height: 162,
+          weight: 55,
+          allergies: "None",
+          conditions: "Migraine, PCOS",
+          lifestyle: "Marketing professional, high stress",
+          medicalHistory: "Hormonal imbalances, frequent headaches",
+          sleepPattern: "6-7 hrs/night, light sleep",
+          digestion: "Strong",
+          notes: "Irregular periods, stress-related issues",
+        },
       },
     ];
     return seed;
   });
+
   const [notifications, setNotifications] = useState<Notification[]>(() =>
     load<Notification[]>("app:notifications", []),
   );
   const [conversations, setConversations] = useState<
     Record<string, ChatMessage[]>
-  >(() => {
-    const loaded = load<Record<string, ChatMessage[]>>("app:conversations", {});
-    if (Object.keys(loaded).length) return loaded;
-    const base: Record<string, ChatMessage[]> = {};
-    const now = Date.now();
-    base["req_1001"] = [
-      {
-        id: uid("msg"),
-        requestId: "req_1001",
-        from: "system",
-        text: "Consultation started with Riya Sharma.",
-        ts: now - 800000,
-      },
-      {
-        id: uid("msg"),
-        requestId: "req_1001",
-        from: "patient",
-        text: "Good morning, doctor!",
-        ts: now - 790000,
-      },
-      {
-        id: uid("msg"),
-        requestId: "req_1001",
-        from: "doctor",
-        text: "Hello Riya, how are you feeling today?",
-        ts: now - 780000,
-      },
-    ];
-    base["req_1003"] = [
-      {
-        id: uid("msg"),
-        requestId: "req_1003",
-        from: "system",
-        text: "Consultation started with Neha Gupta.",
-        ts: now - 400000,
-      },
-      {
-        id: uid("msg"),
-        requestId: "req_1003",
-        from: "patient",
-        text: "I feel heavy after dinner.",
-        ts: now - 300000,
-      },
-    ];
-    return base;
-  });
+  >(() => load<Record<string, ChatMessage[]>>("app:conversations", {}));
 
   useEffect(() => save("app:currentUser", currentUser), [currentUser]);
   useEffect(() => save("app:progress", progress), [progress]);
@@ -325,7 +360,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       ].slice(0, 50),
     );
   };
-  const markAllRead = () => setNotifications((prev) => []);
+  const markAllRead = () => setNotifications([]);
   const markNotificationRead = (id: string) =>
     setNotifications((prev) => prev.filter((x) => x.id !== id));
 

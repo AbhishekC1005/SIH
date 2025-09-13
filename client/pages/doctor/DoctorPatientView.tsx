@@ -61,8 +61,24 @@ export default function DoctorPatientView() {
     });
     const wp = { days };
     saveWP(wp);
-    // also mirror a single-day plan into request for compatibility (first day)
-    setRequests(requests.map(r => r.id === id ? { ...r, status: r.status === "rejected" ? "accepted" : r.status, plan: days[0].meals.map(m=>({ time:m.time, name:m.name, calories:m.calories, waterMl:m.waterMl })) } : r));
+
+    // Don't overwrite existing patient profile with default profile
+    setRequests(requests.map(r =>
+      r.id === id
+        ? {
+            ...r,
+            status: r.status === "rejected" ? "accepted" : r.status,
+            plan: wp.days.flatMap(d =>
+              d.meals.map(m => ({
+                time: m.time,
+                name: m.name,
+                calories: m.calories,
+                waterMl: m.waterMl,
+              }))
+            ),
+          }
+        : r
+    ));
     return wp;
   };
 
@@ -110,35 +126,81 @@ export default function DoctorPatientView() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={()=>navigate("/doctor/patients")}>Back to Patients</Button>
           <Button variant="outline" onClick={()=>navigate(`/doctor/generator/recipes?pid=${req.userId}`)}>Recipe Generator</Button>
-          <Button onClick={()=>navigate(`/doctor/generator/diet?pid=${req.userId}`)}>Generate Diet Plan</Button>
+          <Button onClick={regen}>Generate Diet Plan</Button>
         </div>
       </div>
 
+      {/* Patient Details */}
       <Card>
         <CardHeader>
           <CardTitle>Patient Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <div className="text-xs text-muted-foreground">Age</div>
-              <div className="font-medium">{req.patientProfile?.age ?? "—"}</div>
+          {req.patientProfile ? (
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+              <div>
+                <div className="text-xs text-muted-foreground">Name</div>
+                <div className="font-medium">{req.patientProfile.name}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Age</div>
+                <div className="font-medium">{req.patientProfile.age ?? "—"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Gender</div>
+                <div className="font-medium">{req.patientProfile.gender ?? "—"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Dosha</div>
+                <div className="font-medium">{req.patientProfile.dosha ?? "—"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Height</div>
+                <div className="font-medium">{req.patientProfile.height ?? "—"} {req.patientProfile.height ? "cm" : ""}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Weight</div>
+                <div className="font-medium">{req.patientProfile.weight ?? "—"} {req.patientProfile.weight ? "kg" : ""}</div>
+              </div>
+              <div className="sm:col-span-2 md:col-span-3">
+                <div className="text-xs text-muted-foreground">Lifestyle</div>
+                <div className="font-medium">{req.patientProfile.lifestyle || "—"}</div>
+              </div>
+              <div className="sm:col-span-2 md:col-span-3">
+                <div className="text-xs text-muted-foreground">Medical History</div>
+                <div className="font-medium">{req.patientProfile.medicalHistory || "—"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Allergies</div>
+                <div className="font-medium">{req.patientProfile.allergies || "—"}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Conditions</div>
+                <div className="font-medium">{req.patientProfile.conditions || "—"}</div>
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Gender</div>
-              <div className="font-medium">{req.patientProfile?.gender ?? "—"}</div>
+          ) : (
+            <div className="space-y-3">
+              {/* Show basic patient info even without full profile */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <div className="text-xs text-muted-foreground">Name</div>
+                  <div className="font-medium">{req.patientName || `Patient ${req.userId}`}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Dosha</div>
+                  <div className="font-medium">{req.patientDosha || "—"}</div>
+                </div>
+              </div>
+              <div className="mt-3 rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                Complete patient profile not available. Add medical details to personalize the plan.
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Dosha</div>
-              <div className="font-medium">{req.patientDosha ?? "—"}</div>
-            </div>
-          </div>
-          {!req.patientProfile && (
-            <div className="mt-3 rounded-md bg-muted p-3 text-sm text-muted-foreground">Not sufficient data. Add medical details to personalize the plan.</div>
           )}
         </CardContent>
       </Card>
 
+      {/* Weekly Plan */}
       {weekly ? (
         <>
           <Card>
