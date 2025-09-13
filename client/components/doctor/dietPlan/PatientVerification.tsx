@@ -9,14 +9,21 @@ type Props = {
   onVerified: (name: string) => void;
 };
 
-export default function PatientVerification({ requests, patientId, setPatientId, onVerified }: Props) {
+export default function PatientVerification({
+  requests,
+  patientId,
+  setPatientId,
+  onVerified,
+}: Props) {
   const [fetchedName, setFetchedName] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchPatient = () => {
     const q = patientId.trim().toLowerCase();
-    const match = requests.find((r) =>
-      r.userId.toLowerCase() === q || (r.patientName || "").toLowerCase().includes(q),
+    const match = requests.find(
+      (r) =>
+        r.userId.toLowerCase() === q ||
+        (r.patientName || "").toLowerCase().includes(q),
     );
     if (match) {
       setFetchedName(match.patientName || `Patient ${match.userId}`);
@@ -41,7 +48,9 @@ export default function PatientVerification({ requests, patientId, setPatientId,
           placeholder="Enter Patient ID or Name"
           value={patientId}
           onChange={(e) => setPatientId(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') fetchPatient(); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") fetchPatient();
+          }}
         />
         <Button onClick={fetchPatient}>Fetch Patient</Button>
       </div>
@@ -67,7 +76,9 @@ export default function PatientVerification({ requests, patientId, setPatientId,
           </div>
         </div>
       )}
-      {fetchError && <div className="mt-3 text-sm text-destructive">{fetchError}</div>}
+      {fetchError && (
+        <div className="mt-3 text-sm text-destructive">{fetchError}</div>
+      )}
     </div>
   );
 }

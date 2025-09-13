@@ -16,9 +16,25 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { MessageCircle, Salad, ScanLine, Stethoscope, ChefHat, BarChart3, LayoutDashboard, LogOut, Users } from "lucide-react";
+import {
+  MessageCircle,
+  Salad,
+  ScanLine,
+  Stethoscope,
+  ChefHat,
+  BarChart3,
+  LayoutDashboard,
+  LogOut,
+  Users,
+} from "lucide-react";
 import React from "react";
 import { useAppState } from "@/context/app-state";
 import { ChatWidget } from "@/components/app/ChatWidget";
@@ -33,8 +49,16 @@ export const AppLayout: React.FC = () => {
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
         { to: "/doctor/patients", label: "Patients", icon: Users },
-        { to: "/doctor/generator/diet", label: "Diet Plan Generator", icon: Salad },
-        { to: "/doctor/generator/recipes", label: "Recipe Generator", icon: ChefHat },
+        {
+          to: "/doctor/generator/diet",
+          label: "Diet Plan Generator",
+          icon: Salad,
+        },
+        {
+          to: "/doctor/generator/recipes",
+          label: "Recipe Generator",
+          icon: ChefHat,
+        },
         { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
       ]
     : [
@@ -63,13 +87,18 @@ export const AppLayout: React.FC = () => {
             <SidebarMenu>
               {menu.map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.to}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.to}
+                  >
                     <NavLink
                       to={item.to}
                       className={({ isActive }) =>
                         cn(
                           "flex items-center gap-3 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition-all",
-                          isActive ? "bg-gray-100 font-semibold text-gray-900" : ""
+                          isActive
+                            ? "bg-gray-100 font-semibold text-gray-900"
+                            : "",
                         )
                       }
                     >
@@ -92,8 +121,12 @@ export const AppLayout: React.FC = () => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <div className="text-sm font-medium text-gray-900">{currentUser?.name || "Guest"}</div>
-                <div className="text-xs text-gray-500">{currentUser?.role ?? "unauthenticated"}</div>
+                <div className="text-sm font-medium text-gray-900">
+                  {currentUser?.name || "Guest"}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {currentUser?.role ?? "unauthenticated"}
+                </div>
               </div>
             </div>
             <Button
@@ -137,11 +170,18 @@ const Topbar: React.FC = () => {
       <div className="flex items-center gap-3">
         <Sheet>
           <SheetTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400">
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400"
+            >
               <MessageCircle className="h-4 w-4" /> Assistant
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[480px] p-0 bg-white/80 backdrop-blur-sm border border-gray-200">
+          <SheetContent
+            side="right"
+            className="w-[480px] p-0 bg-white/80 backdrop-blur-sm border border-gray-200"
+          >
             <SheetHeader className="sr-only">
               <SheetTitle>Assistant</SheetTitle>
             </SheetHeader>
