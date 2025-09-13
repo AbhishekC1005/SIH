@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAppState } from "@/context/app-state";
 import PatientVerification from "@/components/doctor/dietPlan/PatientVerification";
@@ -17,11 +17,12 @@ export default function DoctorDietGenerator() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Optional pid from patient view
+  // Optional pid from patient view or query string
   const passedPid = location.state?.pid as string | undefined;
+  const pidFromQuery = new URLSearchParams(location.search).get("pid") || undefined;
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [patientId, setPatientId] = useState(passedPid ?? "");
+  const [patientId, setPatientId] = useState(passedPid ?? pidFromQuery ?? "");
   const [patientName, setPatientName] = useState("");
 
   // Quiz inputs
@@ -35,6 +36,14 @@ export default function DoctorDietGenerator() {
   const [detail, setDetail] = useState<{ di: number; mi: number } | null>(null);
 
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100;
+
+  // Keep input in sync if route changes
+  useEffect(() => {
+    const s = (location.state as any)?.pid as string | undefined;
+    const q = new URLSearchParams(location.search).get("pid") || undefined;
+    const next = s ?? q;
+    if (next && next !== patientId) setPatientId(next);
+  }, [location]);
 
   const recommend = useMemo(() => {
     const water = activity === "High" ? 3000 : activity === "Moderate" ? 2500 : 2000;
