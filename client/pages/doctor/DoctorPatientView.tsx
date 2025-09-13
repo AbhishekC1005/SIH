@@ -126,7 +126,7 @@ export default function DoctorPatientView() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={()=>navigate("/doctor/patients")}>Back to Patients</Button>
           <Button variant="outline" onClick={()=>navigate(`/doctor/generator/recipes?pid=${req.userId}`)}>Recipe Generator</Button>
-          <Button onClick={regen}>Generate Diet Plan</Button>
+          <Button onClick={() => navigate("/doctor/generator/diet", { state: { pid: req.userId } })}>Generate Diet Plan</Button>
         </div>
       </div>
 
