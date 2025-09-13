@@ -356,6 +356,16 @@ export default function DoctorDietGenerator() {
             </Button>
           </div>
           {fetchError && <div className="mt-3 text-sm text-destructive">{fetchError}</div>}
+          {fetchedName && (
+            <div className="mt-3 rounded-md border bg-secondary/30 p-3">
+              <div className="font-medium">{fetchedName}</div>
+              <div className="mt-2 text-sm">Is this the correct patient?</div>
+              <div className="mt-2 flex gap-2">
+                <Button size="sm" onClick={() => { setStep(2); setConfirmOpen(false); }}>Yes</Button>
+                <Button size="sm" variant="outline" onClick={() => { setFetchedName(null); setPatientId(""); setConfirmOpen(false); }}>No</Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
