@@ -14,15 +14,16 @@ export default function PatientVerification({ requests, patientId, setPatientId,
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchPatient = () => {
-    const match = requests.find(
-      (r) => r.userId.toLowerCase() === patientId.trim().toLowerCase()
+    const q = patientId.trim().toLowerCase();
+    const match = requests.find((r) =>
+      r.userId.toLowerCase() === q || (r.patientName || "").toLowerCase().includes(q),
     );
     if (match) {
       setFetchedName(match.patientName || `Patient ${match.userId}`);
       setFetchError(null);
     } else {
       setFetchedName(null);
-      setFetchError("No patient found with that ID. Please re-enter.");
+      setFetchError("No patient found. Try full ID or part of the name.");
     }
   };
 
@@ -30,9 +31,10 @@ export default function PatientVerification({ requests, patientId, setPatientId,
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
         <Input
-          placeholder="Enter Patient ID"
+          placeholder="Enter Patient ID or Name"
           value={patientId}
           onChange={(e) => setPatientId(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') fetchPatient(); }}
         />
         <Button onClick={fetchPatient}>Fetch Patient</Button>
       </div>
