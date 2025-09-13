@@ -80,8 +80,9 @@ export default function DoctorDietGenerator() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const fetchPatient = () => {
+    const q = patientId.trim().toLowerCase();
     const match = requests.find(
-      (r) => r.userId.toLowerCase() === patientId.trim().toLowerCase(),
+      (r) => r.userId.toLowerCase() === q || (r.patientName || "").toLowerCase().includes(q),
     );
     if (match) {
       setFetchedName(match.patientName || `Patient ${match.userId}`);
@@ -89,7 +90,7 @@ export default function DoctorDietGenerator() {
       setConfirmOpen(true);
     } else {
       setFetchedName(null);
-      setFetchError("No patient found with that ID. Please re-enter.");
+      setFetchError("No patient found. Try full ID or part of the name.");
       setConfirmOpen(false);
     }
   };
