@@ -104,11 +104,14 @@ export default function DoctorDietGenerator() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border bg-card p-6 shadow-sm flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">Diet Plan Generator</h1>
-        <div className="w-48">
-          <Progress value={progress} />
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Diet Plan Generator</h1>
+          <div className="w-48">
+            <Progress value={progress} />
+          </div>
         </div>
+        <p className="mt-2 text-sm text-muted-foreground">Search by Patient ID or Name to verify the patient, then proceed.</p>
       </div>
 
       {/* Step 1 */}
