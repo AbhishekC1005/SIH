@@ -9,30 +9,48 @@ type Props = {
   onVerified: (name: string) => void;
 };
 
-export default function PatientVerification({ requests, patientId, setPatientId, onVerified }: Props) {
+export default function PatientVerification({
+  requests,
+  patientId,
+  setPatientId,
+  onVerified,
+}: Props) {
   const [fetchedName, setFetchedName] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchPatient = () => {
+    const q = patientId.trim().toLowerCase();
     const match = requests.find(
-      (r) => r.userId.toLowerCase() === patientId.trim().toLowerCase()
+      (r) =>
+        r.userId.toLowerCase() === q ||
+        (r.patientName || "").toLowerCase().includes(q),
     );
     if (match) {
       setFetchedName(match.patientName || `Patient ${match.userId}`);
       setFetchError(null);
     } else {
       setFetchedName(null);
-      setFetchError("No patient found with that ID. Please re-enter.");
+      setFetchError("No patient found. Try full ID or part of the name.");
     }
   };
+
+  useEffect(() => {
+    if (patientId && !fetchedName && !fetchError) {
+      fetchPatient();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId]);
 
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
         <Input
-          placeholder="Enter Patient ID"
+          placeholder="Enter Patient ID or Name"
           value={patientId}
           onChange={(e) => setPatientId(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") fetchPatient();
+          }}
         />
         <Button onClick={fetchPatient}>Fetch Patient</Button>
       </div>
@@ -58,7 +76,9 @@ export default function PatientVerification({ requests, patientId, setPatientId,
           </div>
         </div>
       )}
-      {fetchError && <div className="mt-3 text-sm text-destructive">{fetchError}</div>}
+      {fetchError && (
+        <div className="mt-3 text-sm text-destructive">{fetchError}</div>
+      )}
     </div>
   );
 }

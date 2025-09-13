@@ -4,7 +4,14 @@ import { useAppState } from "@/context/app-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function DoctorRecipeGenerator() {
   const navigate = useNavigate();
@@ -35,8 +42,11 @@ export default function DoctorRecipeGenerator() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
 
   const fetchPatient = () => {
+    const q = patientId.trim().toLowerCase();
     const match = requests.find(
-      (r) => r.userId.toLowerCase() === patientId.trim().toLowerCase(),
+      (r) =>
+        r.userId.toLowerCase() === q ||
+        (r.patientName || "").toLowerCase().includes(q),
     );
     if (match) {
       setFetchedName(match.patientName || `Patient ${match.userId}`);
@@ -44,7 +54,7 @@ export default function DoctorRecipeGenerator() {
       setConfirmed(false);
     } else {
       setFetchedName(null);
-      setFetchError("No patient found with that ID. Please re-enter.");
+      setFetchError("No patient found. Try full ID or part of the name.");
       setConfirmed(false);
     }
   };
@@ -87,15 +97,20 @@ export default function DoctorRecipeGenerator() {
 
   const onGenerate = () => {
     if (!confirmed || !mealName.trim()) return;
-    setRecipe(generateSingle(mealName.trim()))
+    setRecipe(generateSingle(mealName.trim()));
   };
 
   return (
     <div className="space-y-4">
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Recipe Generator</h1>
-          <p className="text-muted-foreground">Enter Patient ID, confirm, then provide a meal name to get a single detailed recipe</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Recipe Generator
+          </h1>
+          <p className="text-muted-foreground">
+            Enter Patient ID, confirm, then provide a meal name to get a single
+            detailed recipe
+          </p>
         </div>
       </div>
 
@@ -106,9 +121,12 @@ export default function DoctorRecipeGenerator() {
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
             <Input
-              placeholder="Enter Patient ID"
+              placeholder="Enter Patient ID or Name"
               value={patientId}
               onChange={(e) => setPatientId(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") fetchPatient();
+              }}
             />
             <Button onClick={fetchPatient}>Fetch Patient</Button>
           </div>
@@ -182,7 +200,8 @@ export default function DoctorRecipeGenerator() {
                     <TableCell>{recipe.fat} g</TableCell>
                     <TableCell>{recipe.vitamins.join(", ")}</TableCell>
                     <TableCell>
-                      Rasa {recipe.ayur.rasa}, Virya {recipe.ayur.virya}, Vipaka {recipe.ayur.vipaka}, Guna {recipe.ayur.guna.join(", ")}
+                      Rasa {recipe.ayur.rasa}, Virya {recipe.ayur.virya}, Vipaka{" "}
+                      {recipe.ayur.vipaka}, Guna {recipe.ayur.guna.join(", ")}
                     </TableCell>
                   </TableRow>
                 </TableBody>
