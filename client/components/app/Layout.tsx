@@ -142,6 +142,9 @@ const Topbar: React.FC = () => {
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[480px] p-0 bg-white/80 backdrop-blur-sm border border-gray-200">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Assistant</SheetTitle>
+            </SheetHeader>
             <ChatWidget mode="panel" />
           </SheetContent>
         </Sheet>
