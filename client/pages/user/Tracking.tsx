@@ -329,8 +329,8 @@ export default function Tracking() {
   console.log('Chart data:', week);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-emerald-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen w-full bg-gradient-to-br from-sky-50 via-white to-emerald-50 p-4 sm:p-6 overflow-x-hidden">
+      <div className="w-full mx-auto space-y-4 sm:space-y-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -338,14 +338,10 @@ export default function Tracking() {
             <h1 className="text-3xl font-bold text-gray-900">Health Tracking</h1>
             <p className="text-gray-600 mt-1">Monitor your daily wellness progress</p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="bg-white/80 backdrop-blur-sm border-gray-200">Share</Button>
-            <Button variant="outline" className="bg-white/80 backdrop-blur-sm border-gray-200">Export</Button>
-          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-semibold text-gray-700 flex items-center gap-2">
@@ -419,7 +415,7 @@ export default function Tracking() {
         </div>
 
         {/* Charts */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 w-full">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
@@ -428,7 +424,7 @@ export default function Tracking() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 w-full">
+              <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={week} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>

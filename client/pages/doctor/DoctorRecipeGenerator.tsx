@@ -120,7 +120,8 @@ export default function DoctorRecipeGenerator() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-6 py-8">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-emerald-50 p-4 sm:p-6 overflow-x-hidden">
+      <div className="w-full max-w-[1800px] mx-auto space-y-8">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -212,7 +213,7 @@ export default function DoctorRecipeGenerator() {
             variants={itemVariants}
             className={!confirmed ? "opacity-50 pointer-events-none" : ""}
           >
-            <Card className="border-border shadow-sm">
+            <Card className="border-0 shadow-lg overflow-hidden w-full">
               <CardHeader>
                 <CardTitle className="text-lg">Recipe Request</CardTitle>
                 <CardDescription>
@@ -259,8 +260,8 @@ export default function DoctorRecipeGenerator() {
                 variants={itemVariants}
                 exit={{ opacity: 0, y: 20 }}
               >
-                <Card className="border-primary/20 shadow-md overflow-hidden">
-                  <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 border-b">
+                <Card className="border-0 shadow-lg overflow-hidden w-full">
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-slate-100">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <h2 className="text-2xl font-bold text-foreground">{recipe.name}</h2>
@@ -283,8 +284,8 @@ export default function DoctorRecipeGenerator() {
                     </div>
                   </div>
                   
-                  <CardContent className="p-6">
-                    <div className="grid gap-6 md:grid-cols-2">
+                  <CardContent className="p-6 bg-white">
+                    <div className="grid gap-8 md:grid-cols-2">
                       <div>
                         <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                           <Utensils className="h-5 w-5 text-accent" />
@@ -362,7 +363,7 @@ export default function DoctorRecipeGenerator() {
                           ))}
                         </ol>
                         
-                        <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-border">
+                        <div className="mt-8 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-slate-100">
                           <h4 className="font-medium mb-2 flex items-center gap-2">
                             <Info className="h-4 w-4 text-primary" />
                             Serving Suggestion
@@ -395,6 +396,7 @@ export default function DoctorRecipeGenerator() {
           </motion.div>
         </motion.div>
       </motion.div>
+      </div>
     </div>
   );
 }

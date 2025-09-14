@@ -93,25 +93,65 @@ export default function Dashboard() {
   // const consultedDoctorIds = requests.map(r => r.doctorId);
   // const consultedDoctors = doctors.filter(d => consultedDoctorIds.includes(d.id));
 
+  const statCards = [
+    { 
+      title: "Dosha", 
+      icon: Bot, 
+      value: currentUser?.dosha || "Unclassified", 
+      subtitle: "Complete quiz to personalize",
+      bgGradient: "from-emerald-500 to-teal-400",
+      iconColor: "text-white"
+    },
+    { 
+      title: "Water Intake", 
+      icon: Droplet, 
+      value: `${progress.waterMl} / ${progress.waterGoalMl} ml`, 
+      subtitle: "Track hydration",
+      bgGradient: "from-blue-500 to-cyan-400",
+      iconColor: "text-white"
+    },
+    { 
+      title: "Meals", 
+      icon: Salad, 
+      value: `${progress.mealsTaken}/${progress.mealsPlanned}`, 
+      subtitle: "Monitor meals",
+      bgGradient: "from-amber-500 to-yellow-400",
+      iconColor: "text-white"
+    },
+    { 
+      title: "Last Plan", 
+      icon: ChefHat, 
+      value: dietPlan ? dietPlan.date : "None", 
+      subtitle: "Generate a plan to get started",
+      bgGradient: "from-rose-500 to-pink-400",
+      iconColor: "text-white"
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-emerald-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 sm:p-6 overflow-x-hidden">
+      <div className="w-full mx-auto space-y-4 sm:space-y-6">
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[{ title: "Dosha", icon: Bot, value: currentUser?.dosha || "Unclassified", subtitle: "Complete quiz to personalize" },
-            { title: "Water Intake", icon: Droplet, value: `${progress.waterMl} / ${progress.waterGoalMl} ml`, subtitle: "Track hydration" },
-            { title: "Meals", icon: Salad, value: `${progress.mealsTaken}/${progress.mealsPlanned}`, subtitle: "Monitor meals" },
-            { title: "Last Plan", icon: ChefHat, value: dietPlan ? dietPlan.date : "None", subtitle: "Generate a plan to get started" }
-          ].map((item, index) => (
-            <motion.div key={index} variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-                  <item.icon className="h-4 w-4 text-muted-foreground" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {statCards.map((item, index) => (
+            <motion.div 
+              key={index} 
+              variants={cardVariants} 
+              initial="hidden" 
+              animate="visible" 
+              whileHover="hover"
+            >
+              <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${item.bgGradient} rounded-full -mr-12 -mt-12 opacity-10`}></div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                  <CardTitle className="text-sm font-medium text-slate-700">{item.title}</CardTitle>
+                  <div className={`p-2 rounded-lg bg-gradient-to-br ${item.bgGradient} ${item.iconColor} shadow-md`}>
+                    <item.icon className="h-4 w-4" />
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{item.value}</div>
-                  <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                <CardContent className="relative z-10">
+                  <div className="text-2xl font-bold text-slate-800">{item.value}</div>
+                  <p className="text-xs text-slate-500">{item.subtitle}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -119,15 +159,23 @@ export default function Dashboard() {
         </div>
 
         {/* Main Section: Left Hydration / Right Doctors + Actions */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 w-full">
           {/* Left: Weekly Hydration */}
           <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle>Weekly Hydration</CardTitle>
+            <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-slate-800">Weekly Hydration</CardTitle>
+                    <p className="text-xs text-slate-500 mt-1">Track your daily water intake</p>
+                  </div>
+                  <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <Droplet className="h-5 w-5 text-blue-500" />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] w-full">
+                <div className="h-[280px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={chartData}
@@ -135,8 +183,8 @@ export default function Dashboard() {
                     >
                       <defs>
                         <linearGradient id="colorWater" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                          <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.1}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
@@ -159,21 +207,23 @@ export default function Dashboard() {
                       <Area 
                         type="monotone" 
                         dataKey="water" 
-                        stroke="#3b82f6" 
+                        stroke="#0ea5e9" 
                         fillOpacity={1} 
                         fill="url(#colorWater)" 
-                        strokeWidth={2}
+                        strokeWidth={2.5}
                         dot={{
                           fill: 'white',
-                          stroke: '#3b82f6',
+                          stroke: '#0ea5e9',
                           strokeWidth: 2,
-                          r: 4
+                          r: 4,
+                          strokeDasharray: '0'
                         }}
                         activeDot={{
                           fill: 'white',
-                          stroke: '#3b82f6',
+                          stroke: '#0ea5e9',
                           strokeWidth: 2,
-                          r: 6
+                          r: 6,
+                          strokeDasharray: '0'
                         }}
                       />
                     </AreaChart>
@@ -187,9 +237,17 @@ export default function Dashboard() {
           <div className="space-y-4">
             {/* Consulted Doctors */}
             <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <CardTitle>Consulted Doctors</CardTitle>
+              <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="border-b border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-slate-800">Consulted Doctors</CardTitle>
+                      <p className="text-xs text-slate-500 mt-1">Your healthcare providers</p>
+                    </div>
+                    <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                      <Stethoscope className="h-5 w-5 text-emerald-500" />
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {consultedDoctors.length === 0 ? (
