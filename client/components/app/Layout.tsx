@@ -146,7 +146,7 @@ export const AppLayout: React.FC = () => {
                   <SheetTitle>User Profile</SheetTitle>
                 </SheetHeader>
                 <div className="relative">
-                  <div className="h-28 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
+                  <div className="h-32 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
                   <div className="-mt-10 px-6 pb-4 flex items-end gap-4">
                     <Avatar className="h-16 w-16 ring-4 ring-white shadow-md">
                       <AvatarFallback>
