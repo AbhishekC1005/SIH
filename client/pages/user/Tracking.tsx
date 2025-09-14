@@ -28,7 +28,7 @@ export default function Tracking(){
     calories: 1800+Math.round(Math.random()*700)
   })),[]);
 
-  const COLORS = ["#06b6d4","#10b981","#64748b"];
+  const COLORS = ["#06b6d4","#f59e0b","#64748b"];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-emerald-50 p-6">
@@ -181,22 +181,22 @@ export default function Tracking(){
             <CardHeader>
               <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                 <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                Sleep Quality
+                Daily Calories
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={{ sleep:{label:"Hours", color:"#10b981"} }} className="h-64">
+              <ChartContainer config={{ calories:{label:"Calories", color:"#f59e0b"} }} className="h-64 w-full">
                 <LineChart data={week}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="day" axisLine={false} tickLine={false} className="text-sm" />
                   <YAxis hide />
                   <Line 
                     type="monotone" 
-                    dataKey="sleep" 
-                    stroke="#10b981" 
+                    dataKey="calories" 
+                    stroke="#f59e0b" 
                     strokeWidth={3} 
-                    dot={{ fill: "#10b981", strokeWidth: 2, r: 6 }}
-                    activeDot={{ r: 8, stroke: "#10b981", strokeWidth: 2, fill: "#fff" }}
+                    dot={{ fill: "#f59e0b", strokeWidth: 2, r: 6 }}
+                    activeDot={{ r: 8, stroke: "#f59e0b", strokeWidth: 2, fill: "#fff" }}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
                 </LineChart>
