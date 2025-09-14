@@ -16,7 +16,7 @@ export default defineConfig({
   },
   server: {
     host: "::",
-    port: 8080,
+    port: 9999,
     fs: {
       // The `allow` option is now more concise as you don't need to specify client directory
       // since the dev server's root is the project root by default
