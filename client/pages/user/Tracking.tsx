@@ -152,7 +152,7 @@ export default function Tracking(){
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={{ water:{label:"Water (ml)", color:"#06b6d4"} }} className="h-64">
+              <ChartContainer config={{ water:{label:"Water (ml)", color:"#06b6d4"} }} className="h-64 w-full">
                 <AreaChart data={week}>
                   <defs>
                     <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
