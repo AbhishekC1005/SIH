@@ -16,6 +16,7 @@ import { ArrowLeft } from "lucide-react";
 
 export default function DoctorProfile() {
   const { currentUser, doctorProfile, setDoctorProfile } = useAppState();
+  const navigate = useNavigate();
   const [form, setForm] = useState(doctorProfile || null);
 
   useEffect(() => setForm(doctorProfile || null), [doctorProfile]);
