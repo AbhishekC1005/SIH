@@ -147,7 +147,11 @@ export const AppLayout: React.FC = () => {
                   <SheetTitle>My Profile</SheetTitle>
                 </SheetHeader>
                 <div className="p-4">
-                  <UserProfile />
+                  {currentUser?.role === "doctor" ? (
+                    <DoctorProfile />
+                  ) : (
+                    <UserProfile />
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
