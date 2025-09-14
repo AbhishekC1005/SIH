@@ -15,8 +15,8 @@ export default defineConfig({
     outDir: "dist", // Vite's default output directory
   },
   server: {
-    host: "::",
-    port: 8080,
+    host: "0.0.0.0",
+    port: 9999,
     fs: {
       // The `allow` option is now more concise as you don't need to specify client directory
       // since the dev server's root is the project root by default

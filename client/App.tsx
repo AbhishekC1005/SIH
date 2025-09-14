@@ -19,9 +19,11 @@ import DoctorPatients from "./pages/doctor/DoctorPatients.tsx";
 import DoctorPatientView from "./pages/doctor/DoctorPatientView.tsx";
 import DoctorDietGenerator from "../archieve/DoctorDietGenerator.tsx";
 import DoctorRecipeGenerator from "./pages/doctor/DoctorRecipeGenerator.tsx";
+import DoctorProfile from "./pages/doctor/DoctorProfile.tsx";
 import Tracking from "./pages/user/Tracking.tsx";
 import Recipes from "./pages/user/Recipes.tsx";
 import Scan from "./pages/user/Scan.tsx";
+import UserProfile from "./pages/user/UserProfile.tsx";
 import { AppLayout } from "./components/app/Layout";
 import { AppStateProvider, useAppState } from "@/context/app-state";
 import { lazy, Suspense } from "react";
@@ -68,6 +70,7 @@ const AppRoutes = () => (
     >
       <Route element={<UserGuard />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<UserProfile />} />
         <Route path="/tracking" element={<Tracking />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/scan" element={<Scan />} />
@@ -76,6 +79,7 @@ const AppRoutes = () => (
         <Route path="/doctor" element={<DoctorDashboard />} />
         <Route path="/doctor/patients" element={<DoctorPatients />} />
         <Route path="/doctor/patients/:id" element={<DoctorPatientView />} />
+        <Route path="/doctor/profile" element={<DoctorProfile />} />
         <Route
           path="/doctor/generator/diet"
           element={<DoctorDietGenerator />}

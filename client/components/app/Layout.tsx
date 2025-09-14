@@ -34,6 +34,7 @@ import {
   LayoutDashboard,
   LogOut,
   Users,
+  User as UserIcon,
 } from "lucide-react";
 import React from "react";
 import { useAppState } from "@/context/app-state";
@@ -48,6 +49,7 @@ export const AppLayout: React.FC = () => {
   const menu = isDoctor
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
+        { to: "/doctor/profile", label: "Profile", icon: UserIcon },
         { to: "/doctor/patients", label: "Patients", icon: Users },
         {
           to: "/doctor/generator/diet",
@@ -63,6 +65,7 @@ export const AppLayout: React.FC = () => {
       ]
     : [
         { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { to: "/profile", label: "Profile", icon: UserIcon },
         { to: "/tracking", label: "Tracking", icon: BarChart3 },
         { to: "/recipes", label: "Recipes", icon: ChefHat },
         { to: "/scan", label: "Scan", icon: ScanLine },
