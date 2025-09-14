@@ -39,6 +39,7 @@ import {
 import React from "react";
 import { useAppState } from "@/context/app-state";
 import { ChatWidget } from "@/components/app/ChatWidget";
+import UserProfile from "@/pages/user/UserProfile";
 
 export const AppLayout: React.FC = () => {
   const { currentUser, setCurrentUser } = useAppState();
@@ -117,21 +118,40 @@ export const AppLayout: React.FC = () => {
 
         <SidebarFooter className="border-t border-gray-200 p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-9 w-9 bg-gray-200">
-                <AvatarFallback>
-                  {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="text-sm font-medium text-gray-900">
-                  {currentUser?.name || "Guest"}
+            <Sheet>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+                >
+                  <Avatar className="h-9 w-9 bg-gray-200">
+                    <AvatarFallback>
+                      {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-gray-900">
+                      {currentUser?.name || "Guest"}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {currentUser?.role ?? "unauthenticated"}
+                    </div>
+                  </div>
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-[720px] max-w-[95vw] p-0 bg-white/80 backdrop-blur-sm border border-gray-200 overflow-auto"
+              >
+                <SheetHeader className="border-b px-4 py-3">
+                  <SheetTitle>My Profile</SheetTitle>
+                </SheetHeader>
+                <div className="p-4">
+                  <UserProfile />
                 </div>
-                <div className="text-xs text-gray-500">
-                  {currentUser?.role ?? "unauthenticated"}
-                </div>
-              </div>
-            </div>
+              </SheetContent>
+            </Sheet>
+
             <Button
               variant="ghost"
               size="icon"

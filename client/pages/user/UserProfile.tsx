@@ -238,13 +238,36 @@ export default function UserProfile() {
           <CardTitle>Medical Reports</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm text-muted-foreground">
-              Add links to PDFs or images. Click to view.
+              Add links to PDFs or images, or upload files. Click to view.
             </div>
-            <Button size="sm" onClick={addDocument}>
-              Add Report
-            </Button>
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept="application/pdf,image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !form) return;
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const dataUrl = String(reader.result || "");
+                    const type = file.type.includes("pdf") ? ("pdf" as const) : ("image" as const);
+                    const next = [
+                      ...((form.documents as { name: string; url: string; type?: "pdf" | "image" }[]) || []),
+                      { name: file.name, url: dataUrl, type },
+                    ];
+                    setForm({ ...form, documents: next });
+                  };
+                  reader.readAsDataURL(file);
+                  e.currentTarget.value = "";
+                }}
+                className="max-w-[240px]"
+              />
+              <Button size="sm" onClick={addDocument}>
+                Add Report
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             {(form.documents || []).map((doc, idx) => (
@@ -262,7 +285,7 @@ export default function UserProfile() {
                   }}
                 />
                 <Input
-                  placeholder="https://..."
+                  placeholder="https://... or data URL"
                   value={doc.url}
                   onChange={(e) => {
                     const next = [...(form.documents || [])];
