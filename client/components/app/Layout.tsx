@@ -140,7 +140,7 @@ export const AppLayout: React.FC = () => {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-screen max-w-none h-svh p-0 bg-white/90 backdrop-blur-md border border-gray-200"
+                className="w-screen max-w-none h-svh p-0 bg-white/90 backdrop-blur-md border border-gray-200 flex flex-col"
               >
                 <SheetHeader className="sr-only">
                   <SheetTitle>User Profile</SheetTitle>
