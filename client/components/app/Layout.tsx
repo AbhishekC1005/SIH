@@ -140,7 +140,7 @@ export const AppLayout: React.FC = () => {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[860px] max-w-[98vw] p-0 bg-white/90 backdrop-blur-md border border-gray-200 overflow-auto"
+                className="w-screen max-w-none h-svh p-0 bg-white/90 backdrop-blur-md border border-gray-200"
               >
                 <SheetHeader className="sr-only">
                   <SheetTitle>User Profile</SheetTitle>
@@ -163,7 +163,7 @@ export const AppLayout: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className="p-4">
+                <div className="p-4 pt-2 flex-1 overflow-auto">
                   {currentUser?.role === "doctor" ? (
                     <DoctorProfile />
                   ) : (
