@@ -21,11 +21,11 @@ export default function Tracking(){
     return ()=>clearInterval(id);
   }, [reminders]);
 
-  const week = useMemo(()=>Array.from({length:7}).map((_,i)=>({ 
-    day:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i], 
-    water: 1200+Math.round(Math.random()*1200), 
-    meals: 2+Math.round(Math.random()*1), 
-    sleep: 6+Math.round(Math.random()*3) 
+  const week = useMemo(()=>Array.from({length:7}).map((_,i)=>({
+    day:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][i],
+    water: 1200+Math.round(Math.random()*1200),
+    meals: 2+Math.round(Math.random()*1),
+    calories: 1800+Math.round(Math.random()*700)
   })),[]);
 
   const COLORS = ["#06b6d4","#10b981","#64748b"];
