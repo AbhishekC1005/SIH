@@ -51,7 +51,6 @@ export const AppLayout: React.FC = () => {
   const menu = isDoctor
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
-        { to: "/doctor/profile", label: "Profile", icon: UserIcon },
         { to: "/doctor/patients", label: "Patients", icon: Users },
         {
           to: "/doctor/generator/diet",
@@ -67,7 +66,6 @@ export const AppLayout: React.FC = () => {
       ]
     : [
         { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/profile", label: "Profile", icon: UserIcon },
         { to: "/tracking", label: "Tracking", icon: BarChart3 },
         { to: "/recipes", label: "Recipes", icon: ChefHat },
         { to: "/scan", label: "Scan", icon: ScanLine },
@@ -142,11 +140,26 @@ export const AppLayout: React.FC = () => {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[720px] max-w-[95vw] p-0 bg-white/80 backdrop-blur-sm border border-gray-200 overflow-auto"
+                className="w-[860px] max-w-[98vw] p-0 bg-white/90 backdrop-blur-md border border-gray-200 overflow-auto"
               >
-                <SheetHeader className="border-b px-4 py-3">
-                  <SheetTitle>My Profile</SheetTitle>
-                </SheetHeader>
+                <div className="relative">
+                  <div className="h-28 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
+                  <div className="-mt-10 px-6 pb-4 flex items-end gap-4">
+                    <Avatar className="h-16 w-16 ring-4 ring-white shadow-md">
+                      <AvatarFallback>
+                        {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="text-lg font-semibold text-gray-900">
+                        {currentUser?.name || "Guest"}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {currentUser?.email} • {currentUser?.role}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div className="p-4">
                   {currentUser?.role === "doctor" ? (
                     <DoctorProfile />
