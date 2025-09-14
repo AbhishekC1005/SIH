@@ -40,6 +40,7 @@ import React from "react";
 import { useAppState } from "@/context/app-state";
 import { ChatWidget } from "@/components/app/ChatWidget";
 import UserProfile from "@/pages/user/UserProfile";
+import DoctorProfile from "@/pages/doctor/DoctorProfile";
 
 export const AppLayout: React.FC = () => {
   const { currentUser, setCurrentUser } = useAppState();
