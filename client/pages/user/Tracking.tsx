@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +9,7 @@ import { AreaChart, Area, CartesianGrid, XAxis, YAxis, LineChart, Line, Tooltip,
 import { useAppState } from "@/context/app-state";
 
 // Icons
-import { Utensils } from "lucide-react";
+import { Utensils, CalendarDays, Info } from "lucide-react";
 
 // Meal plan types
 interface Meal {
@@ -17,6 +17,37 @@ interface Meal {
   lunch: string;
   snack: string;
   dinner: string;
+}
+
+interface MealDetails {
+  title: string;
+  description: string;
+  ayurvedicInfo: {
+    dosha: string;
+    qualities: string;
+    benefits: string[];
+    bestTime: string;
+    spices: string;
+  };
+  modernNutrition: {
+    calories: number;
+    protein: string;
+    carbs: string;
+    fat: string;
+    fiber?: string;
+    omega3?: string;
+    probiotics?: string;
+    keyNutrients: string[];
+  };
+  ingredients: string[];
+  instructions: string[];
+}
+
+type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+interface MealPlan {
+  day: string;
+  meals: Meal;
 }
 
 interface MealPlan {
@@ -36,7 +67,13 @@ const weeklyMealPlan: MealPlan[] = [
 ];
 
 // MealCard component
-const MealCard = ({ title, content, icon }) => (
+interface MealCardProps {
+  title: string;
+  content: string;
+  icon: React.ReactNode;
+}
+
+const MealCard = ({ title, content, icon }: MealCardProps) => (
   <motion.div whileHover={{ scale: 1.03 }} transition={{ type: "spring", stiffness: 300 }}>
     <Card className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
       <CardHeader className="pb-2">
@@ -55,10 +92,25 @@ const MealCard = ({ title, content, icon }) => (
 );
 
 export default function Tracking() {
-  const { progress, updateWater, markMealTaken } = useAppState();
+  const appState = useAppState();
   const [reminders, setReminders] = useState(false);
-  const [notif, setNotif] = useState(null);
-  const [selectedDayIndex, setSelectedDayIndex] = useState(new Date().getDay() - 1 >= 0 ? new Date().getDay() - 1 : 6);
+  const [notif, setNotif] = useState<string | null>(null);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(
+    new Date().getDay() - 1 >= 0 ? new Date().getDay() - 1 : 6
+  );
+  const [selectedMeal, setSelectedMeal] = useState<{type: MealType; details: MealDetails} | null>(null);
+  
+  // Provide default values if appState is not available yet
+  const { 
+    progress = { 
+      waterMl: 0, 
+      waterGoalMl: 2000, 
+      mealsTaken: 0, 
+      mealsPlanned: 3 
+    },
+    updateWater = () => {},
+    markMealTaken = () => {}
+  } = appState || {};
 
   useEffect(() => {
     if (!reminders) return;
@@ -68,14 +120,209 @@ export default function Tracking() {
     return () => clearInterval(id);
   }, [reminders]);
 
+  // Meal details data with Ayurvedic and modern information
+  const mealDetails: Record<MealType, MealDetails> = {
+    breakfast: {
+      title: "Oatmeal with Fruits",
+      description: "A healthy and filling breakfast option with complex carbs and natural sugars.",
+      ayurvedicInfo: {
+        dosha: "Balances Vata and Pitta, increases Kapha in excess",
+        qualities: "Heavy, moist, nourishing, grounding",
+        benefits: [
+          "Supports Ojas (vitality)",
+          "Nourishes Dhatus (tissues)",
+          "Promotes digestive strength (Agni)",
+          "Calms the nervous system"
+        ],
+        bestTime: "6-10 AM (Kapha time of day)",
+        spices: "Cinnamon, cardamom, nutmeg (enhance digestion)"
+      },
+      modernNutrition: {
+        calories: 350,
+        protein: "12g",
+        carbs: "58g",
+        fat: "6g",
+        fiber: "8g",
+        keyNutrients: [
+          "Rich in Beta-glucan (supports heart health)",
+          "High in B-vitamins (energy production)",
+          "Good source of antioxidants",
+          "Low glycemic index (sustained energy)"
+        ]
+      },
+      ingredients: [
+        "1/2 cup rolled oats",
+        "1 cup almond milk",
+        "1/2 banana, sliced",
+        "1/4 cup mixed berries",
+        "1 tbsp honey",
+        "1 tbsp chia seeds"
+      ],
+      instructions: [
+        "Bring almond milk to a boil in a small saucepan.",
+        "Add oats and reduce heat to medium-low.",
+        "Cook for 5-7 minutes, stirring occasionally.",
+        "Top with banana, berries, honey, and chia seeds."
+      ]
+    },
+    lunch: {
+      title: "Quinoa Salad Bowl",
+      description: "A protein-packed lunch with fresh vegetables and a light dressing.",
+      ayurvedicInfo: {
+        dosha: "Balances Vata and Pitta, light for Kapha",
+        qualities: "Light, dry, cooling, easy to digest",
+        benefits: [
+          "Supports Pitta dosha with cooling ingredients",
+          "Enhances digestive fire (Agni)",
+          "Provides sustained energy",
+          "Detoxifying properties"
+        ],
+        bestTime: "12-2 PM (Pitta time of day)",
+        spices: "Cumin, coriander, fennel (aids digestion)"
+      },
+      modernNutrition: {
+        calories: 420,
+        protein: "18g",
+        carbs: "55g",
+        fat: "15g",
+        fiber: "12g",
+        keyNutrients: [
+          "Complete plant-based protein",
+          "Rich in iron and magnesium",
+          "High in fiber and antioxidants",
+          "Source of healthy omega-3s"
+        ]
+      },
+      ingredients: [
+        "1/2 cup cooked quinoa",
+        "1 cup mixed greens",
+        "1/4 avocado, diced",
+        "1/4 cup cherry tomatoes, halved",
+        "1/4 cup cucumber, diced",
+        "2 tbsp feta cheese",
+        "1 tbsp olive oil",
+        "1 tbsp lemon juice"
+      ],
+      instructions: [
+        "Combine all vegetables and quinoa in a bowl.",
+        "Whisk together olive oil, lemon juice, salt, and pepper.",
+        "Drizzle dressing over the salad and toss to combine.",
+        "Top with feta cheese and serve."
+      ]
+    },
+    dinner: {
+      title: "Grilled Salmon with Vegetables",
+      description: "A light yet satisfying dinner rich in omega-3s and fiber.",
+      ayurvedicInfo: {
+        dosha: "Balances Vata, good for Kapha, use in moderation for Pitta",
+        qualities: "Heavy, oily, nourishing, building",
+        benefits: [
+          "Nourishes all Dhatus (tissues)",
+          "Supports nervous system",
+          "Promotes Ojas (vital essence)",
+          "Strengthens reproductive system"
+        ],
+        bestTime: "6-8 PM (Vata time of day)",
+        spices: "Turmeric, black pepper, ginger (aids digestion)"
+      },
+      modernNutrition: {
+        calories: 480,
+        protein: "35g",
+        carbs: "30g",
+        fat: "25g",
+        omega3: "2.5g",
+        keyNutrients: [
+          "Excellent source of Omega-3 fatty acids",
+          "High in Vitamin D and B12",
+          "Rich in selenium and potassium",
+          "Anti-inflammatory properties"
+        ]
+      },
+      ingredients: [
+        "1 salmon fillet (6oz)",
+        "1 cup mixed vegetables (broccoli, carrots, bell peppers)",
+        "1 tbsp olive oil",
+        "1/2 lemon, sliced",
+        "1 clove garlic, minced",
+        "1/2 tsp dried herbs",
+        "Salt and pepper to taste"
+      ],
+      instructions: [
+        "Preheat grill to medium-high heat.",
+        "Season salmon with salt, pepper, and herbs.",
+        "Toss vegetables with olive oil, garlic, salt, and pepper.",
+        "Grill salmon for 4-5 minutes per side.",
+        "Grill vegetables until tender, about 8-10 minutes.",
+        "Serve with lemon wedges."
+      ]
+    },
+    snack: {
+      title: "Spiced Yogurt with Nuts",
+      description: "A protein-rich snack with digestive spices to keep you full between meals.",
+      ayurvedicInfo: {
+        dosha: "Balances Vata and Pitta when spiced, can increase Kapha",
+        qualities: "Cooling, heavy, moist, nourishing",
+        benefits: [
+          "Supports gut health (contains probiotics)",
+          "Nourishes all tissues (Dhatus)",
+          "Calms Pitta dosha",
+          "Enhances digestion when spiced"
+        ],
+        bestTime: "Mid-morning or afternoon",
+        spices: "Cumin, ginger, black salt (aids digestion)"
+      },
+      modernNutrition: {
+        calories: 280,
+        protein: "15g",
+        carbs: "22g",
+        fat: "14g",
+        probiotics: "Live active cultures",
+        keyNutrients: [
+          "High in calcium and protein",
+          "Source of probiotics for gut health",
+          "Provides healthy fats and protein",
+          "Contains magnesium and B-vitamins"
+        ]
+      },
+      ingredients: [
+        "1 cup Greek yogurt",
+        "1/4 cup mixed nuts (almonds, walnuts)",
+        "1 tsp honey",
+        "1/4 tsp cinnamon"
+      ],
+      instructions: [
+        "Scoop Greek yogurt into a bowl.",
+        "Top with mixed nuts.",
+        "Drizzle with honey and sprinkle with cinnamon."
+      ]
+    }
+  };
+
+  // Define the week data with proper typing
   const week = useMemo(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    return days.map(day => ({
-      day,
-      calories: 1800 + Math.round(Math.random() * 1000), // Random calories between 1800-2800
-      water: 1000 + Math.round(Math.random() * 2000), // Random water between 1000-3000ml
-      goal: 2200
-    }));
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 (Sunday) to 6 (Saturday)
+    const todayShort = today.toLocaleDateString('en-US', { weekday: 'short' });
+    
+    return days.map((day, idx) => {
+      const date = new Date(today);
+      // Adjust to start the week from Monday
+      const dayOffset = currentDay === 0 ? 6 : currentDay - 1; // Convert to 0 (Monday) to 6 (Sunday)
+      date.setDate(today.getDate() - dayOffset + idx);
+      
+      return {
+        day,
+        date: date.getDate(),
+        month: date.getMonth() + 1,
+        monthName: date.toLocaleString('default', { month: 'short' }),
+        calories: 1800 + Math.round(Math.random() * 1000),
+        water: 1000 + Math.round(Math.random() * 2000),
+        goal: 2200,
+        isToday: day === todayShort,
+        fullDate: date
+      };
+    });
   }, []);
 
   // Debug: Log the chart data
@@ -291,44 +538,251 @@ export default function Tracking() {
           </Card>
         </div>
 
-        {/* Diet Plan Section with Updated Styling */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Weekly Diet Plan</h2>
+        {/* Enhanced Diet Plan Section */}
+        <div className="mt-16">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Weekly Diet Plan</h2>
+              <p className="text-gray-500 text-sm mt-1">Your personalized meal plan for the week</p>
+            </div>
+            <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full">
+              <span className="text-blue-600 text-sm font-medium">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+              </span>
+            </div>
+          </div>
           
-          <div className="flex gap-3 mb-6 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            {weeklyMealPlan.map((plan, idx) => (
-              <button
-                key={plan.day}
-                className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 ${
-                  selectedDayIndex === idx 
-                    ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-                onClick={() => setSelectedDayIndex(idx)}
-              >
-                {plan.day}
-              </button>
-            ))}
+          {/* Day Selector */}
+          <div className="relative">
+            <div className="flex gap-2 mb-8 pb-2 overflow-x-auto">
+              {week.map(({ day, date, monthName, isToday }, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedDayIndex(idx)}
+                  className={`flex flex-col items-center px-4 py-3 rounded-xl transition-all duration-200 min-w-[75px] relative group ${
+                    selectedDayIndex === idx
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-lg'
+                      : 'bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                  }`}
+                >
+                  <span className={`text-xs font-medium ${
+                    selectedDayIndex === idx ? 'text-blue-50' : 'text-gray-500'
+                  }`}>
+                    {day}
+                  </span>
+                  <span className={`mt-0.5 text-lg font-semibold ${
+                    selectedDayIndex === idx ? 'text-white' : 'text-gray-800'
+                  }`}>
+                    {date}
+                  </span>
+                  <span className={`text-xs mt-0.5 ${
+                    selectedDayIndex === idx ? 'text-blue-100' : 'text-gray-400'
+                  }`}>
+                    {monthName}
+                  </span>
+                  {isToday && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full border-2 border-white"></span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {/* Meal Cards */}
           <motion.div 
             key={selectedDayIndex}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
+            className="space-y-6"
           >
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-blue-500" />
+              {weeklyMealPlan[selectedDayIndex].day}'s Meals
+            </h3>
+            
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
               {Object.entries(weeklyMealPlan[selectedDayIndex].meals).map(([mealType, description]) => (
-                <MealCard
+                <div 
                   key={mealType}
-                  title={mealType}
-                  content={description}
-                  icon={<Utensils size={20} />}
-                />
+                  className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-gray-800 capitalize">{mealType}</h4>
+                      <div className="p-2 bg-blue-50 rounded-lg">
+                        <Utensils className="w-5 h-5 text-blue-500" />
+                      </div>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {description}
+                    </p>
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-500">
+                        {mealType === 'breakfast' ? '8:00 AM' : 
+                         mealType === 'lunch' ? '1:00 PM' :
+                         mealType === 'snack' ? '4:00 PM' : '8:00 PM'}
+                      </span>
+                      <button 
+                        onClick={() => setSelectedMeal({ 
+  type: mealType as MealType, 
+  details: mealDetails[mealType as MealType] 
+})}
+                        className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        View Details →
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </motion.div>
         </div>
+
+        {/* Meal Details Modal */}
+        <AnimatePresence>
+          {selectedMeal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              >
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-800 capitalize">{selectedMeal.details.title}</h3>
+                      <p className="text-gray-600 mt-1">{selectedMeal.details.description}</p>
+                    </div>
+                    <button 
+                      onClick={() => setSelectedMeal(null)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-8 mt-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        Modern Nutrition
+                      </h4>
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Calories</span>
+                            <span className="font-medium">{selectedMeal.details.modernNutrition.calories}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Protein</span>
+                            <span className="font-medium">{selectedMeal.details.modernNutrition.protein}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Carbs</span>
+                            <span className="font-medium">{selectedMeal.details.modernNutrition.carbs}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Fat</span>
+                            <span className="font-medium">{selectedMeal.details.modernNutrition.fat}</span>
+                          </div>
+                        </div>
+                        <div className="pt-2 mt-2 border-t border-gray-200">
+                          <h5 className="text-sm font-medium text-gray-700 mb-1">Key Nutrients:</h5>
+                          <ul className="text-xs text-gray-600 space-y-1">
+                            {selectedMeal.details.modernNutrition.keyNutrients.map((nutrient: string, i: number) => (
+                              <li key={i} className="flex items-start">
+                                <span className="text-blue-500 mr-1.5">•</span>
+                                {nutrient}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          Ayurvedic Perspective
+                        </h4>
+                        <div className="bg-amber-50 rounded-lg p-4 mb-6">
+                          <div className="space-y-3">
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">Dosha: </span>
+                              <span className="text-sm text-gray-800">{selectedMeal.details.ayurvedicInfo.dosha}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">Qualities: </span>
+                              <span className="text-sm text-gray-800">{selectedMeal.details.ayurvedicInfo.qualities}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">Best Time: </span>
+                              <span className="text-sm text-gray-800">{selectedMeal.details.ayurvedicInfo.bestTime}</span>
+                            </div>
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">Recommended Spices: </span>
+                              <span className="text-sm text-gray-800">{selectedMeal.details.ayurvedicInfo.spices}</span>
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-medium text-gray-700 mb-1">Benefits:</h5>
+                              <ul className="text-xs text-gray-700 space-y-1">
+                                {selectedMeal.details.ayurvedicInfo.benefits.map((benefit: string, i: number) => (
+                                  <li key={i} className="flex items-start">
+                                    <span className="text-amber-500 mr-1.5">•</span>
+                                    {benefit}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Ingredients
+                      </h4>
+                      <ul className="space-y-2">
+                        {selectedMeal.details.ingredients.map((ingredient: string, i: number) => (
+                          <li key={i} className="flex items-start">
+                            <span className="text-green-500 mr-2">•</span>
+                            <span className="text-gray-700">{ingredient}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="mt-6">
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                        </svg>
+                        Instructions
+                      </h4>
+                      <ol className="space-y-3">
+                        {selectedMeal.details.instructions.map((step: string, i: number) => (
+                          <li key={i} className="flex">
+                            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm font-medium mr-3">
+                              {i + 1}
+                            </span>
+                            <span className="text-gray-700">{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
