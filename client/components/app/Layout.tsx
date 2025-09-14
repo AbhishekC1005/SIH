@@ -142,6 +142,9 @@ export const AppLayout: React.FC = () => {
                 side="right"
                 className="w-[860px] max-w-[98vw] p-0 bg-white/90 backdrop-blur-md border border-gray-200 overflow-auto"
               >
+                <SheetHeader className="sr-only">
+                  <SheetTitle>User Profile</SheetTitle>
+                </SheetHeader>
                 <div className="relative">
                   <div className="h-28 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
                   <div className="-mt-10 px-6 pb-4 flex items-end gap-4">
