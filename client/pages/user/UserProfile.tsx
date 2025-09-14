@@ -61,6 +61,11 @@ export default function UserProfile() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" className="gap-2" onClick={() => navigate('/dashboard')}>
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+        </Button>
+      </div>
       {/* Profile Information */}
       <Card className="bg-white/80 backdrop-blur-sm border shadow-sm">
         <CardHeader className="pb-2">
