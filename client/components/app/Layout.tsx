@@ -34,6 +34,7 @@ import {
   LayoutDashboard,
   LogOut,
   Users,
+  User as UserIcon,
 } from "lucide-react";
 import React from "react";
 import { useAppState } from "@/context/app-state";
