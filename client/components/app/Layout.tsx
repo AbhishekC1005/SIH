@@ -39,8 +39,6 @@ import {
 import React from "react";
 import { useAppState } from "@/context/app-state";
 import { ChatWidget } from "@/components/app/ChatWidget";
-import UserProfile from "@/pages/user/UserProfile";
-import DoctorProfile from "@/pages/doctor/DoctorProfile";
 
 export const AppLayout: React.FC = () => {
   const { currentUser, setCurrentUser } = useAppState();
@@ -117,61 +115,25 @@ export const AppLayout: React.FC = () => {
 
         <SidebarFooter className="border-t border-gray-200 p-4">
           <div className="flex items-center justify-between">
-            <Sheet>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
-                >
-                  <Avatar className="h-9 w-9 bg-gray-200">
-                    <AvatarFallback>
-                      {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-left">
-                    <div className="text-sm font-medium text-gray-900">
-                      {currentUser?.name || "Guest"}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {currentUser?.role ?? "unauthenticated"}
-                    </div>
-                  </div>
-                </button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="w-screen max-w-none h-svh p-0 bg-white/90 backdrop-blur-md border border-gray-200 flex flex-col"
-              >
-                <SheetHeader className="sr-only">
-                  <SheetTitle>User Profile</SheetTitle>
-                </SheetHeader>
-                <div className="relative">
-                  <div className="h-32 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
-                  <div className="-mt-10 px-6 pb-4 flex items-end gap-4">
-                    <Avatar className="h-16 w-16 ring-4 ring-white shadow-md">
-                      <AvatarFallback>
-                        {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="text-lg font-semibold text-gray-900">
-                        {currentUser?.name || "Guest"}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {currentUser?.email} • {currentUser?.role}
-                      </div>
-                    </div>
-                  </div>
+            <button
+              type="button"
+              onClick={() => navigate(currentUser?.role === "doctor" ? "/doctor/profile" : "/profile")}
+              className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+            >
+              <Avatar className="h-9 w-9 bg-gray-200">
+                <AvatarFallback>
+                  {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-left">
+                <div className="text-sm font-medium text-gray-900">
+                  {currentUser?.name || "Guest"}
                 </div>
-                <div className="p-4 pt-2 flex-1 overflow-auto">
-                  {currentUser?.role === "doctor" ? (
-                    <DoctorProfile />
-                  ) : (
-                    <UserProfile />
-                  )}
+                <div className="text-xs text-gray-500">
+                  {currentUser?.role ?? "unauthenticated"}
                 </div>
-              </SheetContent>
-            </Sheet>
+              </div>
+            </button>
 
             <Button
               variant="ghost"
