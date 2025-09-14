@@ -71,7 +71,7 @@ export const AppLayout: React.FC = () => {
 
   return (
     <SidebarProvider>
-      <Sidebar className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm w-64">
+      <Sidebar className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm">
         <SidebarHeader className="px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-md bg-emerald-500" />
