@@ -4,7 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function DoctorProfile() {
   const { currentUser, doctorProfile, setDoctorProfile } = useAppState();
@@ -14,7 +20,8 @@ export default function DoctorProfile() {
 
   if (!currentUser || !form) return null;
 
-  const onChange = (key: string, value: any) => setForm({ ...form, [key]: value });
+  const onChange = (key: string, value: any) =>
+    setForm({ ...form, [key]: value });
 
   return (
     <div className="space-y-4 p-2 sm:p-4">
@@ -25,15 +32,27 @@ export default function DoctorProfile() {
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label className="text-xs">Full Name</Label>
-            <Input value={form.name} onChange={(e) => onChange("name", e.target.value)} />
+            <Input
+              value={form.name}
+              onChange={(e) => onChange("name", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Age</Label>
-            <Input type="number" value={form.age ?? ""} onChange={(e) => onChange("age", e.target.value ? Number(e.target.value) : null)} />
+            <Input
+              type="number"
+              value={form.age ?? ""}
+              onChange={(e) =>
+                onChange("age", e.target.value ? Number(e.target.value) : null)
+              }
+            />
           </div>
           <div>
             <Label className="text-xs">Gender</Label>
-            <Select value={form.gender || ""} onValueChange={(v) => onChange("gender", (v || null))}>
+            <Select
+              value={form.gender || ""}
+              onValueChange={(v) => onChange("gender", v || null)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -46,37 +65,61 @@ export default function DoctorProfile() {
           </div>
           <div>
             <Label className="text-xs">License No.</Label>
-            <Input value={form.licenseNo} onChange={(e) => onChange("licenseNo", e.target.value)} />
+            <Input
+              value={form.licenseNo}
+              onChange={(e) => onChange("licenseNo", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Hospital/Clinic</Label>
-            <Input value={form.hospital} onChange={(e) => onChange("hospital", e.target.value)} />
+            <Input
+              value={form.hospital}
+              onChange={(e) => onChange("hospital", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Specialty</Label>
-            <Input value={form.specialty} onChange={(e) => onChange("specialty", e.target.value)} />
+            <Input
+              value={form.specialty}
+              onChange={(e) => onChange("specialty", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Phone</Label>
-            <Input value={form.phone} onChange={(e) => onChange("phone", e.target.value)} />
+            <Input
+              value={form.phone}
+              onChange={(e) => onChange("phone", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => onChange("email", e.target.value)} />
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => onChange("email", e.target.value)}
+            />
           </div>
           <div className="sm:col-span-2">
             <Label className="text-xs">Address</Label>
-            <Input value={form.address || ""} onChange={(e) => onChange("address", e.target.value)} />
+            <Input
+              value={form.address || ""}
+              onChange={(e) => onChange("address", e.target.value)}
+            />
           </div>
           <div className="sm:col-span-2">
             <Label className="text-xs">Bio</Label>
-            <Input value={form.bio || ""} onChange={(e) => onChange("bio", e.target.value)} />
+            <Input
+              value={form.bio || ""}
+              onChange={(e) => onChange("bio", e.target.value)}
+            />
           </div>
         </CardContent>
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={() => form && setDoctorProfile(form)}>Save Changes</Button>
+        <Button onClick={() => form && setDoctorProfile(form)}>
+          Save Changes
+        </Button>
       </div>
     </div>
   );

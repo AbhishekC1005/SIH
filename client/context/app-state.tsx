@@ -109,7 +109,11 @@ export const samplePatientProfile: PatientProfile = {
 };
 
 // Helper function to create a basic patient profile from minimal data
-const createBasicPatientProfile = (id: string, name: string, dosha?: "Vata" | "Pitta" | "Kapha" | null): PatientProfile => ({
+const createBasicPatientProfile = (
+  id: string,
+  name: string,
+  dosha?: "Vata" | "Pitta" | "Kapha" | null,
+): PatientProfile => ({
   id: id,
   name: name,
   dosha: dosha || null,
@@ -215,9 +219,24 @@ function makePlan(
   return meals && Array.isArray(meals) && meals.length
     ? (meals as any)
     : [
-        { time: "08:00", name: "Warm Spiced Oats", calories: 320, waterMl: 250 },
-        { time: "12:30", name: "Moong Dal Khichdi", calories: 450, waterMl: 300 },
-        { time: "19:30", name: "Steamed Veg + Ghee", calories: 420, waterMl: 250 },
+        {
+          time: "08:00",
+          name: "Warm Spiced Oats",
+          calories: 320,
+          waterMl: 250,
+        },
+        {
+          time: "12:30",
+          name: "Moong Dal Khichdi",
+          calories: 450,
+          waterMl: 300,
+        },
+        {
+          time: "19:30",
+          name: "Steamed Veg + Ghee",
+          calories: 420,
+          waterMl: 250,
+        },
       ];
 }
 
@@ -239,9 +258,24 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
     load<DietPlan | null>("app:dietPlan", null),
   );
   const [doctors] = useState<Doctor[]>([
-    { id: "d1", name: "Dr. Anaya Verma", specialty: "Ayurvedic Diet", rating: 4.9 },
-    { id: "d2", name: "Dr. Rohan Mehta", specialty: "Digestive Health", rating: 4.7 },
-    { id: "d3", name: "Dr. Kavya Iyer", specialty: "Metabolic Care", rating: 4.8 },
+    {
+      id: "d1",
+      name: "Dr. Anaya Verma",
+      specialty: "Ayurvedic Diet",
+      rating: 4.9,
+    },
+    {
+      id: "d2",
+      name: "Dr. Rohan Mehta",
+      specialty: "Digestive Health",
+      rating: 4.7,
+    },
+    {
+      id: "d3",
+      name: "Dr. Kavya Iyer",
+      specialty: "Metabolic Care",
+      rating: 4.8,
+    },
   ]);
 
   const [requests, setRequests] = useState<ConsultRequest[]>(() => {
@@ -370,39 +404,50 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => save("app:notifications", notifications), [notifications]);
   useEffect(() => save("app:conversations", conversations), [conversations]);
 
-  const getUserProfileKey = () => `app:userProfile:${currentUser?.id || "anon"}`;
-  const getDoctorProfileKey = () => `app:doctorProfile:${currentUser?.id || "anon"}`;
+  const getUserProfileKey = () =>
+    `app:userProfile:${currentUser?.id || "anon"}`;
+  const getDoctorProfileKey = () =>
+    `app:doctorProfile:${currentUser?.id || "anon"}`;
 
   const [userProfile, _setUserProfile] = useState<PatientProfile | null>(() => {
     const cu = load<User | null>("app:currentUser", null);
     const key = `app:userProfile:${cu?.id || "anon"}`;
     return load<PatientProfile | null>(key, null);
   });
-  const [doctorProfile, _setDoctorProfile] = useState<DoctorSelfProfile | null>(() => {
-    const cu = load<User | null>("app:currentUser", null);
-    const key = `app:doctorProfile:${cu?.id || "anon"}`;
-    const fallback = cu && cu.role === "doctor"
-      ? {
-          id: cu.id,
-          name: cu.name,
-          age: null,
-          gender: null,
-          licenseNo: "",
-          hospital: "",
-          specialty: "",
-          phone: "",
-          email: cu.email,
-          address: "",
-          bio: "",
-        }
-      : null;
-    return load<DoctorSelfProfile | null>(key, fallback);
-  });
+  const [doctorProfile, _setDoctorProfile] = useState<DoctorSelfProfile | null>(
+    () => {
+      const cu = load<User | null>("app:currentUser", null);
+      const key = `app:doctorProfile:${cu?.id || "anon"}`;
+      const fallback =
+        cu && cu.role === "doctor"
+          ? {
+              id: cu.id,
+              name: cu.name,
+              age: null,
+              gender: null,
+              licenseNo: "",
+              hospital: "",
+              specialty: "",
+              phone: "",
+              email: cu.email,
+              address: "",
+              bio: "",
+            }
+          : null;
+      return load<DoctorSelfProfile | null>(key, fallback);
+    },
+  );
 
   useEffect(() => {
     if (!currentUser) return;
     if (currentUser.role === "user" && !userProfile) {
-      _setUserProfile(createBasicPatientProfile(`P-${currentUser.id}`, currentUser.name, currentUser.dosha || null));
+      _setUserProfile(
+        createBasicPatientProfile(
+          `P-${currentUser.id}`,
+          currentUser.name,
+          currentUser.dosha || null,
+        ),
+      );
     }
     if (currentUser.role === "doctor" && !doctorProfile) {
       _setDoctorProfile({
@@ -421,8 +466,12 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [currentUser]);
 
-  useEffect(() => { save(getUserProfileKey(), userProfile); }, [userProfile, currentUser]);
-  useEffect(() => { save(getDoctorProfileKey(), doctorProfile); }, [doctorProfile, currentUser]);
+  useEffect(() => {
+    save(getUserProfileKey(), userProfile);
+  }, [userProfile, currentUser]);
+  useEffect(() => {
+    save(getDoctorProfileKey(), doctorProfile);
+  }, [doctorProfile, currentUser]);
 
   const setUserProfile = (p: PatientProfile) => _setUserProfile(p);
   const setDoctorProfile = (p: DoctorSelfProfile) => _setDoctorProfile(p);

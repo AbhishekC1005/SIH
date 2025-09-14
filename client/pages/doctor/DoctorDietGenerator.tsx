@@ -7,7 +7,13 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -68,14 +74,82 @@ type Food = {
 };
 
 const FOOD_DB: Food[] = [
-  { name: "Moong Dal Khichdi", type: "Lunch", calories: 450, protein: 18, carbs: 78, fat: 8, ayur: { dosha: "Tridoshic", rasa: "Madhura", properties: ["Light", "Sattvic"] } },
-  { name: "Oats with Fruits", type: "Breakfast", calories: 350, protein: 12, carbs: 60, fat: 8, ayur: { dosha: "Pitta", rasa: "Madhura", properties: ["Cooling"] } },
-  { name: "Grilled Paneer Salad", type: "Dinner", calories: 420, protein: 25, carbs: 30, fat: 18, ayur: { dosha: "Kapha", rasa: "Madhura", properties: ["Light"] } },
-  { name: "Herbal Tea + Nuts", type: "Snack", calories: 180, protein: 6, carbs: 12, fat: 10, ayur: { dosha: "Vata", rasa: "Kashaya", properties: ["Warm"] } },
-  { name: "Chicken Curry with Rice", type: "Lunch", calories: 600, protein: 28, carbs: 80, fat: 18, ayur: { dosha: "Pitta", rasa: "Madhura", properties: ["Sattvic"] } },
-  { name: "Steamed Veg + Ghee", type: "Dinner", calories: 420, protein: 10, carbs: 45, fat: 16, ayur: { dosha: "Vata", rasa: "Madhura", properties: ["Grounding"] } },
-  { name: "Idli Sambhar", type: "Breakfast", calories: 320, protein: 10, carbs: 60, fat: 6, ayur: { dosha: "Tridoshic", rasa: "Amla", properties: ["Light"] } },
-  { name: "Curd Rice", type: "Lunch", calories: 500, protein: 12, carbs: 85, fat: 12, ayur: { dosha: "Pitta", rasa: "Amla", properties: ["Cooling"] } },
+  {
+    name: "Moong Dal Khichdi",
+    type: "Lunch",
+    calories: 450,
+    protein: 18,
+    carbs: 78,
+    fat: 8,
+    ayur: {
+      dosha: "Tridoshic",
+      rasa: "Madhura",
+      properties: ["Light", "Sattvic"],
+    },
+  },
+  {
+    name: "Oats with Fruits",
+    type: "Breakfast",
+    calories: 350,
+    protein: 12,
+    carbs: 60,
+    fat: 8,
+    ayur: { dosha: "Pitta", rasa: "Madhura", properties: ["Cooling"] },
+  },
+  {
+    name: "Grilled Paneer Salad",
+    type: "Dinner",
+    calories: 420,
+    protein: 25,
+    carbs: 30,
+    fat: 18,
+    ayur: { dosha: "Kapha", rasa: "Madhura", properties: ["Light"] },
+  },
+  {
+    name: "Herbal Tea + Nuts",
+    type: "Snack",
+    calories: 180,
+    protein: 6,
+    carbs: 12,
+    fat: 10,
+    ayur: { dosha: "Vata", rasa: "Kashaya", properties: ["Warm"] },
+  },
+  {
+    name: "Chicken Curry with Rice",
+    type: "Lunch",
+    calories: 600,
+    protein: 28,
+    carbs: 80,
+    fat: 18,
+    ayur: { dosha: "Pitta", rasa: "Madhura", properties: ["Sattvic"] },
+  },
+  {
+    name: "Steamed Veg + Ghee",
+    type: "Dinner",
+    calories: 420,
+    protein: 10,
+    carbs: 45,
+    fat: 16,
+    ayur: { dosha: "Vata", rasa: "Madhura", properties: ["Grounding"] },
+  },
+  {
+    name: "Idli Sambhar",
+    type: "Breakfast",
+    calories: 320,
+    protein: 10,
+    carbs: 60,
+    fat: 6,
+    ayur: { dosha: "Tridoshic", rasa: "Amla", properties: ["Light"] },
+  },
+  {
+    name: "Curd Rice",
+    type: "Lunch",
+    calories: 500,
+    protein: 12,
+    carbs: 85,
+    fat: 12,
+    ayur: { dosha: "Pitta", rasa: "Amla", properties: ["Cooling"] },
+  },
 ];
 
 export default function DoctorDietGenerator() {
@@ -105,13 +179,18 @@ export default function DoctorDietGenerator() {
   const [detail, setDetail] = useState<{ di: number; mi: number } | null>(null);
 
   // Editing and search state
-  const [editing, setEditing] = useState<{ di: number; mi: number } | null>(null);
+  const [editing, setEditing] = useState<{ di: number; mi: number } | null>(
+    null,
+  );
   const [search, setSearch] = useState("");
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return FOOD_DB.slice(0, 6);
     return FOOD_DB.filter(
-      (f) => f.name.toLowerCase().includes(q) || f.type.toLowerCase().includes(q) || (f.ayur.dosha || "").toLowerCase().includes(q),
+      (f) =>
+        f.name.toLowerCase().includes(q) ||
+        f.type.toLowerCase().includes(q) ||
+        (f.ayur.dosha || "").toLowerCase().includes(q),
     ).slice(0, 10);
   }, [search]);
 
@@ -159,7 +238,11 @@ export default function DoctorDietGenerator() {
           carbs: veg ? 78 : 80,
           fat: veg ? 8 : 18,
           vitamins: ["A", "B12"],
-          ayur: { dosha: veg ? "Tridoshic" : "Pitta", rasa: "Madhura", properties: ["Sattvic"] },
+          ayur: {
+            dosha: veg ? "Tridoshic" : "Pitta",
+            rasa: "Madhura",
+            properties: ["Sattvic"],
+          },
         },
         {
           type: "Dinner",
@@ -183,7 +266,10 @@ export default function DoctorDietGenerator() {
     if (!plan) return { perDay: [], avgCal: 0 };
     const perDay = plan.map((d) => ({
       date: d.day,
-      calories: d.meals.reduce((s: number, m: Meal) => s + (m.calories || 0), 0),
+      calories: d.meals.reduce(
+        (s: number, m: Meal) => s + (m.calories || 0),
+        0,
+      ),
     }));
     const avgCal = perDay.length
       ? Math.round(perDay.reduce((s, x) => s + x.calories, 0) / perDay.length)
@@ -280,12 +366,18 @@ export default function DoctorDietGenerator() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="text-sm text-muted-foreground">Click a meal to edit or replace from search.</div>
+                <div className="text-sm text-muted-foreground">
+                  Click a meal to edit or replace from search.
+                </div>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     onClick={() =>
-                      setPlan((p) => (p ? [...p, { day: `Day ${p.length + 1}`, meals: [] }] : p))
+                      setPlan((p) =>
+                        p
+                          ? [...p, { day: `Day ${p.length + 1}`, meals: [] }]
+                          : p,
+                      )
                     }
                   >
                     Add Day
@@ -312,13 +404,14 @@ export default function DoctorDietGenerator() {
                                         m.type === "Breakfast"
                                           ? "08:00"
                                           : m.type === "Lunch"
-                                          ? "12:30"
-                                          : m.type === "Snack"
-                                          ? "16:00"
-                                          : "19:30",
+                                            ? "12:30"
+                                            : m.type === "Snack"
+                                              ? "16:00"
+                                              : "19:30",
                                       name: m.name,
                                       calories: m.calories,
-                                      waterMl: m.type === "Snack" ? 200 : undefined,
+                                      waterMl:
+                                        m.type === "Snack" ? 200 : undefined,
                                     })),
                                   ),
                                 }
@@ -327,7 +420,9 @@ export default function DoctorDietGenerator() {
                         );
                         alert("Plan saved to patient");
                       } else {
-                        alert("No matching patient to save plan. Use exact User ID or patient name.");
+                        alert(
+                          "No matching patient to save plan. Use exact User ID or patient name.",
+                        );
                       }
                     }}
                   >
@@ -357,23 +452,49 @@ export default function DoctorDietGenerator() {
                             >
                               {day.day}
                               <div className="mt-2">
-                                <Button size="sm" variant="outline" onClick={() => {
-                                  setPlan((p) => p ? p.map((d, idx) => idx === di ? { ...d, meals: [...d.meals, {
-                                    type: "Snack",
-                                    name: "Herbal Tea + Nuts",
-                                    calories: 180,
-                                    protein: 6,
-                                    carbs: 12,
-                                    fat: 10,
-                                    vitamins: [],
-                                    ayur: { dosha: "Vata", rasa: "Kashaya", properties: ["Warm"] },
-                                  }] } : d) : p);
-                                }}>Add Meal</Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setPlan((p) =>
+                                      p
+                                        ? p.map((d, idx) =>
+                                            idx === di
+                                              ? {
+                                                  ...d,
+                                                  meals: [
+                                                    ...d.meals,
+                                                    {
+                                                      type: "Snack",
+                                                      name: "Herbal Tea + Nuts",
+                                                      calories: 180,
+                                                      protein: 6,
+                                                      carbs: 12,
+                                                      fat: 10,
+                                                      vitamins: [],
+                                                      ayur: {
+                                                        dosha: "Vata",
+                                                        rasa: "Kashaya",
+                                                        properties: ["Warm"],
+                                                      },
+                                                    },
+                                                  ],
+                                                }
+                                              : d,
+                                          )
+                                        : p,
+                                    );
+                                  }}
+                                >
+                                  Add Meal
+                                </Button>
                               </div>
                             </TableCell>
                           )}
                           <TableCell>
-                            {editing && editing.di === di && editing.mi === mi ? (
+                            {editing &&
+                            editing.di === di &&
+                            editing.mi === mi ? (
                               <Input
                                 value={m.name}
                                 onChange={(e) => {
@@ -384,7 +505,11 @@ export default function DoctorDietGenerator() {
                                           i1 === di
                                             ? {
                                                 ...d,
-                                                meals: d.meals.map((mm, i2) => (i2 === mi ? { ...mm, name: v } : mm)),
+                                                meals: d.meals.map((mm, i2) =>
+                                                  i2 === mi
+                                                    ? { ...mm, name: v }
+                                                    : mm,
+                                                ),
                                               }
                                             : d,
                                         )
@@ -414,13 +539,40 @@ export default function DoctorDietGenerator() {
                             )}
                           </TableCell>
                           <TableCell>
-                            {editing && editing.di === di && editing.mi === mi ? (
-                              <Select value={m.type} onValueChange={(v) => {
-                                setPlan((p) => p ? p.map((d,i1)=> i1===di ? { ...d, meals: d.meals.map((mm,i2)=> i2===mi ? { ...mm, type: v as Meal["type"] } : mm) } : d) : p);
-                              }}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
+                            {editing &&
+                            editing.di === di &&
+                            editing.mi === mi ? (
+                              <Select
+                                value={m.type}
+                                onValueChange={(v) => {
+                                  setPlan((p) =>
+                                    p
+                                      ? p.map((d, i1) =>
+                                          i1 === di
+                                            ? {
+                                                ...d,
+                                                meals: d.meals.map((mm, i2) =>
+                                                  i2 === mi
+                                                    ? {
+                                                        ...mm,
+                                                        type: v as Meal["type"],
+                                                      }
+                                                    : mm,
+                                                ),
+                                              }
+                                            : d,
+                                        )
+                                      : p,
+                                  );
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="Breakfast">Breakfast</SelectItem>
+                                  <SelectItem value="Breakfast">
+                                    Breakfast
+                                  </SelectItem>
                                   <SelectItem value="Lunch">Lunch</SelectItem>
                                   <SelectItem value="Snack">Snack</SelectItem>
                                   <SelectItem value="Dinner">Dinner</SelectItem>
@@ -431,14 +583,34 @@ export default function DoctorDietGenerator() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            {editing && editing.di === di && editing.mi === mi ? (
+                            {editing &&
+                            editing.di === di &&
+                            editing.mi === mi ? (
                               <Input
                                 className="text-right"
                                 type="number"
                                 value={m.calories}
                                 onChange={(e) => {
-                                  const v = Math.max(0, parseInt(e.target.value || "0", 10));
-                                  setPlan((p) => p ? p.map((d,i1)=> i1===di ? { ...d, meals: d.meals.map((mm,i2)=> i2===mi ? { ...mm, calories: v } : mm) } : d) : p);
+                                  const v = Math.max(
+                                    0,
+                                    parseInt(e.target.value || "0", 10),
+                                  );
+                                  setPlan((p) =>
+                                    p
+                                      ? p.map((d, i1) =>
+                                          i1 === di
+                                            ? {
+                                                ...d,
+                                                meals: d.meals.map((mm, i2) =>
+                                                  i2 === mi
+                                                    ? { ...mm, calories: v }
+                                                    : mm,
+                                                ),
+                                              }
+                                            : d,
+                                        )
+                                      : p,
+                                  );
                                 }}
                               />
                             ) : (
@@ -446,21 +618,74 @@ export default function DoctorDietGenerator() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            {editing && editing.di === di && editing.mi === mi ? (
+                            {editing &&
+                            editing.di === di &&
+                            editing.mi === mi ? (
                               <div className="flex justify-end gap-2">
-                                <Button size="sm" variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
-                                <Button size="sm" onClick={() => setEditing(null)}>Done</Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setEditing(null)}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setEditing(null)}
+                                >
+                                  Done
+                                </Button>
                               </div>
                             ) : (
                               <div className="flex justify-end gap-2">
-                                <Button size="sm" variant="outline" onClick={() => setEditing({ di, mi })}>Edit</Button>
-                                <Button size="sm" variant="outline" onClick={() => {
-                                  setSearch("");
-                                  setEditing({ di, mi });
-                                  const el = document.getElementById("food-search-input");
-                                  if (el) setTimeout(() => (el as HTMLInputElement).focus(), 0);
-                                }}>Search Food</Button>
-                                <Button size="sm" variant="outline" onClick={() => setPlan((p)=> p ? p.map((d,i1)=> i1===di ? { ...d, meals: d.meals.filter((_,i2)=> i2!==mi) } : d) : p)}>Remove</Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setEditing({ di, mi })}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSearch("");
+                                    setEditing({ di, mi });
+                                    const el =
+                                      document.getElementById(
+                                        "food-search-input",
+                                      );
+                                    if (el)
+                                      setTimeout(
+                                        () => (el as HTMLInputElement).focus(),
+                                        0,
+                                      );
+                                  }}
+                                >
+                                  Search Food
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    setPlan((p) =>
+                                      p
+                                        ? p.map((d, i1) =>
+                                            i1 === di
+                                              ? {
+                                                  ...d,
+                                                  meals: d.meals.filter(
+                                                    (_, i2) => i2 !== mi,
+                                                  ),
+                                                }
+                                              : d,
+                                          )
+                                        : p,
+                                    )
+                                  }
+                                >
+                                  Remove
+                                </Button>
                               </div>
                             )}
                           </TableCell>
@@ -473,23 +698,69 @@ export default function DoctorDietGenerator() {
 
               {editing && plan ? (
                 <div className="mt-4 rounded-lg border p-3">
-                  <div className="mb-2 text-sm font-medium">Search and replace meal</div>
+                  <div className="mb-2 text-sm font-medium">
+                    Search and replace meal
+                  </div>
                   <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] items-center">
-                    <Input id="food-search-input" placeholder="Search food (name, type, dosha)" value={search} onChange={(e)=> setSearch(e.target.value)} />
-                    <div className="text-right text-sm text-muted-foreground hidden sm:block">Results: {searchResults.length}</div>
-                    <Button variant="outline" onClick={()=> setSearch("")}>Clear</Button>
+                    <Input
+                      id="food-search-input"
+                      placeholder="Search food (name, type, dosha)"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                    <div className="text-right text-sm text-muted-foreground hidden sm:block">
+                      Results: {searchResults.length}
+                    </div>
+                    <Button variant="outline" onClick={() => setSearch("")}>
+                      Clear
+                    </Button>
                   </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     {searchResults.map((f, idx) => (
-                      <div key={idx} className="flex items-center justify-between gap-2 rounded-md border p-2">
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 rounded-md border p-2"
+                      >
                         <div>
                           <div className="font-medium">{f.name}</div>
-                          <div className="text-xs text-muted-foreground">{f.type} • {f.calories} kcal • {f.ayur.rasa} • {f.ayur.properties.join(", ")}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {f.type} • {f.calories} kcal • {f.ayur.rasa} •{" "}
+                            {f.ayur.properties.join(", ")}
+                          </div>
                         </div>
-                        <Button size="sm" onClick={() => {
-                          const { di, mi } = editing;
-                          setPlan((p)=> p ? p.map((d,i1)=> i1===di ? { ...d, meals: d.meals.map((mm,i2)=> i2===mi ? { ...mm, name: f.name, type: f.type, calories: f.calories, protein: f.protein, carbs: f.carbs, fat: f.fat, ayur: f.ayur } : mm) } : d) : p);
-                        }}>Use</Button>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const { di, mi } = editing;
+                            setPlan((p) =>
+                              p
+                                ? p.map((d, i1) =>
+                                    i1 === di
+                                      ? {
+                                          ...d,
+                                          meals: d.meals.map((mm, i2) =>
+                                            i2 === mi
+                                              ? {
+                                                  ...mm,
+                                                  name: f.name,
+                                                  type: f.type,
+                                                  calories: f.calories,
+                                                  protein: f.protein,
+                                                  carbs: f.carbs,
+                                                  fat: f.fat,
+                                                  ayur: f.ayur,
+                                                }
+                                              : mm,
+                                          ),
+                                        }
+                                      : d,
+                                  )
+                                : p,
+                            );
+                          }}
+                        >
+                          Use
+                        </Button>
                       </div>
                     ))}
                   </div>

@@ -5,7 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function UserProfile() {
   const { currentUser, userProfile, setUserProfile } = useAppState();
@@ -15,7 +21,10 @@ export default function UserProfile() {
     setForm(userProfile);
   }, [userProfile]);
 
-  const onChange = <K extends keyof PatientProfile>(key: K, value: PatientProfile[K]) => {
+  const onChange = <K extends keyof PatientProfile>(
+    key: K,
+    value: PatientProfile[K],
+  ) => {
     if (!form) return;
     setForm({ ...form, [key]: value });
   };
@@ -24,7 +33,10 @@ export default function UserProfile() {
     if (!form) return;
     setForm({
       ...form,
-      documents: [...(form.documents || []), { name: "New Document", url: "", type: "pdf" }],
+      documents: [
+        ...(form.documents || []),
+        { name: "New Document", url: "", type: "pdf" },
+      ],
     });
   };
 
@@ -38,9 +50,12 @@ export default function UserProfile() {
   const canEdit = useMemo(() => currentUser?.role === "user", [currentUser]);
 
   if (!currentUser) return null;
-  if (!form) return (
-    <div className="p-4">No profile found. Please create your profile first.</div>
-  );
+  if (!form)
+    return (
+      <div className="p-4">
+        No profile found. Please create your profile first.
+      </div>
+    );
 
   return (
     <div className="space-y-4 p-2 sm:p-4">
@@ -51,15 +66,26 @@ export default function UserProfile() {
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label className="text-xs">Patient ID</Label>
-            <Input value={form.id} onChange={(e) => onChange("id", e.target.value)} disabled={!canEdit} />
+            <Input
+              value={form.id}
+              onChange={(e) => onChange("id", e.target.value)}
+              disabled={!canEdit}
+            />
           </div>
           <div>
             <Label className="text-xs">Full Name</Label>
-            <Input value={form.name} onChange={(e) => onChange("name", e.target.value)} disabled={!canEdit} />
+            <Input
+              value={form.name}
+              onChange={(e) => onChange("name", e.target.value)}
+              disabled={!canEdit}
+            />
           </div>
           <div>
             <Label className="text-xs">Dosha</Label>
-            <Select value={form.dosha || ""} onValueChange={(v) => onChange("dosha", (v || null) as any)}>
+            <Select
+              value={form.dosha || ""}
+              onValueChange={(v) => onChange("dosha", (v || null) as any)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select dosha" />
               </SelectTrigger>
@@ -72,11 +98,20 @@ export default function UserProfile() {
           </div>
           <div>
             <Label className="text-xs">Age</Label>
-            <Input type="number" value={form.age ?? ""} onChange={(e) => onChange("age", e.target.value ? Number(e.target.value) : null)} />
+            <Input
+              type="number"
+              value={form.age ?? ""}
+              onChange={(e) =>
+                onChange("age", e.target.value ? Number(e.target.value) : null)
+              }
+            />
           </div>
           <div>
             <Label className="text-xs">Gender</Label>
-            <Select value={form.gender || ""} onValueChange={(v) => onChange("gender", (v || null) as any)}>
+            <Select
+              value={form.gender || ""}
+              onValueChange={(v) => onChange("gender", (v || null) as any)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
@@ -89,47 +124,94 @@ export default function UserProfile() {
           </div>
           <div>
             <Label className="text-xs">Phone</Label>
-            <Input value={form.phone} onChange={(e) => onChange("phone", e.target.value)} />
+            <Input
+              value={form.phone}
+              onChange={(e) => onChange("phone", e.target.value)}
+            />
           </div>
           <div className="sm:col-span-2">
             <Label className="text-xs">Address</Label>
-            <Input value={form.address} onChange={(e) => onChange("address", e.target.value)} />
+            <Input
+              value={form.address}
+              onChange={(e) => onChange("address", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Height (cm)</Label>
-            <Input type="number" value={form.height ?? ""} onChange={(e) => onChange("height", e.target.value ? Number(e.target.value) : null)} />
+            <Input
+              type="number"
+              value={form.height ?? ""}
+              onChange={(e) =>
+                onChange(
+                  "height",
+                  e.target.value ? Number(e.target.value) : null,
+                )
+              }
+            />
           </div>
           <div>
             <Label className="text-xs">Weight (kg)</Label>
-            <Input type="number" value={form.weight ?? ""} onChange={(e) => onChange("weight", e.target.value ? Number(e.target.value) : null)} />
+            <Input
+              type="number"
+              value={form.weight ?? ""}
+              onChange={(e) =>
+                onChange(
+                  "weight",
+                  e.target.value ? Number(e.target.value) : null,
+                )
+              }
+            />
           </div>
           <div className="sm:col-span-2">
             <Label className="text-xs">Lifestyle</Label>
-            <Textarea rows={2} value={form.lifestyle} onChange={(e) => onChange("lifestyle", e.target.value)} />
+            <Textarea
+              rows={2}
+              value={form.lifestyle}
+              onChange={(e) => onChange("lifestyle", e.target.value)}
+            />
           </div>
           <div className="sm:col-span-2">
             <Label className="text-xs">Medical History</Label>
-            <Textarea rows={2} value={form.medicalHistory} onChange={(e) => onChange("medicalHistory", e.target.value)} />
+            <Textarea
+              rows={2}
+              value={form.medicalHistory}
+              onChange={(e) => onChange("medicalHistory", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Allergies</Label>
-            <Input value={form.allergies} onChange={(e) => onChange("allergies", e.target.value)} />
+            <Input
+              value={form.allergies}
+              onChange={(e) => onChange("allergies", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Conditions</Label>
-            <Input value={form.conditions} onChange={(e) => onChange("conditions", e.target.value)} />
+            <Input
+              value={form.conditions}
+              onChange={(e) => onChange("conditions", e.target.value)}
+            />
           </div>
           <div className="sm:col-span-2">
             <Label className="text-xs">Medications</Label>
-            <Input value={form.medications} onChange={(e) => onChange("medications", e.target.value)} />
+            <Input
+              value={form.medications}
+              onChange={(e) => onChange("medications", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Sleep Pattern</Label>
-            <Input value={form.sleepPattern} onChange={(e) => onChange("sleepPattern", e.target.value)} />
+            <Input
+              value={form.sleepPattern}
+              onChange={(e) => onChange("sleepPattern", e.target.value)}
+            />
           </div>
           <div>
             <Label className="text-xs">Digestion</Label>
-            <Select value={(form.digestion as any) || ""} onValueChange={(v) => onChange("digestion", (v || null) as any)}>
+            <Select
+              value={(form.digestion as any) || ""}
+              onValueChange={(v) => onChange("digestion", (v || null) as any)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -142,7 +224,11 @@ export default function UserProfile() {
           </div>
           <div className="sm:col-span-2">
             <Label className="text-xs">Notes</Label>
-            <Textarea rows={3} value={form.notes} onChange={(e) => onChange("notes", e.target.value)} />
+            <Textarea
+              rows={3}
+              value={form.notes}
+              onChange={(e) => onChange("notes", e.target.value)}
+            />
           </div>
         </CardContent>
       </Card>
@@ -153,12 +239,19 @@ export default function UserProfile() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between">
-            <div className="text-sm text-muted-foreground">Add links to PDFs or images. Click to view.</div>
-            <Button size="sm" onClick={addDocument}>Add Report</Button>
+            <div className="text-sm text-muted-foreground">
+              Add links to PDFs or images. Click to view.
+            </div>
+            <Button size="sm" onClick={addDocument}>
+              Add Report
+            </Button>
           </div>
           <div className="space-y-2">
             {(form.documents || []).map((doc, idx) => (
-              <div key={idx} className="grid items-center gap-2 sm:grid-cols-[1fr_1fr_120px_auto]">
+              <div
+                key={idx}
+                className="grid items-center gap-2 sm:grid-cols-[1fr_1fr_120px_auto]"
+              >
                 <Input
                   placeholder="Name"
                   value={doc.name}
@@ -177,11 +270,14 @@ export default function UserProfile() {
                     setForm({ ...form, documents: next });
                   }}
                 />
-                <Select value={doc.type || "pdf"} onValueChange={(v) => {
-                  const next = [...(form.documents || [])];
-                  next[idx] = { ...doc, type: v as any };
-                  setForm({ ...form, documents: next });
-                }}>
+                <Select
+                  value={doc.type || "pdf"}
+                  onValueChange={(v) => {
+                    const next = [...(form.documents || [])];
+                    next[idx] = { ...doc, type: v as any };
+                    setForm({ ...form, documents: next });
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -191,8 +287,21 @@ export default function UserProfile() {
                   </SelectContent>
                 </Select>
                 <div className="flex items-center gap-2">
-                  <a className="text-sm text-primary underline" href={doc.url} target="_blank" rel="noreferrer">View</a>
-                  <Button variant="outline" size="sm" onClick={() => removeDocument(idx)}>Remove</Button>
+                  <a
+                    className="text-sm text-primary underline"
+                    href={doc.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View
+                  </a>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeDocument(idx)}
+                  >
+                    Remove
+                  </Button>
                 </div>
               </div>
             ))}
@@ -201,7 +310,9 @@ export default function UserProfile() {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={() => form && setUserProfile(form)}>Save Changes</Button>
+        <Button onClick={() => form && setUserProfile(form)}>
+          Save Changes
+        </Button>
       </div>
     </div>
   );
