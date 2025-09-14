@@ -43,6 +43,20 @@ export type Doctor = {
   rating: number;
 };
 
+export type DoctorSelfProfile = {
+  id: string;
+  name: string;
+  age: number | null;
+  gender: "Male" | "Female" | "Other" | null;
+  licenseNo: string;
+  hospital: string;
+  specialty: string;
+  phone: string;
+  email: string;
+  address?: string;
+  bio?: string;
+};
+
 export type PatientProfile = {
   id: string;
   name: string;
@@ -187,6 +201,10 @@ export type AppState = {
     requestId: string,
     msg: Omit<ChatMessage, "id" | "requestId" | "ts"> & { ts?: number },
   ) => void;
+  userProfile: PatientProfile | null;
+  setUserProfile: (p: PatientProfile) => void;
+  doctorProfile: DoctorSelfProfile | null;
+  setDoctorProfile: (p: DoctorSelfProfile) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -352,6 +370,63 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => save("app:notifications", notifications), [notifications]);
   useEffect(() => save("app:conversations", conversations), [conversations]);
 
+  const getUserProfileKey = () => `app:userProfile:${currentUser?.id || "anon"}`;
+  const getDoctorProfileKey = () => `app:doctorProfile:${currentUser?.id || "anon"}`;
+
+  const [userProfile, _setUserProfile] = useState<PatientProfile | null>(() => {
+    const cu = load<User | null>("app:currentUser", null);
+    const key = `app:userProfile:${cu?.id || "anon"}`;
+    return load<PatientProfile | null>(key, null);
+  });
+  const [doctorProfile, _setDoctorProfile] = useState<DoctorSelfProfile | null>(() => {
+    const cu = load<User | null>("app:currentUser", null);
+    const key = `app:doctorProfile:${cu?.id || "anon"}`;
+    const fallback = cu && cu.role === "doctor"
+      ? {
+          id: cu.id,
+          name: cu.name,
+          age: null,
+          gender: null,
+          licenseNo: "",
+          hospital: "",
+          specialty: "",
+          phone: "",
+          email: cu.email,
+          address: "",
+          bio: "",
+        }
+      : null;
+    return load<DoctorSelfProfile | null>(key, fallback);
+  });
+
+  useEffect(() => {
+    if (!currentUser) return;
+    if (currentUser.role === "user" && !userProfile) {
+      _setUserProfile(createBasicPatientProfile(`P-${currentUser.id}`, currentUser.name, currentUser.dosha || null));
+    }
+    if (currentUser.role === "doctor" && !doctorProfile) {
+      _setDoctorProfile({
+        id: currentUser.id,
+        name: currentUser.name,
+        age: null,
+        gender: null,
+        licenseNo: "",
+        hospital: "",
+        specialty: "",
+        phone: "",
+        email: currentUser.email,
+        address: "",
+        bio: "",
+      });
+    }
+  }, [currentUser]);
+
+  useEffect(() => { save(getUserProfileKey(), userProfile); }, [userProfile, currentUser]);
+  useEffect(() => { save(getDoctorProfileKey(), doctorProfile); }, [doctorProfile, currentUser]);
+
+  const setUserProfile = (p: PatientProfile) => _setUserProfile(p);
+  const setDoctorProfile = (p: DoctorSelfProfile) => _setDoctorProfile(p);
+
   const addNotification = (n: Omit<Notification, "id" | "time" | "read">) => {
     setNotifications((prev) =>
       [
@@ -464,6 +539,10 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       generateMockPlan,
       conversations,
       addMessage,
+      userProfile,
+      setUserProfile,
+      doctorProfile,
+      setDoctorProfile,
     }),
     [
       currentUser,
