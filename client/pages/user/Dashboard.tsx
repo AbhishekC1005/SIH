@@ -1,13 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAppState } from "@/context/app-state";
+import { useAppState, type Doctor } from "@/context/app-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChefHat, Salad, Stethoscope, ScanLine, Bot, Droplet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -28,14 +27,58 @@ export default function Dashboard() {
   } = useAppState();
 
   const [connectOpen, setConnectOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor & {
+    experience?: string;
+    bio?: string;
+    hospital?: string;
+    location?: string;
+    availability?: string;
+  } | null>(null);
 
-  const chartData = useMemo(() => (
-    Array.from({ length: 7 }).map((_, i) => ({
-      day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i],
-      water: 1500 + Math.round(Math.random() * 800),
-      meals: 2 + Math.round(Math.random())
-    }))
-  ), []);
+  const chartData = useMemo(() => ([
+    {
+      day: "Mon",
+      water: 1200,
+      meals: 2,
+      calories: 1600
+    },
+    {
+      day: "Tue",
+      water: 1800,
+      meals: 3,
+      calories: 1950
+    },
+    {
+      day: "Wed",
+      water: 2200,
+      meals: 4,
+      calories: 2100
+    },
+    {
+      day: "Thu",
+      water: 2500,
+      meals: 3,
+      calories: 2300
+    },
+    {
+      day: "Fri",
+      water: 2000,
+      meals: 3,
+      calories: 1900
+    },
+    {
+      day: "Sat",
+      water: 1500,
+      meals: 2,
+      calories: 1750
+    },
+    {
+      day: "Sun",
+      water: 1900,
+      meals: 4,
+      calories: 2050
+    }
+  ]), []);
 
   const cardVariants = {
     hidden: { opacity: 0, scale: 0.95 },
@@ -43,8 +86,12 @@ export default function Dashboard() {
     hover: { scale: 1.02, transition: { duration: 0.2 } },
   };
 
-  const consultedDoctorIds = requests.map(r => r.doctorId);
-  const consultedDoctors = doctors.filter(d => consultedDoctorIds.includes(d.id));
+  // For demo purposes, show all doctors as consulted
+  const consultedDoctors = [...doctors];
+  
+  // In a real app, you would use this logic:
+  // const consultedDoctorIds = requests.map(r => r.doctorId);
+  // const consultedDoctors = doctors.filter(d => consultedDoctorIds.includes(d.id));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-emerald-50 p-6">
@@ -80,15 +127,58 @@ export default function Dashboard() {
                 <CardTitle>Weekly Hydration</CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartContainer config={{ water: { label: "Water", color: "hsl(var(--primary))" } }}>
-                  <AreaChart data={chartData}>
-                    <CartesianGrid vertical={false} stroke="#e5e7eb" />
-                    <XAxis dataKey="day" tickLine={false} axisLine={false} />
-                    <YAxis hide />
-                    <Area type="monotone" dataKey="water" stroke="hsl(var(--primary))" fill="hsl(var(--primary)/.2)" />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </AreaChart>
-                </ChartContainer>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={chartData}
+                      margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorWater" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <XAxis 
+                        dataKey="day"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                      />
+                      <YAxis 
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: '#6b7280', fontSize: 12 }}
+                        tickFormatter={(value) => `${value}ml`}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [`${value}ml`, 'Water Intake']}
+                        labelFormatter={(label) => `Day: ${label}`}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="water" 
+                        stroke="#3b82f6" 
+                        fillOpacity={1} 
+                        fill="url(#colorWater)" 
+                        strokeWidth={2}
+                        dot={{
+                          fill: 'white',
+                          stroke: '#3b82f6',
+                          strokeWidth: 2,
+                          r: 4
+                        }}
+                        activeDot={{
+                          fill: 'white',
+                          stroke: '#3b82f6',
+                          strokeWidth: 2,
+                          r: 6
+                        }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -107,7 +197,11 @@ export default function Dashboard() {
                   ) : (
                     <div className="space-y-3">
                       {consultedDoctors.map((d) => (
-                        <Card key={d.id} className="p-3 bg-white/70 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200">
+                        <Card 
+                          key={d.id} 
+                          className="p-3 bg-white/70 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                          onClick={() => setSelectedDoctor(d)}
+                        >
                           <div className="flex items-center justify-between">
                             <div>
                               <div className="font-medium">{d.name}</div>
@@ -129,10 +223,13 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
-                <CardContent className="grid gap-2">
+                <CardContent className="grid gap-3">
+                  {/* Connect with Doctor */}
                   <Dialog open={connectOpen} onOpenChange={setConnectOpen}>
                     <DialogTrigger asChild>
-                      <Button variant="outline" className="w-full flex gap-2"><Stethoscope className="h-4 w-4" /> Connect with Doctor</Button>
+                      <Button variant="outline" className="w-full flex gap-2">
+                        <Stethoscope className="h-4 w-4" /> Connect with Doctor
+                      </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-2xl">
                       <DialogHeader>
@@ -140,52 +237,161 @@ export default function Dashboard() {
                       </DialogHeader>
                       <div className="grid gap-3 sm:grid-cols-2">
                         {doctors.map((d) => (
-                          <Card key={d.id} className="p-4 bg-white/70 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200">
+                          <Card key={d.id} className="p-4 bg-white/70 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer" onClick={() => setSelectedDoctor(d)}>
                             <div className="flex items-center justify-between">
                               <div>
                                 <div className="font-semibold">{d.name}</div>
                                 <div className="text-xs text-muted-foreground">{d.specialty}</div>
                               </div>
-                              <Badge variant="secondary">★ {d.rating}</Badge>
+                              <Badge variant="secondary" className="text-sm">
+                                ★ {d.rating}
+                              </Badge>
                             </div>
-                            <Button className="mt-3 w-full" onClick={() => {
-                              setRequests([...requests, {
-                                id: `req_${Date.now()}`,
-                                userId: currentUser?.id || "me",
-                                doctorId: d.id,
-                                status: "pending",
-                                createdAt: new Date().toISOString(),
-                                patientName: currentUser?.name,
-                                patientDosha: currentUser?.dosha
-                              }]);
-                              setConnectOpen(false);
-                              addNotification({
-                                type: "doctor",
-                                title: "Consultation requested",
-                                message: `We’ll connect you with ${d.name} shortly.`
-                              });
-                              toast({
-                                title: "Consultation requested",
-                                description: `We’ll connect you with ${d.name} shortly. You’ll see updates in Notifications.`
-                              });
-                            }}>Request Consult</Button>
                           </Card>
                         ))}
                       </div>
                     </DialogContent>
                   </Dialog>
 
-                  <Button variant="outline" className="w-full flex gap-2" onClick={() => navigate('/scan')}>
-                    <ScanLine className="h-4 w-4" /> Scan Barcode
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex gap-2" 
+                    onClick={() => navigate('/recipes')}
+                  >
+                    <ChefHat className="h-4 w-4" /> Generate Recipe
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={() => navigate('/recipes')}>
-                    Recipe Generator
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex gap-2" 
+                    onClick={() => navigate('/scan')}
+                  >
+                    <ScanLine className="h-4 w-4" /> Scan Barcode
                   </Button>
                 </CardContent>
               </Card>
             </motion.div>
           </div>
         </div>
+
+        {/* Doctor Details Dialog */}
+        <Dialog open={!!selectedDoctor} onOpenChange={(open) => !open && setSelectedDoctor(null)}>
+          <DialogContent className="sm:max-w-2xl">
+            {selectedDoctor && (
+              <div className="space-y-6">
+                <DialogHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <DialogTitle className="text-2xl">{selectedDoctor.name}</DialogTitle>
+                      <DialogDescription className="text-base">
+                        {selectedDoctor.specialty}
+                      </DialogDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-sm px-2 py-1">
+                        ★ {selectedDoctor.rating}
+                      </Badge>
+                    </div>
+                  </div>
+                </DialogHeader>
+                
+                <div className="grid gap-6 md:grid-cols-2">
+                  {/* Left Column */}
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2">ABOUT</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedDoctor.bio || 'Experienced healthcare professional with a focus on patient wellness and preventive care.'}
+                      </p>
+                    </div>
+                    
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2">SPECIALIZATIONS</h4>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className="text-xs">General Medicine</Badge>
+                        {selectedDoctor.specialty && (
+                          <Badge variant="outline" className="text-xs">{selectedDoctor.specialty}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Right Column */}
+                  <div className="space-y-4">
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2">LOCATION</h4>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{selectedDoctor.hospital || 'City General Hospital'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedDoctor.location || '123 Main St, City, Country'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <h4 className="font-medium text-sm mb-2">AVAILABILITY</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedDoctor.availability || 'Monday - Friday, 9:00 AM - 5:00 PM'}
+                      </p>
+                      {selectedDoctor.experience && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {selectedDoctor.experience} years of experience
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-3 pt-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedDoctor(null)}
+                    className="px-6"
+                  >
+                    Close
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      if (!currentUser) {
+                        toast({
+                          variant: "destructive",
+                          title: "Authentication required",
+                          description: "Please sign in to request a consultation."
+                        });
+                        return;
+                      }
+                      
+                      const newRequest = {
+                        id: `req_${Date.now()}`,
+                        userId: currentUser.id,
+                        doctorId: selectedDoctor.id,
+                        status: "pending" as const,
+                        createdAt: new Date().toISOString(),
+                        patientName: currentUser.name,
+                        patientDosha: currentUser.dosha
+                      };
+                      
+                      setRequests([...requests, newRequest]);
+                      setSelectedDoctor(null);
+                      addNotification({
+                        type: "doctor",
+                        title: "Consultation requested",
+                        message: `We'll connect you with Dr. ${selectedDoctor.name} shortly.`
+                      });
+                      toast({
+                        title: "Consultation requested",
+                        description: `We'll connect you with Dr. ${selectedDoctor.name} shortly. You'll see updates in Notifications.`
+                      });
+                    }}
+                    className="px-6"
+                  >
+                    Request Consultation
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Notifications */}
         <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
@@ -196,22 +402,23 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {notifications.length === 0 && (
+                {notifications.length === 0 ? (
                   <div className="text-sm text-muted-foreground">No notifications yet.</div>
+                ) : (
+                  notifications.slice(0, 10).map((n) => (
+                    <div key={n.id} className="flex items-start gap-3 rounded-md border p-2 hover:bg-muted transition-colors">
+                      <span className={`mt-1 inline-block h-2 w-2 rounded-full ${n.read ? 'bg-muted' : 'bg-primary'}`} />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">{n.title}</div>
+                        <div className="text-xs text-muted-foreground">{n.message}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-[10px] text-muted-foreground">{new Date(n.time).toLocaleTimeString()}</div>
+                        <Button variant="ghost" size="sm" onClick={() => markNotificationRead(n.id)}>Mark read</Button>
+                      </div>
+                    </div>
+                  ))
                 )}
-                {notifications.slice(0, 10).map((n) => (
-                  <div key={n.id} className="flex items-start gap-3 rounded-md border p-2 hover:bg-muted transition-colors">
-                    <span className={`mt-1 inline-block h-2 w-2 rounded-full ${n.read ? 'bg-muted' : 'bg-primary'}`} />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{n.title}</div>
-                      <div className="text-xs text-muted-foreground">{n.message}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-[10px] text-muted-foreground">{new Date(n.time).toLocaleTimeString()}</div>
-                      <Button variant="ghost" size="sm" onClick={() => markNotificationRead(n.id)}>Mark read</Button>
-                    </div>
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>

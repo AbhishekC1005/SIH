@@ -30,10 +30,12 @@ import { lazy, Suspense } from "react";
 import RegisterUser from "./pages/auth/RegisterUser.tsx";
 import RegisterDoctor from "./pages/auth/RegisterDoctor.tsx";
 import Login from "./pages/auth/Login.tsx";
-
 const DoctorMessagesLazy = lazy(
   () => import("./pages/doctor/DoctorMessages.tsx"),
 );
+
+const MessagesPageLazy = lazy(() => import("./pages/messages"));
+const DoctorChatLazy = lazy(() => import("./pages/messages/[doctorId]"));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -74,6 +76,8 @@ const AppRoutes = () => (
         <Route path="/tracking" element={<Tracking />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/scan" element={<Scan />} />
+        <Route path="/messages" element={<Suspense fallback={null}><MessagesPageLazy /></Suspense>} />
+        <Route path="/messages/:doctorId" element={<Suspense fallback={null}><DoctorChatLazy /></Suspense>} />
       </Route>
       <Route element={<DoctorGuard />}>
         <Route path="/doctor" element={<DoctorDashboard />} />

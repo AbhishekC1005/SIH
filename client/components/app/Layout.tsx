@@ -46,6 +46,9 @@ export const AppLayout: React.FC = () => {
   const location = useLocation();
 
   const isDoctor = currentUser?.role === "doctor";
+  const { doctors } = useAppState();
+  const firstDoctorId = doctors[0]?.id;
+  
   const menu = isDoctor
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
@@ -67,6 +70,7 @@ export const AppLayout: React.FC = () => {
         { to: "/tracking", label: "Tracking", icon: BarChart3 },
         { to: "/recipes", label: "Recipes", icon: ChefHat },
         { to: "/scan", label: "Scan", icon: ScanLine },
+        { to: firstDoctorId ? `/messages/${firstDoctorId}` : "/messages", label: "Messages", icon: MessageCircle },
       ];
 
   return (
