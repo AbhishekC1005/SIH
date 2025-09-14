@@ -117,7 +117,13 @@ export const AppLayout: React.FC = () => {
           <div className="flex items-center justify-between">
             <button
               type="button"
-              onClick={() => navigate(currentUser?.role === "doctor" ? "/doctor/profile" : "/profile")}
+              onClick={() =>
+                navigate(
+                  currentUser?.role === "doctor"
+                    ? "/doctor/profile"
+                    : "/profile",
+                )
+              }
               className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
             >
               <Avatar className="h-9 w-9 bg-gray-200">

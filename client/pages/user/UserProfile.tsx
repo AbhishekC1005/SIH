@@ -56,13 +56,19 @@ export default function UserProfile() {
   if (!currentUser) return null;
   if (!form)
     return (
-      <div className="p-4">No profile found. Please create your profile first.</div>
+      <div className="p-4">
+        No profile found. Please create your profile first.
+      </div>
     );
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" className="gap-2" onClick={() => navigate('/dashboard')}>
+        <Button
+          variant="ghost"
+          className="gap-2"
+          onClick={() => navigate("/dashboard")}
+        >
           <ArrowLeft className="h-4 w-4" /> Back to Dashboard
         </Button>
       </div>
@@ -270,9 +276,15 @@ export default function UserProfile() {
                   const reader = new FileReader();
                   reader.onload = () => {
                     const dataUrl = String(reader.result || "");
-                    const type = file.type.includes("pdf") ? ("pdf" as const) : ("image" as const);
+                    const type = file.type.includes("pdf")
+                      ? ("pdf" as const)
+                      : ("image" as const);
                     const next = [
-                      ...((form.documents as { name: string; url: string; type?: "pdf" | "image" }[]) || []),
+                      ...((form.documents as {
+                        name: string;
+                        url: string;
+                        type?: "pdf" | "image";
+                      }[]) || []),
                       { name: file.name, url: dataUrl, type },
                     ];
                     setForm({ ...form, documents: next });
@@ -354,7 +366,9 @@ export default function UserProfile() {
 
       {/* Sticky actions */}
       <div className="sticky bottom-0 inset-x-0 z-10 bg-white/80 backdrop-blur border-t p-3 flex justify-end">
-        <Button onClick={() => form && setUserProfile(form)}>Save Changes</Button>
+        <Button onClick={() => form && setUserProfile(form)}>
+          Save Changes
+        </Button>
       </div>
     </div>
   );

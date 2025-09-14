@@ -29,7 +29,11 @@ export default function DoctorProfile() {
   return (
     <div className="space-y-4 p-2 sm:p-4">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" className="gap-2" onClick={() => navigate('/doctor')}>
+        <Button
+          variant="ghost"
+          className="gap-2"
+          onClick={() => navigate("/doctor")}
+        >
           <ArrowLeft className="h-4 w-4" /> Back to Doctor Dashboard
         </Button>
       </div>
