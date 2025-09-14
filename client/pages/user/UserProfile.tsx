@@ -59,8 +59,7 @@ export default function UserProfile() {
 
   return (
     <div className="space-y-4 p-2 sm:p-4">
-      <Card className="bg-transparent border-0 shadow-none">
-        <CardContent className="grid gap-4 sm:grid-cols-2 p-0">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <Label className="text-xs">Patient ID</Label>
             <Input
@@ -227,8 +226,7 @@ export default function UserProfile() {
               onChange={(e) => onChange("notes", e.target.value)}
             />
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
       <Card>
         <CardHeader>
