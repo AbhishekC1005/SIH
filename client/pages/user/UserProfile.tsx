@@ -59,11 +59,8 @@ export default function UserProfile() {
 
   return (
     <div className="space-y-4 p-2 sm:p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>My Profile</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+      <Card className="bg-transparent border-0 shadow-none">
+        <CardContent className="grid gap-4 sm:grid-cols-2 p-0">
           <div>
             <Label className="text-xs">Patient ID</Label>
             <Input
