@@ -213,7 +213,7 @@ export default function Tracking(){
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={{ carb:{label:"Carbs"}, protein:{label:"Protein"}, fat:{label:"Fats"} }} className="h-64">
+              <ChartContainer config={{ carb:{label:"Carbs"}, protein:{label:"Protein"}, fat:{label:"Fats"} }} className="h-64 w-full">
                 <PieChart>
                   <Pie 
                     data={[
