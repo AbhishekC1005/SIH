@@ -13,8 +13,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+
 export default function UserProfile() {
   const { currentUser, userProfile, setUserProfile } = useAppState();
+  const navigate = useNavigate();
   const [form, setForm] = useState<PatientProfile | null>(userProfile);
 
   useEffect(() => {
@@ -58,12 +62,22 @@ export default function UserProfile() {
     );
 
   return (
-    <div className="space-y-4 p-2 sm:p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>My Profile</CardTitle>
+    <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          className="gap-2"
+          onClick={() => navigate("/dashboard")}
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+        </Button>
+      </div>
+      {/* Profile Information */}
+      <Card className="bg-white/80 backdrop-blur-sm border shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Profile Information</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <Label className="text-xs">Patient ID</Label>
             <Input
@@ -78,32 +92,6 @@ export default function UserProfile() {
               value={form.name}
               onChange={(e) => onChange("name", e.target.value)}
               disabled={!canEdit}
-            />
-          </div>
-          <div>
-            <Label className="text-xs">Dosha</Label>
-            <Select
-              value={form.dosha || ""}
-              onValueChange={(v) => onChange("dosha", (v || null) as any)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select dosha" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Vata">Vata</SelectItem>
-                <SelectItem value="Pitta">Pitta</SelectItem>
-                <SelectItem value="Kapha">Kapha</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Age</Label>
-            <Input
-              type="number"
-              value={form.age ?? ""}
-              onChange={(e) =>
-                onChange("age", e.target.value ? Number(e.target.value) : null)
-              }
             />
           </div>
           <div>
@@ -123,13 +111,39 @@ export default function UserProfile() {
             </Select>
           </div>
           <div>
+            <Label className="text-xs">Age</Label>
+            <Input
+              type="number"
+              value={form.age ?? ""}
+              onChange={(e) =>
+                onChange("age", e.target.value ? Number(e.target.value) : null)
+              }
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Dosha</Label>
+            <Select
+              value={form.dosha || ""}
+              onValueChange={(v) => onChange("dosha", (v || null) as any)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select dosha" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Vata">Vata</SelectItem>
+                <SelectItem value="Pitta">Pitta</SelectItem>
+                <SelectItem value="Kapha">Kapha</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label className="text-xs">Phone</Label>
             <Input
               value={form.phone}
               onChange={(e) => onChange("phone", e.target.value)}
             />
           </div>
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-3">
             <Label className="text-xs">Address</Label>
             <Input
               value={form.address}
@@ -162,6 +176,15 @@ export default function UserProfile() {
               }
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Health Details */}
+      <Card className="bg-white/80 backdrop-blur-sm border shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Health Details</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label className="text-xs">Lifestyle</Label>
             <Textarea
@@ -233,59 +256,91 @@ export default function UserProfile() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Medical Reports</CardTitle>
+      {/* Documents */}
+      <Card className="bg-white/80 backdrop-blur-sm border shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Documents</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex justify-between">
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm text-muted-foreground">
-              Add links to PDFs or images. Click to view.
+              Upload PDFs/images or add links.
             </div>
-            <Button size="sm" onClick={addDocument}>
-              Add Report
-            </Button>
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept="application/pdf,image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !form) return;
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const dataUrl = String(reader.result || "");
+                    const type = file.type.includes("pdf")
+                      ? ("pdf" as const)
+                      : ("image" as const);
+                    const next = [
+                      ...((form.documents as {
+                        name: string;
+                        url: string;
+                        type?: "pdf" | "image";
+                      }[]) || []),
+                      { name: file.name, url: dataUrl, type },
+                    ];
+                    setForm({ ...form, documents: next });
+                  };
+                  reader.readAsDataURL(file);
+                  e.currentTarget.value = "";
+                }}
+                className="max-w-[240px]"
+              />
+              <Button size="sm" onClick={addDocument}>
+                Add Empty
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             {(form.documents || []).map((doc, idx) => (
               <div
                 key={idx}
-                className="grid items-center gap-2 sm:grid-cols-[1fr_1fr_120px_auto]"
+                className="flex flex-col gap-2 rounded-md border bg-white/60 p-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <Input
-                  placeholder="Name"
-                  value={doc.name}
-                  onChange={(e) => {
-                    const next = [...(form.documents || [])];
-                    next[idx] = { ...doc, name: e.target.value };
-                    setForm({ ...form, documents: next });
-                  }}
-                />
-                <Input
-                  placeholder="https://..."
-                  value={doc.url}
-                  onChange={(e) => {
-                    const next = [...(form.documents || [])];
-                    next[idx] = { ...doc, url: e.target.value };
-                    setForm({ ...form, documents: next });
-                  }}
-                />
-                <Select
-                  value={doc.type || "pdf"}
-                  onValueChange={(v) => {
-                    const next = [...(form.documents || [])];
-                    next[idx] = { ...doc, type: v as any };
-                    setForm({ ...form, documents: next });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pdf">pdf</SelectItem>
-                    <SelectItem value="image">image</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_120px] sm:flex-1 sm:items-center">
+                  <Input
+                    placeholder="Name"
+                    value={doc.name}
+                    onChange={(e) => {
+                      const next = [...(form.documents || [])];
+                      next[idx] = { ...doc, name: e.target.value };
+                      setForm({ ...form, documents: next });
+                    }}
+                  />
+                  <Input
+                    placeholder="https://... or data URL"
+                    value={doc.url}
+                    onChange={(e) => {
+                      const next = [...(form.documents || [])];
+                      next[idx] = { ...doc, url: e.target.value };
+                      setForm({ ...form, documents: next });
+                    }}
+                  />
+                  <Select
+                    value={doc.type || "pdf"}
+                    onValueChange={(v) => {
+                      const next = [...(form.documents || [])];
+                      next[idx] = { ...doc, type: v as any };
+                      setForm({ ...form, documents: next });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pdf">pdf</SelectItem>
+                      <SelectItem value="image">image</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex items-center gap-2">
                   <a
                     className="text-sm text-primary underline"
@@ -293,7 +348,7 @@ export default function UserProfile() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    View
+                    Open
                   </a>
                   <Button
                     variant="outline"
@@ -309,7 +364,8 @@ export default function UserProfile() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      {/* Sticky actions */}
+      <div className="sticky bottom-0 inset-x-0 z-10 bg-white/80 backdrop-blur border-t p-3 flex justify-end">
         <Button onClick={() => form && setUserProfile(form)}>
           Save Changes
         </Button>

@@ -49,7 +49,6 @@ export const AppLayout: React.FC = () => {
   const menu = isDoctor
     ? [
         { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
-        { to: "/doctor/profile", label: "Profile", icon: UserIcon },
         { to: "/doctor/patients", label: "Patients", icon: Users },
         {
           to: "/doctor/generator/diet",
@@ -65,7 +64,6 @@ export const AppLayout: React.FC = () => {
       ]
     : [
         { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/profile", label: "Profile", icon: UserIcon },
         { to: "/tracking", label: "Tracking", icon: BarChart3 },
         { to: "/recipes", label: "Recipes", icon: ChefHat },
         { to: "/scan", label: "Scan", icon: ScanLine },
@@ -73,7 +71,7 @@ export const AppLayout: React.FC = () => {
 
   return (
     <SidebarProvider>
-      <Sidebar className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm w-64">
+      <Sidebar className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm">
         <SidebarHeader className="px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-md bg-emerald-500" />
@@ -117,13 +115,23 @@ export const AppLayout: React.FC = () => {
 
         <SidebarFooter className="border-t border-gray-200 p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  currentUser?.role === "doctor"
+                    ? "/doctor/profile"
+                    : "/profile",
+                )
+              }
+              className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+            >
               <Avatar className="h-9 w-9 bg-gray-200">
                 <AvatarFallback>
                   {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="text-left">
                 <div className="text-sm font-medium text-gray-900">
                   {currentUser?.name || "Guest"}
                 </div>
@@ -131,7 +139,8 @@ export const AppLayout: React.FC = () => {
                   {currentUser?.role ?? "unauthenticated"}
                 </div>
               </div>
-            </div>
+            </button>
+
             <Button
               variant="ghost"
               size="icon"
