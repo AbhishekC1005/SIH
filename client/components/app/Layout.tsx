@@ -51,64 +51,85 @@ export const AppLayout: React.FC = () => {
   
   const menu = isDoctor
     ? [
-        { to: "/doctor", label: "Doctor Panel", icon: Stethoscope },
+        { to: "/doctor", label: "Dashboard", icon: LayoutDashboard },
         { to: "/doctor/patients", label: "Patients", icon: Users },
         {
           to: "/doctor/generator/diet",
-          label: "Diet Plan Generator",
+          label: "Diet Plans",
           icon: Salad,
         },
         {
           to: "/doctor/generator/recipes",
-          label: "Recipe Generator",
+          label: "Recipes",
           icon: ChefHat,
         },
         { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
+        { to: "/doctor/profile", label: "Profile", icon: UserIcon },
       ]
     : [
         { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/tracking", label: "Tracking", icon: BarChart3 },
-        { to: "/recipes", label: "Recipes", icon: ChefHat },
-        { to: "/scan", label: "Scan", icon: ScanLine },
+        { to: "/tracking", label: "Health Tracking", icon: BarChart3 },
+        { to: "/recipes", label: "My Recipes", icon: ChefHat },
+        { to: "/scan", label: "Food Scan", icon: ScanLine },
         { to: firstDoctorId ? `/messages/${firstDoctorId}` : "/messages", label: "Messages", icon: MessageCircle },
+        { to: "/profile", label: "My Profile", icon: UserIcon },
       ];
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    navigate('/');
+  };
 
   return (
     <SidebarProvider>
-      <Sidebar className="bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm">
-        <SidebarHeader className="px-5 py-4">
+      <Sidebar className="bg-white border-r border-gray-100 shadow-sm">
+        <SidebarHeader className="px-6 py-6">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-md bg-emerald-500" />
+            <div className="h-10 w-10 rounded-lg bg-green-600 flex items-center justify-center">
+              <Salad className="h-5 w-5 text-white" />
+            </div>
             <div>
-              <div className="text-lg font-bold text-gray-900">AyurWell</div>
-              <div className="text-xs text-gray-500">Holistic Nutrition</div>
+              <h1 className="text-lg font-semibold text-gray-900">AyurWell</h1>
+              <p className="text-xs text-gray-500">Holistic Nutrition</p>
             </div>
           </div>
-          <SidebarSeparator className="my-3 border-gray-200" />
         </SidebarHeader>
 
-        <SidebarContent>
+        <div className="px-4 mb-6">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <Avatar className="h-9 w-9 bg-green-100">
+              <AvatarFallback className="bg-green-600 text-white text-sm font-medium">
+                {currentUser?.name?.charAt(0) || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{currentUser?.name || 'User'}</p>
+              <p className="text-xs text-gray-500">{isDoctor ? 'Doctor' : 'Patient'}</p>
+            </div>
+          </div>
+        </div>
+
+        <SidebarContent className="px-2">
           <SidebarGroup>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {menu.map((item) => (
                 <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.to}
-                  >
+                  <SidebarMenuButton asChild>
                     <NavLink
                       to={item.to}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center gap-3 px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition-all",
+                          "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150",
                           isActive
-                            ? "bg-gray-100 font-semibold text-gray-900"
-                            : "",
+                            ? "bg-green-50 text-green-700"
+                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                         )
                       }
                     >
-                      <item.icon className="h-5 w-5 text-gray-600" />
-                      <span>{item.label}</span>
+                      <>
+                        <item.icon className="h-4.5 w-4.5 flex-shrink-0" />
+                        <span>{item.label}</span>
+                      </>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -117,45 +138,16 @@ export const AppLayout: React.FC = () => {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="border-t border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  currentUser?.role === "doctor"
-                    ? "/doctor/profile"
-                    : "/profile",
-                )
-              }
-              className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
-            >
-              <Avatar className="h-9 w-9 bg-gray-200">
-                <AvatarFallback>
-                  {currentUser?.name?.slice(0, 2).toUpperCase() || "AY"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-left">
-                <div className="text-sm font-medium text-gray-900">
-                  {currentUser?.name || "Guest"}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {currentUser?.role ?? "unauthenticated"}
-                </div>
-              </div>
-            </button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-gray-100 hover:text-gray-900"
-              onClick={() => {
-                setCurrentUser(null);
-                navigate("/");
-              }}
-            >
-              <LogOut className="h-5 w-5 text-gray-600" />
-            </Button>
+        <SidebarFooter className="p-4 mt-auto">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors duration-150"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign out</span>
+          </button>
+          <div className="mt-4 text-center">
+            <p className="text-xs text-gray-400">AyurWell v1.0.0</p>
           </div>
         </SidebarFooter>
 
