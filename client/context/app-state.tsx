@@ -552,6 +552,8 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       requests,
       notifications,
       conversations,
+      userProfile,
+      doctorProfile,
     ],
   );
 
