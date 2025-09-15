@@ -18,7 +18,7 @@ import DoctorDashboard from "./pages/doctor/DoctorDashboard.tsx";
 // import DoctorDashboard from "./pages/doctor/NewDoctorDashboard.tsx";
 import DoctorPatients from "./pages/doctor/DoctorPatients.tsx";
 import DoctorPatientView from "./pages/doctor/DoctorPatientView.tsx";
-import DoctorDietGenerator from "../archieve/DoctorDietGenerator.tsx";
+import DoctorDietGenerator from "./pages/doctor/DoctorDietGenerator";
 import DoctorRecipeGenerator from "./pages/doctor/DoctorRecipeGenerator.tsx";
 import DoctorProfile from "./pages/doctor/DoctorProfile.tsx";
 import Tracking from "./pages/user/Tracking.tsx";

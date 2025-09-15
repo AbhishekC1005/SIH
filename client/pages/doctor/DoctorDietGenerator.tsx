@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAppState } from "@/context/app-state";
 import PatientVerification from "@/components/doctor/dietPlan/PatientVerification";
 import DietQuiz from "@/components/doctor/dietPlan/DietQuiz";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { User, X, ArrowLeft, Leaf } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -157,14 +158,29 @@ export default function DoctorDietGenerator() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Optional pid from patient view or query string
-  const passedPid = location.state?.pid as string | undefined;
-  const pidFromQuery =
-    new URLSearchParams(location.search).get("pid") || undefined;
+  // Get patient details from URL parameters
+  const [searchParams] = useSearchParams();
+  const patientId = searchParams.get("patientId") || "";
+  const patientName = searchParams.get("patientName") ? decodeURIComponent(searchParams.get("patientName") || '') : "";
+  const dosha = searchParams.get("dosha") || "";
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [patientId, setPatientId] = useState(passedPid ?? pidFromQuery ?? "");
-  const [patientName, setPatientName] = useState("");
+  const [fetchedName, setFetchedName] = useState<string | null>(patientName || null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(!!patientId);
+  
+  // Debug log URL parameters and state
+  useEffect(() => {
+    console.log('URL Params:', { patientId, patientName, dosha });
+    console.log('State:', { fetchedName, confirmed, step });
+  }, [patientId, patientName, dosha, fetchedName, confirmed, step]);
+
+  // Auto-advance to step 2 if patient is already confirmed
+  useEffect(() => {
+    if (confirmed && step === 1) {
+      setStep(2);
+    }
+  }, [confirmed, step]);
 
   // Quiz inputs
   const [cuisine, setCuisine] = useState("Indian");
@@ -196,13 +212,21 @@ export default function DoctorDietGenerator() {
 
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100;
 
-  // Keep input in sync if route changes
+  // Fetch patient details if not in URL
   useEffect(() => {
-    const s = (location.state as any)?.pid as string | undefined;
-    const q = new URLSearchParams(location.search).get("pid") || undefined;
-    const next = s ?? q;
-    if (next && next !== patientId) setPatientId(next);
-  }, [location]);
+    if (patientName) {
+      setFetchedName(decodeURIComponent(patientName));
+    } else if (patientId) {
+      // Fallback to fetch from requests if name not in URL
+      const patient = requests.find(r => r.id === patientId);
+      if (patient) {
+        setFetchedName(patient.patientName || 'Patient');
+        setFetchError(null);
+      } else {
+        setFetchError("Patient details not found. Please select a patient first.");
+      }
+    }
+  }, [patientId, patientName, requests]);
 
   const recommend = useMemo(() => {
     const water =
@@ -293,17 +317,79 @@ export default function DoctorDietGenerator() {
         </p>
       </div>
 
+      {/* Patient Info */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Patient Details</CardTitle>
+          <CardDescription>
+            {fetchedName ? `Generating diet plan for ${fetchedName}${dosha ? ` (${dosha} dosha)` : ''}` : 'No patient selected'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!patientId ? (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground">Please select a patient first</p>
+              <Button 
+                variant="outline" 
+                className="mt-2"
+                onClick={() => navigate('/doctor/patients')}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Select Patient
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{fetchedName || 'Patient'}</span>
+                </div>
+                {dosha && (
+                  <div className="flex items-center gap-2">
+                    <Leaf className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Dosha: {dosha}</span>
+                  </div>
+                )}
+              </div>
+              <div className="pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate(`/doctor/patients/${patientId}`)}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Patient
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {fetchError && (
+            <div className="mt-3 text-sm text-destructive bg-destructive/5 p-3 rounded-md flex items-center gap-2 border border-destructive/20">
+              <X className="h-4 w-4" />
+              {fetchError}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Step 1 */}
       {step === 1 && (
-        <PatientVerification
-          requests={requests}
-          patientId={patientId}
-          setPatientId={setPatientId}
-          onVerified={(name) => {
-            setPatientName(name);
-            setStep(2);
-          }}
-        />
+        <div className={!patientId ? "opacity-50 pointer-events-none" : ""}>
+          <PatientVerification
+            requests={requests}
+            patientId={patientId}
+            onVerified={(name) => {
+              setFetchedName(name);
+              setStep(2);
+            }}
+            setPatientId={() => {
+              // No-op since we're handling patient ID through URL parameters
+            }}
+          />
+        </div>
       )}
 
       {/* Step 2 */}
@@ -339,7 +425,7 @@ export default function DoctorDietGenerator() {
           <Card>
             <CardHeader>
               <CardTitle>
-                Diet Plan for {patientName || "Patient"} • Avg {stats.avgCal}{" "}
+                Diet Plan for {fetchedName || "Patient"} • Avg {stats.avgCal}{" "}
                 kcal/day
               </CardTitle>
             </CardHeader>

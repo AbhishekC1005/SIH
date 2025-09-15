@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppState } from "@/context/app-state";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,13 +36,14 @@ export default function DoctorRecipeGenerator() {
   const navigate = useNavigate();
   const { requests } = useAppState();
 
-  const search = new URLSearchParams(location.search);
-  const pid = search.get("pid") || "";
+  const [searchParams] = useSearchParams();
+  const patientId = searchParams.get("patientId") || "";
+  const patientName = searchParams.get("patientName") || "";
+  const dosha = searchParams.get("dosha") || "";
 
-  const [patientId, setPatientId] = useState<string>(pid);
-  const [fetchedName, setFetchedName] = useState<string | null>(null);
+  const [fetchedName, setFetchedName] = useState<string | null>(patientName ? decodeURIComponent(patientName) : null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmed, setConfirmed] = useState(!!patientId);
 
   const [mealName, setMealName] = useState("");
 
@@ -60,13 +61,22 @@ export default function DoctorRecipeGenerator() {
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
 
+  useEffect(() => {
+    if (patientName) {
+      setFetchedName(decodeURIComponent(patientName));
+    } else if (patientId) {
+      // Fallback to fetch from requests if name not in URL
+      const patient = requests.find(r => r.id === patientId);
+      if (patient) {
+        setFetchedName(patient.patientName || 'Patient');
+      }
+    }
+  }, [patientId, patientName, requests]);
+
   const fetchPatient = () => {
-    const q = patientId.trim().toLowerCase();
-    const match = requests.find(
-      (r) =>
-        r.userId.toLowerCase() === q ||
-        (r.patientName || "").toLowerCase().includes(q),
-    );
+    if (!patientId) return;
+    
+    const match = requests.find(r => r.id === patientId);
     if (match) {
       setFetchedName(match.patientName || `Patient ${match.userId}`);
       setFetchError(null);
@@ -137,62 +147,50 @@ export default function DoctorRecipeGenerator() {
           <motion.div variants={itemVariants}>
             <Card className="border-border shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">Patient Identification</CardTitle>
+                <CardTitle className="text-lg">Patient Details</CardTitle>
                 <CardDescription>
-                  Enter patient ID or name to generate a personalized recipe
+                  {fetchedName ? `Generating recipe for ${fetchedName}${dosha ? ` (${dosha} dosha)` : ''}` : 'No patient selected'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      className="pl-10"
-                      placeholder="Patient ID or name"
-                      value={patientId}
-                      onChange={(e) => setPatientId(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") fetchPatient();
-                      }}
-                    />
+                {!patientId ? (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">Please select a patient first</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-2"
+                      onClick={() => navigate('/doctor/patients')}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Select Patient
+                    </Button>
                   </div>
-                  <Button 
-                    onClick={fetchPatient}
-                    className="h-11 px-6 py-2 text-base font-medium"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Search
-                  </Button>
-                </div>
-
-                {fetchedName && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-4"
-                  >
-                    <div className="flex items-center justify-between p-3 bg-primary/5 rounded-md border">
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-primary" />
-                        <span className="font-medium">{fetchedName}</span>
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{fetchedName || 'Patient'}</span>
                       </div>
+                      {dosha && (
+                        <div className="flex items-center gap-2">
+                          <Leaf className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Dosha: {dosha}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="pt-2">
                       <Button 
-                        size="sm" 
-                        variant={confirmed ? "default" : "outline"}
-                        onClick={() => setConfirmed(!confirmed)}
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate(`/doctor/patients/${patientId}`)}
                         className="gap-2"
                       >
-                        {confirmed ? (
-                          <>
-                            <Check className="h-4 w-4" />
-                            Confirmed
-                          </>
-                        ) : (
-                          'Confirm Patient'
-                        )}
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Patient
                       </Button>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
                 {fetchError && (
