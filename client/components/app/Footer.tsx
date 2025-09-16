@@ -15,12 +15,12 @@ export const Footer: React.FC = () => {
         {/* Left: brand */}
         <div className="flex items-center justify-center gap-3 md:justify-start">
           <div className="h-6 w-6 rounded-md bg-white/30" />
-          <span className="text-base font-semibold">AyurWell</span>
+          <span className="text-base font-semibold">SwasthaSetu</span>
         </div>
 
         {/* Right: copyright */}
         <div className="flex justify-center md:justify-end">
-          <div className="text-sm text-white">© {new Date().getFullYear()} AyurWell. All rights reserved.</div>
+          <div className="text-sm text-white">© {new Date().getFullYear()} SwasthaSetu. All rights reserved.</div>
         </div>
       </div>
     </motion.footer>
