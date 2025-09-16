@@ -168,14 +168,10 @@ export default function DoctorDietGenerator() {
   const [fetchedName, setFetchedName] = useState<string | null>(patientName || null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(!!patientId);
-  
-  // Debug log URL parameters and state
-  useEffect(() => {
-    console.log('URL Params:', { patientId, patientName, dosha });
-    console.log('State:', { fetchedName, confirmed, step });
-  }, [patientId, patientName, dosha, fetchedName, confirmed, step]);
+  const [patientQuery, setPatientQuery] = useState<string>(patientName || "");
+  const [foundDosha, setFoundDosha] = useState<string>(dosha || "");
 
-  // Auto-advance to step 2 if patient is already confirmed
+  // Auto-advance to step 2 if patient is confirmed
   useEffect(() => {
     if (confirmed && step === 1) {
       setStep(2);
@@ -212,21 +208,24 @@ export default function DoctorDietGenerator() {
 
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100;
 
-  // Fetch patient details if not in URL
+  // Fetch patient details from global requests when query or URL changes
   useEffect(() => {
-    if (patientName) {
-      setFetchedName(decodeURIComponent(patientName));
-    } else if (patientId) {
-      // Fallback to fetch from requests if name not in URL
-      const patient = requests.find(r => r.id === patientId);
-      if (patient) {
-        setFetchedName(patient.patientName || 'Patient');
-        setFetchError(null);
-      } else {
-        setFetchError("Patient details not found. Please select a patient first.");
-      }
+    const q = (patientName || patientQuery || "").trim().toLowerCase();
+    if (!q && !patientId) return;
+    const match = requests.find(
+      (r) =>
+        r.id === patientId ||
+        r.userId.toLowerCase() === q ||
+        (r.patientName || "").toLowerCase().includes(q),
+    );
+    if (match) {
+      setFetchedName(match.patientName || (patientName ? decodeURIComponent(patientName) : "Patient"));
+      setFoundDosha((match.patientDosha as string) || foundDosha);
+      setFetchError(null);
+    } else if (q || patientId) {
+      setFetchError("No patient found. Try full ID or part of the name.");
     }
-  }, [patientId, patientName, requests]);
+  }, [patientId, patientName, patientQuery, requests]);
 
   const recommend = useMemo(() => {
     const water =
@@ -322,21 +321,24 @@ export default function DoctorDietGenerator() {
         <CardHeader>
           <CardTitle>Patient Details</CardTitle>
           <CardDescription>
-            {fetchedName ? `Generating diet plan for ${fetchedName}${dosha ? ` (${dosha} dosha)` : ''}` : 'No patient selected'}
+            {fetchedName ? `Generating diet plan for ${fetchedName}${(foundDosha || dosha) ? ` (${foundDosha || dosha} dosha)` : ''}` : 'No patient selected'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!patientId ? (
-            <div className="text-center py-4">
-              <p className="text-muted-foreground">Please select a patient first</p>
-              <Button 
-                variant="outline" 
-                className="mt-2"
-                onClick={() => navigate('/doctor/patients')}
-              >
-                <User className="h-4 w-4 mr-2" />
-                Select Patient
-              </Button>
+          {!confirmed ? (
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">Type patient name or ID and search</div>
+              <PatientVerification
+                requests={requests}
+                patientId={patientQuery}
+                setPatientId={setPatientQuery}
+                onVerified={(name) => {
+                  setFetchedName(name);
+                  setConfirmed(true);
+                  const match = requests.find((r) => (r.patientName || "").toLowerCase() === name.toLowerCase());
+                  if (match && match.patientDosha) setFoundDosha(match.patientDosha as string);
+                }}
+              />
             </div>
           ) : (
             <div className="space-y-4">
@@ -345,22 +347,22 @@ export default function DoctorDietGenerator() {
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">{fetchedName || 'Patient'}</span>
                 </div>
-                {dosha && (
+                {(foundDosha || dosha) && (
                   <div className="flex items-center gap-2">
                     <Leaf className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Dosha: {dosha}</span>
+                    <span className="text-sm text-muted-foreground">Dosha: {foundDosha || dosha}</span>
                   </div>
                 )}
               </div>
               <div className="pt-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
-                  onClick={() => navigate(`/doctor/patients/${patientId}`)}
+                  onClick={() => setConfirmed(false)}
                   className="gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Back to Patient
+                  Change Patient
                 </Button>
               </div>
             </div>
@@ -377,18 +379,8 @@ export default function DoctorDietGenerator() {
 
       {/* Step 1 */}
       {step === 1 && (
-        <div className={!patientId ? "opacity-50 pointer-events-none" : ""}>
-          <PatientVerification
-            requests={requests}
-            patientId={patientId}
-            onVerified={(name) => {
-              setFetchedName(name);
-              setStep(2);
-            }}
-            setPatientId={() => {
-              // No-op since we're handling patient ID through URL parameters
-            }}
-          />
+        <div>
+          {/* Patient verification handled in the card above */}
         </div>
       )}
 
@@ -407,7 +399,8 @@ export default function DoctorDietGenerator() {
           />
           <div className="flex justify-end">
             <button
-              className="px-4 py-2 rounded bg-primary text-white"
+              className="px-4 py-2 rounded bg-primary text-white disabled:opacity-50"
+              disabled={!confirmed}
               onClick={() => {
                 setPlan(generatePlan());
                 setStep(3);
