@@ -17,6 +17,7 @@ import Dashboard from "./pages/user/Dashboard.tsx";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard.tsx";
 // import DoctorDashboard from "./pages/doctor/NewDoctorDashboard.tsx";
 import DoctorPatients from "./pages/doctor/DoctorPatients.tsx";
+import AddPatient from "./pages/doctor/AddPatient.tsx";
 import DoctorPatientView from "./pages/doctor/DoctorPatientView.tsx";
 import DoctorDietGenerator from "./pages/doctor/DoctorDietGenerator";
 import DoctorRecipeGenerator from "./pages/doctor/DoctorRecipeGenerator.tsx";
@@ -64,6 +65,7 @@ const AppRoutes = () => (
     <Route path="/" element={<Index />} />
     <Route path="/login" element={<Login />} />
     <Route path="/register-user" element={<RegisterUser />} />
+    <Route path="/register-doctor" element={<RegisterDoctor />} />
     <Route
       element={
         <ProtectedRoute>
@@ -77,12 +79,27 @@ const AppRoutes = () => (
         <Route path="/tracking" element={<Tracking />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/scan" element={<Scan />} />
-        <Route path="/messages" element={<Suspense fallback={null}><MessagesPageLazy /></Suspense>} />
-        <Route path="/messages/:doctorId" element={<Suspense fallback={null}><DoctorChatLazy /></Suspense>} />
+        <Route
+          path="/messages"
+          element={
+            <Suspense fallback={null}>
+              <MessagesPageLazy />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/messages/:doctorId"
+          element={
+            <Suspense fallback={null}>
+              <DoctorChatLazy />
+            </Suspense>
+          }
+        />
       </Route>
       <Route element={<DoctorGuard />}>
         <Route path="/doctor" element={<DoctorDashboard />} />
         <Route path="/doctor/patients" element={<DoctorPatients />} />
+        <Route path="/doctor/patients/add" element={<AddPatient />} />
         <Route path="/doctor/patients/:id" element={<DoctorPatientView />} />
         <Route path="/doctor/profile" element={<DoctorProfile />} />
         <Route
