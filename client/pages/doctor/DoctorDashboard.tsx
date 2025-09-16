@@ -285,7 +285,7 @@ export default function DoctorDashboard() {
         <div>
           <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
           <p className="text-gray-500">
-            Welcome, Dr. {currentUser?.name || "User"}
+            Welcome, {currentUser?.name || "User"}
           </p>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useAppState } from "@/context/app-state";
 import PatientVerification from "@/components/doctor/dietPlan/PatientVerification";
 import DietQuiz from "@/components/doctor/dietPlan/DietQuiz";
 import { Progress } from "@/components/ui/progress";
+
 import {
   Card,
   CardContent,
@@ -13,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, X, ArrowLeft, Leaf } from "lucide-react";
+import { User, X, ArrowLeft, Leaf, Download } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -56,6 +57,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+// PDF imports
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 type Meal = {
   type: "Breakfast" | "Lunch" | "Dinner" | "Snack";
@@ -249,53 +254,59 @@ export default function DoctorDietGenerator() {
   }, [activity]);
 
   const generatePlan = (): DayPlan[] => {
-    return Array.from({ length: 3 }).map((_, i) => ({
-      day: `Day ${i + 1}`,
-      meals: [
-        {
-          type: "Breakfast",
-          name: "Oats with Fruits",
-          calories: 350,
-          protein: 12,
-          carbs: 60,
-          fat: 8,
-          vitamins: ["B1", "C"],
-          ayur: {
-            dosha: "Pitta",
-            rasa: "Madhura",
-            properties: ["Light", "Cooling"],
+    const today = new Date();
+    return Array.from({ length: 7 }).map((_, i) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const dateStr = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      return {
+        day: dateStr,
+        meals: [
+          {
+            type: "Breakfast",
+            name: "Oats with Fruits",
+            calories: 350,
+            protein: 12,
+            carbs: 60,
+            fat: 8,
+            vitamins: ["B1", "C"],
+            ayur: {
+              dosha: "Pitta",
+              rasa: "Madhura",
+              properties: ["Light", "Cooling"],
+            },
           },
-        },
-        {
-          type: "Lunch",
-          name: veg ? "Moong Dal Khichdi" : "Chicken Curry with Rice",
-          calories: veg ? 450 : 600,
-          protein: veg ? 18 : 28,
-          carbs: veg ? 78 : 80,
-          fat: veg ? 8 : 18,
-          vitamins: ["A", "B12"],
-          ayur: {
-            dosha: veg ? "Tridoshic" : "Pitta",
-            rasa: "Madhura",
-            properties: ["Sattvic"],
+          {
+            type: "Lunch",
+            name: veg ? "Moong Dal Khichdi" : "Chicken Curry with Rice",
+            calories: veg ? 450 : 600,
+            protein: veg ? 18 : 28,
+            carbs: veg ? 78 : 80,
+            fat: veg ? 8 : 18,
+            vitamins: ["A", "B12"],
+            ayur: {
+              dosha: veg ? "Tridoshic" : "Pitta",
+              rasa: "Madhura",
+              properties: ["Sattvic"],
+            },
           },
-        },
-        {
-          type: "Dinner",
-          name: "Steamed Veg + Ghee",
-          calories: 420,
-          protein: 10,
-          carbs: 45,
-          fat: 16,
-          vitamins: ["E"],
-          ayur: {
-            dosha: "Vata",
-            rasa: "Madhura",
-            properties: ["Grounding"],
+          {
+            type: "Dinner",
+            name: "Steamed Veg + Ghee",
+            calories: 420,
+            protein: 10,
+            carbs: 45,
+            fat: 16,
+            vitamins: ["E"],
+            ayur: {
+              dosha: "Vata",
+              rasa: "Madhura",
+              properties: ["Grounding"],
+            },
           },
-        },
-      ],
-    }));
+        ],
+      };
+    });
   };
 
   const stats = useMemo(() => {
@@ -312,6 +323,244 @@ export default function DoctorDietGenerator() {
       : 0;
     return { perDay, avgCal };
   }, [plan]);
+
+  // PDF Export Function
+  const exportToPDF = () => {
+    if (!plan || !fetchedName) {
+      alert('No plan or patient data available to export');
+      return;
+    }
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    let yPosition = 20;
+
+    // Header
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Personalized Diet Plan', pageWidth / 2, yPosition, { align: 'center' });
+    
+    yPosition += 15;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
+    
+    // Patient Information Section
+    yPosition += 25;
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Patient Information', 20, yPosition);
+    
+    yPosition += 10;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    
+    const patientInfo = [
+      ['Patient Name:', fetchedName || 'N/A'],
+      ['Dosha Type:', foundDosha || dosha || 'Not specified'],
+      ['Cuisine Preference:', cuisine],
+      ['Dietary Type:', veg ? 'Vegetarian' : 'Non-Vegetarian'],
+      ['Activity Level:', activity],
+      ['Daily Water Goal:', `${recommend.water}ml`],
+      ['Daily Calorie Target:', `${recommend.calories} kcal`]
+    ];
+
+    patientInfo.forEach(([label, value]) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(label, 20, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(value, 80, yPosition);
+      yPosition += 8;
+    });
+
+    // Dietary Restrictions
+    if (restrictions.length > 0) {
+      yPosition += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Dietary Restrictions:', 20, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.text(restrictions.join(', '), 20, yPosition + 8);
+      yPosition += 16;
+    }
+
+    // Daily Plans Section
+    yPosition += 15;
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Daily Meal Plans', 20, yPosition);
+    yPosition += 15;
+
+    plan.forEach((dayPlan, dayIndex) => {
+      // Check if we need a new page
+      if (yPosition > pageHeight - 60) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      // Day header
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(dayPlan.day, 20, yPosition);
+      yPosition += 10;
+
+      // Daily calories
+      const dayCal = dayPlan.meals.reduce((sum, meal) => sum + meal.calories, 0);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`Total: ${dayCal} kcal`, 20, yPosition);
+      yPosition += 15;
+
+      // Meals table
+      const mealData = dayPlan.meals.map(meal => [
+        meal.type,
+        meal.name,
+        `${meal.calories} kcal`,
+        meal.ayur.dosha || 'N/A',
+        meal.ayur.rasa,
+        meal.ayur.properties.join(', ')
+      ]);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Type', 'Meal', 'Calories', 'Dosha', 'Rasa', 'Properties']],
+        body: mealData,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontSize: 10,
+          fontStyle: 'bold'
+        },
+        bodyStyles: {
+          fontSize: 9,
+          cellPadding: 3
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 45 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 25 },
+          5: { cellWidth: 45 }
+        },
+        margin: { left: 20, right: 20 }
+      });
+
+      yPosition = (doc as any).lastAutoTable.finalY + 20;
+    });
+
+    // Nutrition Summary
+    if (yPosition > pageHeight - 100) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    yPosition += 10;
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Nutrition Summary', 20, yPosition);
+    yPosition += 15;
+
+    // Calculate total nutrition across all days
+    const totalNutrition = plan.reduce(
+      (acc, day) => {
+        day.meals.forEach(meal => {
+          acc.calories += meal.calories;
+          acc.protein += meal.protein;
+          acc.carbs += meal.carbs;
+          acc.fat += meal.fat;
+        });
+        return acc;
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+
+    const avgNutrition = {
+      calories: Math.round(totalNutrition.calories / plan.length),
+      protein: Math.round(totalNutrition.protein / plan.length),
+      carbs: Math.round(totalNutrition.carbs / plan.length),
+      fat: Math.round(totalNutrition.fat / plan.length)
+    };
+
+    const nutritionData = [
+      ['Average Daily Calories', `${avgNutrition.calories} kcal`],
+      ['Average Daily Protein', `${avgNutrition.protein}g`],
+      ['Average Daily Carbohydrates', `${avgNutrition.carbs}g`],
+      ['Average Daily Fat', `${avgNutrition.fat}g`]
+    ];
+
+    autoTable(doc, {
+      startY: yPosition,
+      body: nutritionData,
+      theme: 'plain',
+      bodyStyles: {
+        fontSize: 12,
+        cellPadding: 5
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 80 },
+        1: { cellWidth: 60 }
+      },
+      margin: { left: 20 }
+    });
+
+    yPosition = (doc as any).lastAutoTable.finalY + 20;
+
+    // Ayurvedic Guidelines
+    if (yPosition > pageHeight - 80) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    yPosition += 10;
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Ayurvedic Guidelines', 20, yPosition);
+    yPosition += 15;
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    const guidelines = [
+      '• Eat in a peaceful environment, free from distractions',
+      '• Chew food thoroughly and eat at a moderate pace',
+      '• Have your largest meal at midday when digestion is strongest',
+      '• Avoid ice-cold drinks; prefer warm or room temperature water',
+      '• Allow 3-4 hours between meals for proper digestion',
+      '• Practice mindful eating and express gratitude for your food'
+    ];
+
+    guidelines.forEach(guideline => {
+      const lines = doc.splitTextToSize(guideline, pageWidth - 40);
+      doc.text(lines, 20, yPosition);
+      yPosition += lines.length * 6;
+    });
+
+    // Footer
+    yPosition += 20;
+    if (yPosition > pageHeight - 30) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.text('This diet plan is generated based on Ayurvedic principles. Please consult with your healthcare provider before making significant dietary changes.', 
+      pageWidth / 2, yPosition, { align: 'center', maxWidth: pageWidth - 40 });
+
+    // Page numbers
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth - 30, pageHeight - 10);
+    }
+
+    // Save the PDF
+    const fileName = `Diet_Plan_${fetchedName?.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fileName);
+  };
 
   return (
     <div className="space-y-4">
@@ -484,6 +733,14 @@ export default function DoctorDietGenerator() {
                     }
                   >
                     Add Day
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={exportToPDF}
+                    className="gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export PDF
                   </Button>
                   <Button
                     onClick={() => {
