@@ -4,7 +4,13 @@ import { useAppState } from "@/context/app-state";
 import PatientVerification from "@/components/doctor/dietPlan/PatientVerification";
 import DietQuiz from "@/components/doctor/dietPlan/DietQuiz";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, X, ArrowLeft, Leaf } from "lucide-react";
@@ -161,11 +167,15 @@ export default function DoctorDietGenerator() {
   // Get patient details from URL parameters
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId") || "";
-  const patientName = searchParams.get("patientName") ? decodeURIComponent(searchParams.get("patientName") || '') : "";
+  const patientName = searchParams.get("patientName")
+    ? decodeURIComponent(searchParams.get("patientName") || "")
+    : "";
   const dosha = searchParams.get("dosha") || "";
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [fetchedName, setFetchedName] = useState<string | null>(patientName || null);
+  const [fetchedName, setFetchedName] = useState<string | null>(
+    patientName || null,
+  );
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(!!patientId);
   const [patientQuery, setPatientQuery] = useState<string>(patientName || "");
@@ -219,7 +229,10 @@ export default function DoctorDietGenerator() {
         (r.patientName || "").toLowerCase().includes(q),
     );
     if (match) {
-      setFetchedName(match.patientName || (patientName ? decodeURIComponent(patientName) : "Patient"));
+      setFetchedName(
+        match.patientName ||
+          (patientName ? decodeURIComponent(patientName) : "Patient"),
+      );
       setFoundDosha((match.patientDosha as string) || foundDosha);
       setFetchError(null);
     } else if (q || patientId) {
@@ -321,13 +334,17 @@ export default function DoctorDietGenerator() {
         <CardHeader>
           <CardTitle>Patient Details</CardTitle>
           <CardDescription>
-            {fetchedName ? `Generating diet plan for ${fetchedName}${(foundDosha || dosha) ? ` (${foundDosha || dosha} dosha)` : ''}` : 'No patient selected'}
+            {fetchedName
+              ? `Generating diet plan for ${fetchedName}${foundDosha || dosha ? ` (${foundDosha || dosha} dosha)` : ""}`
+              : "No patient selected"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!confirmed ? (
             <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">Type patient name or ID and search</div>
+              <div className="text-sm text-muted-foreground">
+                Type patient name or ID and search
+              </div>
               <PatientVerification
                 requests={requests}
                 patientId={patientQuery}
@@ -335,8 +352,13 @@ export default function DoctorDietGenerator() {
                 onVerified={(name) => {
                   setFetchedName(name);
                   setConfirmed(true);
-                  const match = requests.find((r) => (r.patientName || "").toLowerCase() === name.toLowerCase());
-                  if (match && match.patientDosha) setFoundDosha(match.patientDosha as string);
+                  const match = requests.find(
+                    (r) =>
+                      (r.patientName || "").toLowerCase() ===
+                      name.toLowerCase(),
+                  );
+                  if (match && match.patientDosha)
+                    setFoundDosha(match.patientDosha as string);
                 }}
               />
             </div>
@@ -345,12 +367,16 @@ export default function DoctorDietGenerator() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{fetchedName || 'Patient'}</span>
+                  <span className="font-medium">
+                    {fetchedName || "Patient"}
+                  </span>
                 </div>
                 {(foundDosha || dosha) && (
                   <div className="flex items-center gap-2">
                     <Leaf className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Dosha: {foundDosha || dosha}</span>
+                    <span className="text-sm text-muted-foreground">
+                      Dosha: {foundDosha || dosha}
+                    </span>
                   </div>
                 )}
               </div>
@@ -379,9 +405,7 @@ export default function DoctorDietGenerator() {
 
       {/* Step 1 */}
       {step === 1 && (
-        <div>
-          {/* Patient verification handled in the card above */}
-        </div>
+        <div>{/* Patient verification handled in the card above */}</div>
       )}
 
       {/* Step 2 */}

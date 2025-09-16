@@ -1,7 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-export const NavBar: React.FC<{ onGetStarted?: () => void; onSignIn?: () => void }> = () => {
+export const NavBar: React.FC<{
+  onGetStarted?: () => void;
+  onSignIn?: () => void;
+}> = () => {
   return (
     <motion.header
       initial={{ y: -16, opacity: 0 }}

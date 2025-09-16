@@ -79,8 +79,22 @@ const AppRoutes = () => (
         <Route path="/tracking" element={<Tracking />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/scan" element={<Scan />} />
-        <Route path="/messages" element={<Suspense fallback={null}><MessagesPageLazy /></Suspense>} />
-        <Route path="/messages/:doctorId" element={<Suspense fallback={null}><DoctorChatLazy /></Suspense>} />
+        <Route
+          path="/messages"
+          element={
+            <Suspense fallback={null}>
+              <MessagesPageLazy />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/messages/:doctorId"
+          element={
+            <Suspense fallback={null}>
+              <DoctorChatLazy />
+            </Suspense>
+          }
+        />
       </Route>
       <Route element={<DoctorGuard />}>
         <Route path="/doctor" element={<DoctorDashboard />} />

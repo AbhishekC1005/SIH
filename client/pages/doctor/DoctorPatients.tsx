@@ -1,12 +1,35 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppState } from "@/context/app-state";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, User, Clock, Calendar, Activity, Heart, Plus, MoreHorizontal, ArrowRight } from "lucide-react";
+import {
+  Search,
+  User,
+  Clock,
+  Calendar,
+  Activity,
+  Heart,
+  Plus,
+  MoreHorizontal,
+  ArrowRight,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -36,31 +59,43 @@ export default function DoctorPatients() {
   type LastViewedMap = Record<string, number>;
   const lvKey = `app:patients:lastViewed:${doctorProfileId}`;
   const readLV = (): LastViewedMap => {
-    try { return JSON.parse(localStorage.getItem(lvKey) || "{}"); } catch { return {}; }
+    try {
+      return JSON.parse(localStorage.getItem(lvKey) || "{}");
+    } catch {
+      return {};
+    }
   };
-  const writeLV = (m: LastViewedMap) => localStorage.setItem(lvKey, JSON.stringify(m));
-  const markViewed = (id: string) => { const m = readLV(); m[id] = Date.now(); writeLV(m); };
+  const writeLV = (m: LastViewedMap) =>
+    localStorage.setItem(lvKey, JSON.stringify(m));
+  const markViewed = (id: string) => {
+    const m = readLV();
+    m[id] = Date.now();
+    writeLV(m);
+  };
 
   // Get all patients for this doctor
-  const myPatients = useMemo(() => 
-    requests.filter(r => r.doctorId === doctorProfileId && r.status === "accepted"), 
-    [requests, doctorProfileId]
+  const myPatients = useMemo(
+    () =>
+      requests.filter(
+        (r) => r.doctorId === doctorProfileId && r.status === "accepted",
+      ),
+    [requests, doctorProfileId],
   );
-  
+
   // Calculate statistics based on available data
   const stats = useMemo(() => {
     const now = new Date();
     const monthAgo = new Date(now);
     monthAgo.setMonth(monthAgo.getMonth() - 1);
-    
+
     // Count patients added in the last month
-    const recentPatients = myPatients.filter(p => {
+    const recentPatients = myPatients.filter((p) => {
       const patientDate = new Date(p.createdAt);
       return patientDate > monthAgo;
     });
-    
+
     // Count patients who might need follow-up (using last viewed as a proxy)
-    const needsFollowUp = myPatients.filter(p => {
+    const needsFollowUp = myPatients.filter((p) => {
       const lastViewed = readLV()[p.id];
       if (!lastViewed) return true; // Never viewed
       const lastViewDate = new Date(lastViewed);
@@ -68,22 +103,22 @@ export default function DoctorPatients() {
       weekAgo.setDate(weekAgo.getDate() - 7);
       return lastViewDate < weekAgo;
     }).length;
-    
+
     return {
       total: myPatients.length,
       recent: recentPatients.length,
-      needsFollowUp
+      needsFollowUp,
     };
   }, [myPatients]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const lv = readLV();
-    const arr = myPatients.filter(r => {
+    const arr = myPatients.filter((r) => {
       const name = (r.patientName || `Patient ${r.userId}`).toLowerCase();
       return q ? name.includes(q) : true;
     });
-    return arr.sort((a,b) => {
+    return arr.sort((a, b) => {
       const la = lv[a.id];
       const lb = lv[b.id];
       if (la && lb) return lb - la;
@@ -111,13 +146,16 @@ export default function DoctorPatients() {
     navigate(`/doctor/patients/${id}`);
   };
 
-
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Patient Management</h1>
-          <p className="text-muted-foreground">Manage and monitor your patients' health journey</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Patient Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage and monitor your patients' health journey
+          </p>
         </div>
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -135,42 +173,60 @@ export default function DoctorPatients() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-800 dark:text-blue-200">Total Patients</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Total Patients
+            </CardTitle>
             <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-800/50">
               <User className="h-4 w-4 text-blue-600 dark:text-blue-300" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-900 dark:text-white">{stats.total}</div>
-            <p className="text-xs text-blue-600 dark:text-blue-300">Under your care</p>
+            <div className="text-3xl font-bold text-blue-900 dark:text-white">
+              {stats.total}
+            </div>
+            <p className="text-xs text-blue-600 dark:text-blue-300">
+              Under your care
+            </p>
           </CardContent>
         </Card>
-        
+
         <Card className="border-l-4 border-l-green-500 bg-green-50 dark:bg-green-900/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">Recent Additions</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-800 dark:text-green-200">
+              Recent Additions
+            </CardTitle>
             <div className="rounded-full bg-green-100 p-2 dark:bg-green-800/50">
               <Activity className="h-4 w-4 text-green-600 dark:text-green-300" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-900 dark:text-white">+{stats.recent}</div>
-            <p className="text-xs text-green-600 dark:text-green-300">This month</p>
+            <div className="text-3xl font-bold text-green-900 dark:text-white">
+              +{stats.recent}
+            </div>
+            <p className="text-xs text-green-600 dark:text-green-300">
+              This month
+            </p>
           </CardContent>
         </Card>
-        
+
         <Card className="border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-900/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-amber-800 dark:text-amber-200">Requiring Follow-up</CardTitle>
+            <CardTitle className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              Requiring Follow-up
+            </CardTitle>
             <div className="rounded-full bg-amber-100 p-2 dark:bg-amber-800/50">
               <Clock className="h-4 w-4 text-amber-600 dark:text-amber-300" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${stats.needsFollowUp > 0 ? 'text-amber-900 dark:text-white' : 'text-gray-500'}`}>
+            <div
+              className={`text-3xl font-bold ${stats.needsFollowUp > 0 ? "text-amber-900 dark:text-white" : "text-gray-500"}`}
+            >
               {stats.needsFollowUp}
             </div>
-            <p className="text-xs text-amber-600 dark:text-amber-300">Needs attention</p>
+            <p className="text-xs text-amber-600 dark:text-amber-300">
+              Needs attention
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -224,14 +280,20 @@ export default function DoctorPatients() {
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
                           <AvatarFallback className="bg-primary/10 text-primary">
-                            {patient.patientName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'P'}
+                            {patient.patientName
+                              ?.split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase() || "P"}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{patient.patientName || `Patient ${patient.userId}`}</div>
+                          <div className="font-medium">
+                            {patient.patientName || `Patient ${patient.userId}`}
+                          </div>
                           <div className="text-sm text-muted-foreground flex items-center">
                             <Heart className="h-3 w-3 mr-1 text-rose-500" />
-                            {patient.patientDosha || 'No dosha data'}
+                            {patient.patientDosha || "No dosha data"}
                           </div>
                         </div>
                       </div>
@@ -239,11 +301,14 @@ export default function DoctorPatients() {
                     <TableCell className="px-4 py-4">
                       <div className="flex items-center text-sm">
                         <Calendar className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
-                        {new Date(patient.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                        {new Date(patient.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-4">
@@ -258,13 +323,19 @@ export default function DoctorPatients() {
                           variant="outline"
                           size="sm"
                           className="gap-1 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
-                          onClick={() => navigate(`/doctor/patients/${patient.id}`)}
+                          onClick={() =>
+                            navigate(`/doctor/patients/${patient.id}`)
+                          }
                         >
                           View <ArrowRight className="h-3.5 w-3.5 ml-1" />
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 p-0"
+                            >
                               <span className="sr-only">Open menu</span>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -274,7 +345,9 @@ export default function DoctorPatients() {
                             <DropdownMenuItem>View Profile</DropdownMenuItem>
                             <DropdownMenuItem>Message</DropdownMenuItem>
                             <DropdownMenuItem>View History</DropdownMenuItem>
-                            <DropdownMenuItem className="text-rose-600">Remove</DropdownMenuItem>
+                            <DropdownMenuItem className="text-rose-600">
+                              Remove
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -292,7 +365,12 @@ export default function DoctorPatients() {
               <p className="mt-2 text-sm text-muted-foreground">
                 When you accept patient requests, they'll appear here.
               </p>
-              <Button className="mt-4" onClick={() => navigate("/doctor/patients/add")}>Add New Patient</Button>
+              <Button
+                className="mt-4"
+                onClick={() => navigate("/doctor/patients/add")}
+              >
+                Add New Patient
+              </Button>
             </div>
           )}
         </CardContent>

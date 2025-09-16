@@ -26,9 +26,10 @@ export default function PatientVerification({
     const seen: Record<string, boolean> = {};
     // match by userId startsWith or name includes
     const list = requests
-      .filter((r) =>
-        r.userId.toLowerCase().startsWith(q) ||
-        (r.patientName || "").toLowerCase().includes(q),
+      .filter(
+        (r) =>
+          r.userId.toLowerCase().startsWith(q) ||
+          (r.patientName || "").toLowerCase().includes(q),
       )
       .filter((r) => {
         if (seen[r.userId]) return false;
@@ -99,8 +100,13 @@ export default function PatientVerification({
                     >
                       <User className="h-4 w-4 opacity-70" />
                       <div className="flex-1">
-                        <div className="text-sm font-medium">{s.patientName || `Patient ${s.userId}`}</div>
-                        <div className="text-xs text-muted-foreground">ID: {s.userId}{s.patientDosha ? ` • Dosha: ${s.patientDosha}` : ""}</div>
+                        <div className="text-sm font-medium">
+                          {s.patientName || `Patient ${s.userId}`}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: {s.userId}
+                          {s.patientDosha ? ` • Dosha: ${s.patientDosha}` : ""}
+                        </div>
                       </div>
                     </button>
                   </li>
