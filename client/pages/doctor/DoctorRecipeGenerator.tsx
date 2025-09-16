@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PatientVerification from "@/components/doctor/dietPlan/PatientVerification";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppState } from "@/context/app-state";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -44,6 +45,7 @@ export default function DoctorRecipeGenerator() {
   const [fetchedName, setFetchedName] = useState<string | null>(patientName ? decodeURIComponent(patientName) : null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(!!patientId);
+  const [patientQuery, setPatientQuery] = useState<string>(patientName || "");
 
   const [mealName, setMealName] = useState("");
 
@@ -62,31 +64,23 @@ export default function DoctorRecipeGenerator() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
-    if (patientName) {
-      setFetchedName(decodeURIComponent(patientName));
-    } else if (patientId) {
-      // Fallback to fetch from requests if name not in URL
-      const patient = requests.find(r => r.id === patientId);
-      if (patient) {
-        setFetchedName(patient.patientName || 'Patient');
-      }
-    }
-  }, [patientId, patientName, requests]);
-
-  const fetchPatient = () => {
-    if (!patientId) return;
-    
-    const match = requests.find(r => r.id === patientId);
+    const q = (patientName || patientQuery || "").trim().toLowerCase();
+    if (!q && !patientId) return;
+    const match = requests.find(
+      (r) =>
+        r.id === patientId ||
+        r.userId.toLowerCase() === q ||
+        (r.patientName || "").toLowerCase().includes(q),
+    );
     if (match) {
-      setFetchedName(match.patientName || `Patient ${match.userId}`);
+      setFetchedName(match.patientName || (patientName ? decodeURIComponent(patientName) : "Patient"));
       setFetchError(null);
-      setConfirmed(false);
-    } else {
-      setFetchedName(null);
+    } else if (q || patientId) {
       setFetchError("No patient found. Try full ID or part of the name.");
-      setConfirmed(false);
     }
-  };
+  }, [patientId, patientName, patientQuery, requests]);
+
+  // Patient selection handled via PatientVerification component
 
   const macros = (kcal: number) => ({
     protein: Math.round((kcal * 0.2) / 4),
@@ -153,17 +147,18 @@ export default function DoctorRecipeGenerator() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {!patientId ? (
-                  <div className="text-center py-4">
-                    <p className="text-muted-foreground">Please select a patient first</p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-2"
-                      onClick={() => navigate('/doctor/patients')}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Select Patient
-                    </Button>
+                {!confirmed ? (
+                  <div className="space-y-4">
+                    <div className="text-sm text-muted-foreground">Type patient name or ID and search</div>
+                    <PatientVerification
+                      requests={requests}
+                      patientId={patientQuery}
+                      setPatientId={setPatientQuery}
+                      onVerified={(name) => {
+                        setFetchedName(name);
+                        setConfirmed(true);
+                      }}
+                    />
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -180,21 +175,21 @@ export default function DoctorRecipeGenerator() {
                       )}
                     </div>
                     <div className="pt-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/doctor/patients/${patientId}`)}
+                        onClick={() => setConfirmed(false)}
                         className="gap-2"
                       >
                         <ArrowLeft className="h-4 w-4" />
-                        Back to Patient
+                        Change Patient
                       </Button>
                     </div>
                   </div>
                 )}
 
                 {fetchError && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-3 text-sm text-destructive bg-destructive/5 p-3 rounded-md flex items-center gap-2 border border-destructive/20"
