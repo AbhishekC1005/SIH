@@ -44,53 +44,22 @@ export default function DoctorDashboard() {
   const [selectedPatient, setSelectedPatient] = useState<PatientRequest | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Sample hardcoded patient requests
-  const sampleRequests: PatientRequest[] = [
-    {
-      id: '1',
-      name: 'Rahul Sharma',
-      patientName: 'Rahul Sharma',
-      dosha: 'Vata',
-      patientDosha: 'Vata',
-      status: 'pending',
-      age: 32,
-      gender: 'Male',
-      symptoms: 'Digestive issues, Insomnia',
-      requestedDate: '2023-06-15',
-      avatar: '/avatars/1.jpg'
-    },
-    {
-      id: '2',
-      name: 'Priya Patel',
-      patientName: 'Priya Patel',
-      dosha: 'Pitta',
-      patientDosha: 'Pitta',
-      status: 'pending',
-      age: 28,
-      gender: 'Female',
-      symptoms: 'Acid reflux, Skin rashes',
-      requestedDate: '2023-06-16',
-      avatar: '/avatars/2.jpg'
-    },
-    {
-      id: '3',
-      name: 'Amit Kumar',
-      patientName: 'Amit Kumar',
-      dosha: 'Kapha',
-      patientDosha: 'Kapha',
-      status: 'pending',
-      age: 45,
-      gender: 'Male',
-      symptoms: 'Weight gain, Fatigue',
-      requestedDate: '2023-06-17',
-      avatar: '/avatars/3.jpg'
+  // Map current user to a doctor profile id used elsewhere in the app
+  const getDoctorProfileId = () => {
+    const key = `app:doctor-map:${currentUser?.id || "anon"}`;
+    let mapped = localStorage.getItem(key);
+    if (!mapped) {
+      mapped = currentUser?.id || "d1";
+      localStorage.setItem(key, mapped);
     }
-  ];
+    return mapped;
+  };
+  const doctorProfileId = getDoctorProfileId();
 
-  // Get pending requests (using sample data for now)
+  // Get pending requests from global state
   const pendingRequests = useMemo<PatientRequest[]>(
-    () => sampleRequests.filter(r => r.status === "pending"),
-    [sampleRequests]
+    () => (requests || []).filter((r: any) => r.status === "pending"),
+    [requests]
   );
 
   // Get counts for different statuses
@@ -121,19 +90,21 @@ export default function DoctorDashboard() {
 
   // Handle accepting a request
   const handleAcceptRequest = (id: string) => {
-    setRequests((prevRequests) => 
-      prevRequests.map((r) => {
-        if (r.id === id) {
-          return {
-            ...r,
-            status: "accepted",
-            doctorId: currentUser?.id, // Set the current doctor as the assigned doctor
-            acceptedDate: new Date().toISOString().split('T')[0] // Add acceptance date
-          };
-        }
-        return r;
-      })
-    );
+    setRequests((prev: any[]) => {
+      const next = prev.map((r: any) =>
+        r.id === id
+          ? {
+              ...r,
+              status: "accepted",
+              doctorId: doctorProfileId,
+              acceptedDate: new Date().toISOString(),
+            }
+          : r,
+      );
+      const updated = next.find((r: any) => r.id === id) || null;
+      if (updated) setSelectedPatient(updated as any);
+      return next;
+    });
   };
 
   // Handle rejecting a request
@@ -407,7 +378,7 @@ export default function DoctorDashboard() {
                       </div>
                       <div className="flex flex-col items-end space-y-2">
                         <span className="text-xs text-gray-500">
-                          Requested on {request.requestedDate}
+                          Requested on {new Date(request.createdAt || Date.now()).toISOString().slice(0,10)}
                         </span>
                         <div className="flex space-x-2">
                           <Button 
