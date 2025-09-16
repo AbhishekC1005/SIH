@@ -188,7 +188,11 @@ export default function DoctorPatients() {
                 Manage and view your patients' information
               </CardDescription>
             </div>
-            <Button size="sm" className="gap-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600">
+            <Button
+              size="sm"
+              className="gap-1 bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600"
+              onClick={() => navigate("/doctor/patients/add")}
+            >
               <Plus className="h-4 w-4" />
               Add Patient
             </Button>
@@ -288,7 +292,7 @@ export default function DoctorPatients() {
               <p className="mt-2 text-sm text-muted-foreground">
                 When you accept patient requests, they'll appear here.
               </p>
-              <Button className="mt-4">Add New Patient</Button>
+              <Button className="mt-4" onClick={() => navigate("/doctor/patients/add")}>Add New Patient</Button>
             </div>
           )}
         </CardContent>
