@@ -12,15 +12,20 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "dist", // Vite's default output directory
+    outDir: "dist",
   },
   server: {
     host: "0.0.0.0",
-    port: 9999,
+    port: 8080,
     fs: {
-      // The `allow` option is now more concise as you don't need to specify client directory
-      // since the dev server's root is the project root by default
       allow: ["."],
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000/api', // Your backend server
+        changeOrigin: true, // Recommended for virtual hosts
+        rewrite: (path) => path.replace(/^\/api/, ''), // Removes /api from the request path
+      },
     },
   },
 });
