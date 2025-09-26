@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 
 export const NavBar: React.FC<{
   onGetStarted?: () => void;
@@ -8,76 +8,67 @@ export const NavBar: React.FC<{
 }> = ({ onGetStarted, onSignIn }) => {
   return (
     <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       className="absolute top-0 left-0 right-0 z-50 w-full"
     >
-      <nav className="mx-auto max-w-7xl px-6 py-6">
+      <nav className="mx-auto max-w-6xl px-6 py-8">
         <div className="flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo - Clean & Minimal */}
           <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex items-center gap-3"
+            className="text-white"
           >
-            <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <div className="absolute inset-0 w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 opacity-30 blur-lg" />
-            </div>
-            <div className="text-white">
-              <h1 className="text-xl font-bold">SwasthaSetu</h1>
-              <p className="text-xs text-white/70 -mt-1">स्वास्थ्य सेतु</p>
-            </div>
+            <h1 className="text-2xl font-light tracking-tight">Swasthsetu</h1>
           </motion.div>
 
-          {/* Navigation Links - Hidden on mobile */}
+          {/* Navigation Links - Clean */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="hidden md:flex items-center gap-8"
           >
-            <a href="#features" className="text-white/80 hover:text-white transition-colors duration-300 font-medium">
+            <a href="#features" className="text-white/80 hover:text-white transition-colors duration-300 font-light text-sm">
               Features
             </a>
-            <a href="#about" className="text-white/80 hover:text-white transition-colors duration-300 font-medium">
+            <a href="#about" className="text-white/80 hover:text-white transition-colors duration-300 font-light text-sm">
               About
             </a>
-            <a href="#contact" className="text-white/80 hover:text-white transition-colors duration-300 font-medium">
+            <a href="#contact" className="text-white/80 hover:text-white transition-colors duration-300 font-light text-sm">
               Contact
             </a>
           </motion.div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Minimal */}
           <motion.div
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-6"
           >
             <button
               onClick={onSignIn}
-              className="hidden sm:block text-white/80 hover:text-white transition-colors duration-300 font-medium"
+              className="hidden sm:block text-white/80 hover:text-white transition-colors duration-300 font-light text-sm"
             >
-              Sign In
+              Sign in
             </button>
             
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={onGetStarted}
-              className="px-6 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-white font-medium rounded-full hover:bg-white/20 transition-all duration-300 shadow-lg"
+              className="px-6 py-2 bg-white/90 text-gray-900 font-normal text-sm rounded-full hover:bg-white transition-all duration-300 shadow-sm"
             >
-              Get Started
+              Get started
             </motion.button>
 
             {/* Mobile menu button */}
             <button className="md:hidden p-2 text-white/80 hover:text-white transition-colors duration-300">
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
             </button>
           </motion.div>
         </div>

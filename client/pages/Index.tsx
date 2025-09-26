@@ -2,7 +2,6 @@ import Hero from "@/components/app/Hero";
 import NavBar from "@/components/app/NavBar";
 import Footer from "@/components/app/Footer";
 import Features from "@/components/app/Features";
-import { motion } from "framer-motion";
 
 export default function Index() {
   const bgUrl =
@@ -10,14 +9,14 @@ export default function Index() {
   
   return (
     <div className="min-h-screen w-full">
-      {/* Hero Section with Background */}
+      {/* Hero Section with Static Background */}
       <div
-        className="min-h-screen w-full bg-fixed bg-cover bg-center text-white relative"
+        className="min-h-screen w-full bg-cover bg-center bg-no-repeat relative"
         style={{ backgroundImage: `url(${bgUrl})` }}
       >
-        {/* Enhanced gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        {/* Clean overlay for readability */}
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
         
         <div className="relative z-10">
           <NavBar
