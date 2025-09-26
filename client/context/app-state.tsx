@@ -142,10 +142,20 @@ export type ConsultRequest = {
   doctorId: string;
   status: "pending" | "accepted" | "rejected";
   createdAt: string;
+  acceptedDate?: string;
   patientName?: string;
   patientDosha?: User["dosha"];
   patientProfile?: PatientProfile;
   plan?: { time: string; name: string; calories: number; waterMl?: number }[];
+  // Additional fields for easier access
+  age?: number;
+  gender?: "Male" | "Female" | "Other";
+  symptoms?: string;
+  weight?: number;
+  height?: number;
+  emergencyContact?: string;
+  lifestyle?: string;
+  documents?: { name: string; url: string; type?: "pdf" | "image" }[];
 };
 
 export type Notification = {
@@ -192,7 +202,7 @@ export type AppState = {
   setDietPlan: (p: DietPlan | null) => void;
   doctors: Doctor[];
   requests: ConsultRequest[];
-  setRequests: (r: ConsultRequest[]) => void;
+  setRequests: React.Dispatch<React.SetStateAction<ConsultRequest[]>>;
   notifications: Notification[];
   addNotification: (n: Omit<Notification, "id" | "time" | "read">) => void;
   markAllRead: () => void;
@@ -219,25 +229,25 @@ function makePlan(
   return meals && Array.isArray(meals) && meals.length
     ? (meals as any)
     : [
-        {
-          time: "08:00",
-          name: "Warm Spiced Oats",
-          calories: 320,
-          waterMl: 250,
-        },
-        {
-          time: "12:30",
-          name: "Moong Dal Khichdi",
-          calories: 450,
-          waterMl: 300,
-        },
-        {
-          time: "19:30",
-          name: "Steamed Veg + Ghee",
-          calories: 420,
-          waterMl: 250,
-        },
-      ];
+      {
+        time: "08:00",
+        name: "Warm Spiced Oats",
+        calories: 320,
+        waterMl: 250,
+      },
+      {
+        time: "12:30",
+        name: "Moong Dal Khichdi",
+        calories: 450,
+        waterMl: 300,
+      },
+      {
+        time: "19:30",
+        name: "Steamed Veg + Ghee",
+        calories: 420,
+        waterMl: 250,
+      },
+    ];
 }
 
 export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -290,8 +300,20 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
         doctorId: "d1",
         status: "accepted",
         createdAt: new Date().toISOString(),
+        acceptedDate: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
         patientName: "Riya Sharma",
         patientDosha: "Pitta",
+        age: 29,
+        gender: "Female",
+        symptoms: "Frequent acidity and heartburn after meals",
+        weight: 58,
+        height: 165,
+        emergencyContact: "Raj Sharma (+91 98765 11111)",
+        lifestyle: "Early riser, yoga 5 days a week, vegetarian diet",
+        documents: [
+          { name: "Blood Test Report.pdf", url: "/mock/blood-test.pdf", type: "pdf" },
+          { name: "Endoscopy Report.pdf", url: "/mock/endoscopy.pdf", type: "pdf" },
+        ],
         patientProfile: {
           ...createBasicPatientProfile("P-1001", "Riya Sharma", "Pitta"),
           age: 29,
@@ -313,11 +335,21 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       {
         id: "req_1002",
         userId: "u1002",
-        doctorId: "d2",
+        doctorId: "",
         status: "pending",
         createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
         patientName: "Neha Gupta",
         patientDosha: "Vata",
+        age: 25,
+        gender: "Female",
+        symptoms: "Chronic anxiety, insomnia, and digestive issues",
+        weight: 52,
+        height: 160,
+        emergencyContact: "Priya Gupta (+91 98765 22222)",
+        lifestyle: "Software engineer, irregular schedule, high stress",
+        documents: [
+          { name: "Anxiety Assessment.pdf", url: "/mock/anxiety.pdf", type: "pdf" },
+        ],
         patientProfile: {
           ...createBasicPatientProfile("P-1002", "Neha Gupta", "Vata"),
           age: 25,
@@ -341,8 +373,20 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
         doctorId: "d3",
         status: "accepted",
         createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+        acceptedDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
         patientName: "Arjun Patel",
         patientDosha: "Kapha",
+        age: 35,
+        gender: "Male",
+        symptoms: "Weight gain, low energy, and slow metabolism",
+        weight: 85,
+        height: 175,
+        emergencyContact: "Meera Patel (+91 98765 33333)",
+        lifestyle: "Sedentary job, minimal exercise, irregular eating",
+        documents: [
+          { name: "Metabolic Panel.pdf", url: "/mock/metabolic.pdf", type: "pdf" },
+          { name: "Thyroid Test.pdf", url: "/mock/thyroid.pdf", type: "pdf" },
+        ],
         patientProfile: {
           ...createBasicPatientProfile("P-1003", "Arjun Patel", "Kapha"),
           age: 35,
@@ -364,11 +408,22 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       {
         id: "req_1004",
         userId: "u1004",
-        doctorId: "d1",
-        status: "rejected",
+        doctorId: "",
+        status: "pending",
         createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
         patientName: "Priya Singh",
         patientDosha: "Pitta",
+        age: 28,
+        gender: "Female",
+        symptoms: "Severe migraines and irregular menstrual cycles",
+        weight: 55,
+        height: 162,
+        emergencyContact: "Amit Singh (+91 98765 44444)",
+        lifestyle: "Marketing professional, high stress, irregular sleep",
+        documents: [
+          { name: "Hormone Panel.pdf", url: "/mock/hormones.pdf", type: "pdf" },
+          { name: "MRI Scan.pdf", url: "/mock/mri.pdf", type: "pdf" },
+        ],
         patientProfile: {
           ...createBasicPatientProfile("P-1004", "Priya Singh", "Pitta"),
           age: 28,
@@ -421,18 +476,18 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       const fallback =
         cu && cu.role === "doctor"
           ? {
-              id: cu.id,
-              name: cu.name,
-              age: null,
-              gender: null,
-              licenseNo: "",
-              hospital: "",
-              specialty: "",
-              phone: "",
-              email: cu.email,
-              address: "",
-              bio: "",
-            }
+            id: cu.id,
+            name: cu.name,
+            age: null,
+            gender: null,
+            licenseNo: "",
+            hospital: "",
+            specialty: "",
+            phone: "",
+            email: cu.email,
+            address: "",
+            bio: "",
+          }
           : null;
       return load<DoctorSelfProfile | null>(key, fallback);
     },

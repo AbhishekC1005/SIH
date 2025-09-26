@@ -23,6 +23,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
   MessageCircle,
@@ -35,8 +43,13 @@ import {
   LogOut,
   Users,
   User as UserIcon,
+  Calendar,
+  Settings,
+  Activity,
+  Menu,
+  ChevronDown,
 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { useAppState } from "@/context/app-state";
 import { ChatWidget } from "@/components/app/ChatWidget";
 
@@ -44,36 +57,38 @@ export const AppLayout: React.FC = () => {
   const { currentUser, setCurrentUser } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   const isDoctor = currentUser?.role === "doctor";
   const { doctors } = useAppState();
   const firstDoctorId = doctors[0]?.id;
-  
+
+  // Original navigation menu - keeping exact same logic and routes
   const menu = isDoctor
     ? [
-        { to: "/doctor", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/doctor/patients", label: "Patients", icon: Users },
-        {
-          to: "/doctor/generator/diet",
-          label: "Diet Plans",
-          icon: Salad,
-        },
-        {
-          to: "/doctor/generator/recipes",
-          label: "Recipes",
-          icon: ChefHat,
-        },
-        { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
-        { to: "/doctor/profile", label: "Profile", icon: UserIcon },
-      ]
+      { to: "/doctor", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/doctor/patients", label: "Patients", icon: Users },
+      {
+        to: "/doctor/generator/diet",
+        label: "Diet Plans",
+        icon: Salad,
+      },
+      {
+        to: "/doctor/generator/recipes",
+        label: "Recipes",
+        icon: ChefHat,
+      },
+      { to: "/doctor/messages", label: "Messages", icon: MessageCircle },
+      { to: "/doctor/profile", label: "Profile", icon: UserIcon },
+    ]
     : [
-        { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { to: "/tracking", label: "Health Tracking", icon: BarChart3 },
-        { to: "/recipes", label: "My Recipes", icon: ChefHat },
-        { to: "/scan", label: "Food Scan", icon: ScanLine },
-        { to: firstDoctorId ? `/messages/${firstDoctorId}` : "/messages", label: "Messages", icon: MessageCircle },
-        { to: "/profile", label: "My Profile", icon: UserIcon },
-      ];
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/tracking", label: "Health Tracking", icon: BarChart3 },
+      { to: "/recipes", label: "My Recipes", icon: ChefHat },
+      { to: "/scan", label: "Food Scan", icon: ScanLine },
+      { to: firstDoctorId ? `/messages/${firstDoctorId}` : "/messages", label: "Messages", icon: MessageCircle },
+      { to: "/profile", label: "My Profile", icon: UserIcon },
+    ];
 
   const handleLogout = () => {
     setCurrentUser(null);
@@ -81,122 +96,203 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <SidebarProvider>
-      <Sidebar className="bg-white border-r border-gray-100 shadow-sm">
-        <SidebarHeader className="px-6 py-6">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-green-600 flex items-center justify-center">
-              <Salad className="h-5 w-5 text-white" />
+    <div className="flex h-screen bg-gray-50">
+      {/* Modern Slim Sidebar */}
+      <div
+        className={cn(
+          "bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out flex flex-col",
+          sidebarExpanded ? "w-64" : "w-16"
+        )}
+        onMouseEnter={() => setSidebarExpanded(true)}
+        onMouseLeave={() => setSidebarExpanded(false)}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Activity className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">SwasthaSetu</h1>
-              <p className="text-xs text-gray-500">Holistic Nutrition</p>
+            <div className={cn(
+              "ml-3 transition-all duration-300 ease-in-out overflow-hidden",
+              sidebarExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+            )}>
+              <h1 className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                {isDoctor ? "Medical Portal" : "SwasthaSetu"}
+              </h1>
+              <p className="text-xs text-gray-500 whitespace-nowrap">
+                {isDoctor ? "Healthcare System" : "Wellness Platform"}
+              </p>
             </div>
           </div>
-        </SidebarHeader>
+        </div>
 
-        <div className="px-4 mb-6">
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-            <Avatar className="h-9 w-9 bg-green-100">
-              <AvatarFallback className="bg-green-600 text-white text-sm font-medium">
+        {/* Navigation */}
+        <nav className="flex-1 p-2">
+          <div className="space-y-1">
+            {menu.map((item) => {
+              const isActive = location.pathname === item.to ||
+                (item.to !== "/" && location.pathname.startsWith(item.to));
+
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group relative",
+                    isActive
+                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  )}
+                >
+                  <item.icon className={cn(
+                    "w-5 h-5 flex-shrink-0 transition-colors duration-200",
+                    isActive ? "text-blue-600" : "text-gray-500 group-hover:text-gray-700"
+                  )} />
+                  <span className={cn(
+                    "ml-3 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap",
+                    sidebarExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+                  )}>
+                    {item.label}
+                  </span>
+
+                  {/* Tooltip for collapsed state */}
+                  {!sidebarExpanded && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                      {item.label}
+                    </div>
+                  )}
+                </NavLink>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* User Profile & Logout */}
+        <div className="p-2 border-t border-gray-100">
+          {/* User Profile */}
+          <div className={cn(
+            "flex items-center p-3 rounded-lg mb-2 transition-all duration-200",
+            sidebarExpanded ? "bg-gray-50" : "justify-center"
+          )}>
+            <Avatar className="w-8 h-8 flex-shrink-0">
+              <AvatarFallback className="bg-blue-600 text-white text-xs font-medium">
                 {currentUser?.name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{currentUser?.name || 'User'}</p>
-              <p className="text-xs text-gray-500">{isDoctor ? 'Doctor' : 'Patient'}</p>
+            <div className={cn(
+              "ml-3 transition-all duration-300 ease-in-out overflow-hidden",
+              sidebarExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+            )}>
+              <p className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                {currentUser?.name || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 whitespace-nowrap">
+                {isDoctor ? 'Doctor' : 'Patient'}
+              </p>
             </div>
           </div>
-        </div>
 
-        <SidebarContent className="px-2">
-          <SidebarGroup>
-            <SidebarMenu className="space-y-1">
-              {menu.map((item) => (
-                <SidebarMenuItem key={item.to}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.to}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-150",
-                          isActive
-                            ? "bg-green-50 text-green-700"
-                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                        )
-                      }
-                    >
-                      <>
-                        <item.icon className="h-4.5 w-4.5 flex-shrink-0" />
-                        <span>{item.label}</span>
-                      </>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-
-        <SidebarFooter className="p-4 mt-auto">
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors duration-150"
+            className={cn(
+              "w-full flex items-center px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-all duration-200 group relative",
+              !sidebarExpanded && "justify-center"
+            )}
           >
-            <LogOut className="h-4 w-4" />
-            <span>Sign out</span>
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            <span className={cn(
+              "ml-3 transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap",
+              sidebarExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+            )}>
+              Sign out
+            </span>
+
+            {/* Tooltip for collapsed state */}
+            {!sidebarExpanded && (
+              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                Sign out
+              </div>
+            )}
           </button>
-          <div className="mt-4 text-center">
-            <p className="text-xs text-gray-400">SwasthaSetu v1.0.0</p>
-          </div>
-        </SidebarFooter>
-
-        <SidebarRail className="bg-gray-50" />
-      </Sidebar>
-
-      <SidebarInset>
-        <Topbar />
-        <div className="px-6 py-6 bg-gray-50 min-h-screen">
-          <Outlet />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Topbar />
+        <main className="flex-1 overflow-auto bg-gray-50">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 };
 
 const Topbar: React.FC = () => {
   const { currentUser } = useAppState();
+  const location = useLocation();
+
+  // Get page title based on current route - keeping original logic
+  const getPageTitle = () => {
+    const path = location.pathname;
+    if (path.includes('/doctor')) {
+      if (path.includes('/patients')) return 'Patients';
+      if (path.includes('/generator/diet')) return 'Diet Plans';
+      if (path.includes('/generator/recipes')) return 'Recipes';
+      if (path.includes('/messages')) return 'Messages';
+      if (path.includes('/profile')) return 'Profile';
+      return 'Doctor Dashboard';
+    }
+    if (path.includes('/tracking')) return 'Health Tracking';
+    if (path.includes('/recipes')) return 'My Recipes';
+    if (path.includes('/scan')) return 'Food Scan';
+    if (path.includes('/messages')) return 'Messages';
+    if (path.includes('/profile')) return 'My Profile';
+    return 'SwasthaSetu';
+  };
+
   return (
-    <div className="sticky top-0 z-20 flex h-14 items-center justify-between bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 shadow-sm">
-      <div className="flex items-center gap-3">
-        <SidebarTrigger className="text-gray-600 hover:text-gray-900 transition-all" />
-        <div className="text-lg font-semibold text-gray-900">
-          {currentUser?.role === "doctor" ? "Doctor Dashboard" : "SwasthaSetu"}
+    <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div>
+            <h1 className="text-xl font-medium text-gray-900">{getPageTitle()}</h1>
+            <p className="text-sm text-gray-500">
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Assistant
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="right"
+              className="w-[480px] p-0 bg-white border-gray-200"
+            >
+              <SheetHeader className="sr-only">
+                <SheetTitle>Assistant</SheetTitle>
+              </SheetHeader>
+              <ChatWidget mode="panel" />
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      <div className="flex items-center gap-3">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400"
-            >
-              <MessageCircle className="h-4 w-4" /> Assistant
-            </Button>
-          </SheetTrigger>
-          <SheetContent
-            side="right"
-            className="w-[480px] p-0 bg-white/80 backdrop-blur-sm border border-gray-200"
-          >
-            <SheetHeader className="sr-only">
-              <SheetTitle>Assistant</SheetTitle>
-            </SheetHeader>
-            <ChatWidget mode="panel" />
-          </SheetContent>
-        </Sheet>
-      </div>
-    </div>
+    </header>
   );
 };

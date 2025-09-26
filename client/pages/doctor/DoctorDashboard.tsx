@@ -1,279 +1,406 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { useAppState } from "@/context/app-state";
+import { useEffect, useMemo, useState } from "react";
+import { useAppState, type ConsultRequest } from "@/context/app-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useSearchParams } from "react-router-dom";
-
-type Document = {
-  name: string;
-  url: string;
-};
-
-type PatientRequest = {
-  id: string;
-  patientName?: string; // Made optional to match ConsultRequest
-  patientDosha?: string; // Made optional to match ConsultRequest
-  status: "pending" | "accepted" | "rejected";
-  weight?: number | string;
-  height?: number | string;
-  lifestyle?: string;
-  emergencyContact?: string;
-  documents?: Document[];
-  // Add other fields that might exist in ConsultRequest
-  name?: string;
-  dosha?: string;
-  [key: string]: any; // For any additional properties
-};
+import { 
+  Clock, 
+  CheckCircle, 
+  Users, 
+  FileText, 
+  Activity,
+  Calendar,
+  ArrowLeft
+} from "lucide-react";
 
 export default function DoctorDashboard() {
-  const {
-    currentUser,
-    requests = [],
-    setRequests,
-  } = useAppState() as {
-    currentUser: any;
-    requests: any[];
-    setRequests: (updater: (prev: any[]) => any[]) => void;
-  };
-  const [selectedPatient, setSelectedPatient] = useState<PatientRequest | null>(
-    null,
-  );
+  const { currentUser, doctors, requests, setRequests } = useAppState();
+  const [selectedPatient, setSelectedPatient] = useState<ConsultRequest | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Map current user to a doctor profile id used elsewhere in the app
+  // Get the doctor profile ID (same logic as DoctorPatients)
   const getDoctorProfileId = () => {
     const key = `app:doctor-map:${currentUser?.id || "anon"}`;
     let mapped = localStorage.getItem(key);
     if (!mapped) {
-      mapped = currentUser?.id || "d1";
+      mapped = doctors[0]?.id || "d1";
       localStorage.setItem(key, mapped);
     }
     return mapped;
   };
   const doctorProfileId = getDoctorProfileId();
 
-  // Get pending requests from global state
-  const pendingRequests = useMemo<PatientRequest[]>(
-    () => (requests || []).filter((r: any) => r.status === "pending"),
-    [requests],
+  // Show ALL requests (not filtered by doctor) so you can see and accept them
+  const allRequests = requests;
+
+  // Get pending requests
+  const pendingRequests = useMemo(() => 
+    allRequests.filter(request => request.status === "pending"),
+    [allRequests]
   );
 
   // Get counts for different statuses
-  const stats = useMemo(
-    () => ({
-      pending: requests.filter((r: any) => r.status === "pending").length,
-      active: requests.filter((r: any) => r.status === "accepted").length,
-      consulted:
-        requests.filter((r: any) => r.status === "consulted").length || 0, // Fallback to 0 if no consulted status exists
-      total: requests.length,
-    }),
-    [requests],
-  );
+  const stats = useMemo(() => ({
+    pending: allRequests.filter(r => r.status === "pending").length,
+    active: allRequests.filter(r => r.status === "accepted").length,
+    consulted: allRequests.filter(r => r.status === "rejected").length, // Using rejected as consulted
+    total: allRequests.length,
+  }), [allRequests]);
 
-  // Helper function to get patient name (handles both ConsultRequest and PatientRequest types)
-  const getPatientName = (patient: PatientRequest) => {
-    return patient.patientName || patient.name || "Unknown";
+  // Helper function to get patient name
+  const getPatientName = (request: ConsultRequest) => {
+    return request.patientName || request.patientProfile?.name || "Unknown Patient";
   };
 
-  // Helper function to get patient dosha (handles both ConsultRequest and PatientRequest types)
-  const getPatientDosha = (patient: PatientRequest) => {
-    return patient.patientDosha || patient.dosha || "N/A";
+  // Helper function to get patient dosha
+  const getPatientDosha = (request: ConsultRequest) => {
+    return request.patientDosha || request.patientProfile?.dosha || "N/A";
+  };
+
+  // Helper function to get patient age
+  const getPatientAge = (request: ConsultRequest) => {
+    return request.age || request.patientProfile?.age || 0;
+  };
+
+  // Helper function to get patient gender
+  const getPatientGender = (request: ConsultRequest) => {
+    return request.gender || request.patientProfile?.gender || "N/A";
+  };
+
+  // Helper function to get patient symptoms
+  const getPatientSymptoms = (request: ConsultRequest) => {
+    return request.symptoms || request.patientProfile?.conditions || "No symptoms provided";
+  };
+
+  // Helper function to get patient weight
+  const getPatientWeight = (request: ConsultRequest) => {
+    return request.weight || request.patientProfile?.weight;
+  };
+
+  // Helper function to get patient height
+  const getPatientHeight = (request: ConsultRequest) => {
+    return request.height || request.patientProfile?.height;
+  };
+
+  // Helper function to get patient emergency contact
+  const getPatientEmergencyContact = (request: ConsultRequest) => {
+    return request.emergencyContact || request.patientProfile?.emergencyContact || "No emergency contact provided";
+  };
+
+  // Helper function to get patient lifestyle
+  const getPatientLifestyle = (request: ConsultRequest) => {
+    return request.lifestyle || request.patientProfile?.lifestyle || "No lifestyle information provided";
+  };
+
+  // Helper function to get patient documents
+  const getPatientDocuments = (request: ConsultRequest) => {
+    return request.documents || request.patientProfile?.documents || [];
   };
 
   // Handle patient selection
-  const handleSelectPatient = (patient: PatientRequest) => {
-    if (patient?.id) {
-      setSelectedPatient(patient);
-      setSearchParams({ patient: patient.id });
+  const handleSelectPatient = (request: ConsultRequest) => {
+    if (request?.id) {
+      setSelectedPatient(request);
+      setSearchParams({ patient: request.id });
     }
   };
 
   // Handle accepting a request
   const handleAcceptRequest = (id: string) => {
-    setRequests((prev: any[]) => {
-      const next = prev.map((r: any) =>
-        r.id === id
-          ? {
-              ...r,
-              status: "accepted",
-              doctorId: doctorProfileId,
-              acceptedDate: new Date().toISOString(),
-            }
-          : r,
-      );
-      const updated = next.find((r: any) => r.id === id) || null;
-      if (updated) setSelectedPatient(updated as any);
-      return next;
+    console.log("DoctorDashboard - Accepting request:", {
+      requestId: id,
+      doctorProfileId,
+      currentUserId: currentUser?.id
     });
+    
+    setRequests(prevRequests => 
+      prevRequests.map(request => 
+        request.id === id 
+          ? { ...request, status: "accepted" as const, doctorId: doctorProfileId, acceptedDate: new Date().toISOString() }
+          : request
+      )
+    );
+    
+    // Update selected patient if it's the current one
+    if (selectedPatient?.id === id) {
+      setSelectedPatient(prev => prev ? { ...prev, status: "accepted", doctorId: doctorProfileId, acceptedDate: new Date().toISOString() } : null);
+    }
   };
 
   // Handle rejecting a request
   const handleRejectRequest = (id: string) => {
-    setRequests((prevRequests) =>
-      prevRequests.map((r) => ({
-        ...r,
-        status: r.id === id ? "rejected" : r.status,
-      })),
+    setRequests(prevRequests => 
+      prevRequests.map(request => 
+        request.id === id 
+          ? { ...request, status: "rejected" as const }
+          : request
+      )
     );
+    
+    // Update selected patient if it's the current one
+    if (selectedPatient?.id === id) {
+      setSelectedPatient(prev => prev ? { ...prev, status: "rejected" } : null);
+    }
   };
 
   // Load selected patient from URL on mount
   useEffect(() => {
     const patientId = searchParams.get("patient");
     if (patientId) {
-      const patient = requests.find((r: any) => r.id === patientId);
-      if (patient) setSelectedPatient(patient);
+      const request = allRequests.find(r => r.id === patientId);
+      if (request) setSelectedPatient(request);
     }
-  }, [searchParams, requests]);
+  }, [searchParams, allRequests]);
 
   // If a patient is selected, show patient details
   if (selectedPatient) {
     return (
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Patient Details</h1>
+        {/* Back Navigation */}
+        <div className="mb-6">
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               setSelectedPatient(null);
               setSearchParams({});
             }}
+            className="text-gray-600 hover:text-gray-900 mb-4"
           >
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
         </div>
+        <div className="grid gap-8 lg:grid-cols-3">
+            {/* Patient Information */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Patient Header Card */}
+              <Card className="shadow-sm border-gray-200">
+                <CardContent className="p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl font-semibold text-blue-700">
+                        {getPatientName(selectedPatient)
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-semibold text-gray-900">{getPatientName(selectedPatient)}</h2>
+                      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+                        <span>{getPatientGender(selectedPatient)}, {getPatientAge(selectedPatient)} years</span>
+                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                          {getPatientDosha(selectedPatient)} Constitution
+                        </span>
+                      </div>
+                      <div className="mt-3 p-4 bg-orange-50 rounded-lg border-l-4 border-orange-400">
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium text-orange-800">Chief Complaint:</span> {getPatientSymptoms(selectedPatient)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Patient Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Basic Information */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Name</h3>
-                  <p className="mt-1">{selectedPatient.patientName || "N/A"}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Dosha Type
-                  </h3>
-                  <p className="mt-1">
-                    {selectedPatient.patientDosha || "N/A"}
-                  </p>
-                </div>
-
-                {/* Weight */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Weight</h3>
-                  <p className="mt-1">
-                    {selectedPatient.weight
-                      ? `${selectedPatient.weight} kg`
-                      : "N/A"}
-                  </p>
-                </div>
-
-                {/* Height */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Height</h3>
-                  <p className="mt-1">
-                    {selectedPatient.height
-                      ? `${selectedPatient.height} cm`
-                      : "N/A"}
-                  </p>
-                </div>
-
-                {/* Lifestyle */}
-                <div className="md:col-span-2">
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Lifestyle
-                  </h3>
-                  <p className="mt-1">{selectedPatient.lifestyle || "N/A"}</p>
-                </div>
-
-                {/* Emergency Contact */}
-                <div className="md:col-span-2">
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Emergency Contact
-                  </h3>
-                  <p className="mt-1">
-                    {selectedPatient.emergencyContact || "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Medical Documents */}
-              {selectedPatient.documents?.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">
-                    Medical Documents
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedPatient.documents.map(
-                      (doc: any, index: number) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-2 border rounded"
-                        >
-                          <span className="text-sm">{doc.name}</span>
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              View
-                            </a>
-                          </Button>
+              {/* Detailed Information */}
+              <Card className="shadow-sm border-gray-200">
+                <CardHeader className="border-b border-gray-100">
+                  <CardTitle className="text-lg font-medium text-gray-900">Patient Details</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Physical Metrics</label>
+                        <div className="mt-2 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Weight:</span>
+                            <span className="text-sm font-medium text-gray-900">
+                              {getPatientWeight(selectedPatient) ? `${getPatientWeight(selectedPatient)} kg` : "Not provided"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Height:</span>
+                            <span className="text-sm font-medium text-gray-900">
+                              {getPatientHeight(selectedPatient) ? `${getPatientHeight(selectedPatient)} cm` : "Not provided"}
+                            </span>
+                          </div>
+                          {getPatientWeight(selectedPatient) && getPatientHeight(selectedPatient) && (
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600">BMI:</span>
+                              <span className="text-sm font-medium text-gray-900">
+                                {(Number(getPatientWeight(selectedPatient)) / Math.pow(Number(getPatientHeight(selectedPatient)) / 100, 2)).toFixed(1)}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      ),
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Contact Information</label>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-900">
+                            {getPatientEmergencyContact(selectedPatient)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Lifestyle & Background</label>
+                        <p className="mt-2 text-sm text-gray-900 leading-relaxed">
+                          {getPatientLifestyle(selectedPatient)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Medical Documents */}
+                  {getPatientDocuments(selectedPatient).length > 0 && (
+                    <div className="mt-8 pt-6 border-t border-gray-100">
+                      <h3 className="text-sm font-medium text-gray-700 mb-4 flex items-center">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Medical Documents ({getPatientDocuments(selectedPatient).length})
+                      </h3>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {getPatientDocuments(selectedPatient).map((doc: any, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                                <FileText className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <span className="text-sm font-medium text-gray-900">{doc.name}</span>
+                            </div>
+                            <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                              View
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Consultation Actions */}
+            <div className="space-y-6">
+              {/* Status Card */}
+              <Card className="shadow-sm border-gray-200">
+                <CardHeader className="border-b border-gray-100">
+                  <CardTitle className="text-lg font-medium text-gray-900">Consultation Status</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
+                        selectedPatient.status === 'pending' 
+                          ? 'bg-yellow-50 text-yellow-800 border border-yellow-200'
+                          : selectedPatient.status === 'accepted'
+                          ? 'bg-green-50 text-green-800 border border-green-200'
+                          : 'bg-gray-50 text-gray-800 border border-gray-200'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full mr-2 ${
+                          selectedPatient.status === 'pending' ? 'bg-yellow-500' :
+                          selectedPatient.status === 'accepted' ? 'bg-green-500' : 'bg-gray-400'
+                        }`}></div>
+                        {selectedPatient.status.charAt(0).toUpperCase() + selectedPatient.status.slice(1)}
+                      </div>
+                    </div>
+                    
+                    {selectedPatient.status === "pending" && (
+                      <div className="space-y-3">
+                        <Button
+                          onClick={() => handleAcceptRequest(selectedPatient.id)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Accept Consultation
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleRejectRequest(selectedPatient.id)}
+                          className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          Decline Request
+                        </Button>
+                      </div>
+                    )}
+
+                    {selectedPatient.status === "accepted" && (
+                      <div className="text-center text-sm text-gray-600">
+                        <p>Consultation accepted on</p>
+                        <p className="font-medium text-gray-900">
+                          {selectedPatient.acceptedDate 
+                            ? new Date(selectedPatient.acceptedDate).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })
+                            : 'Date not available'
+                          }
+                        </p>
+                      </div>
                     )}
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Consultation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">Status</h3>
-                  <p className="mt-1 capitalize">{selectedPatient.status}</p>
-                </div>
-                {selectedPatient.status === "pending" && (
-                  <div className="flex space-x-2">
-                    <Button
-                      onClick={() => handleAcceptRequest(selectedPatient.id)}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleRejectRequest(selectedPatient.id)}
-                    >
-                      Reject
-                    </Button>
+              {/* Patient Timeline */}
+              <Card className="shadow-sm border-gray-200">
+                <CardHeader className="border-b border-gray-100">
+                  <CardTitle className="text-lg font-medium text-gray-900">Timeline</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Request Submitted</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(selectedPatient.createdAt || Date.now()).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    {selectedPatient.acceptedDate && (
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Consultation Accepted</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(selectedPatient.acceptedDate).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
       </div>
     );
   }
@@ -281,184 +408,138 @@ export default function DoctorDashboard() {
   // Main dashboard view
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
-          <p className="text-gray-500">
-            Welcome, {currentUser?.name || "User"}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid gap-6">
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-4">
+      {/* Clean Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-4 mb-8">
           {/* Pending Card */}
-          <Card className="border-l-4 border-yellow-400">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
-                Pending
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-yellow-600">
-                  {stats.pending}
+                <div>
+                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                    Pending
+                  </p>
+                  <p className="text-3xl font-semibold text-gray-900 mt-2">
+                    {stats.pending}
+                  </p>
                 </div>
-                <div className="p-2 rounded-full bg-yellow-100">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-yellow-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                <div className="p-3 bg-yellow-50 rounded-lg">
+                  <Clock className="w-6 h-6 text-yellow-600" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Awaiting your response
+              <p className="text-sm text-gray-500 mt-4">
+                Awaiting response
               </p>
             </CardContent>
           </Card>
 
           {/* Active Card */}
-          <Card className="border-l-4 border-blue-400">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
-                Active
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-blue-600">
-                  {stats.active}
+                <div>
+                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                    Active
+                  </p>
+                  <p className="text-3xl font-semibold text-gray-900 mt-2">
+                    {stats.active}
+                  </p>
                 </div>
-                <div className="p-2 rounded-full bg-blue-100">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-blue-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <Activity className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-500">Currently under care</p>
+              <p className="text-sm text-gray-500 mt-4">
+                Under treatment
+              </p>
             </CardContent>
           </Card>
 
-          {/* Consulted Card */}
-          <Card className="border-l-4 border-green-400">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
-                Consulted
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Completed Card */}
+          <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-green-600">
-                  {stats.consulted}
+                <div>
+                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                    Completed
+                  </p>
+                  <p className="text-3xl font-semibold text-gray-900 mt-2">
+                    {stats.consulted}
+                  </p>
                 </div>
-                <div className="p-2 rounded-full bg-green-100">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-green-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Completed consultations
+              <p className="text-sm text-gray-500 mt-4">
+                Consultations done
               </p>
             </CardContent>
           </Card>
 
           {/* Total Card */}
-          <Card className="border-l-4 border-purple-400">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
-                Total
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-purple-600">
-                  {stats.total}
+                <div>
+                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                    Total
+                  </p>
+                  <p className="text-3xl font-semibold text-gray-900 mt-2">
+                    {stats.total}
+                  </p>
                 </div>
-                <div className="p-2 rounded-full bg-purple-100">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-purple-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
+                <div className="p-3 bg-gray-100 rounded-lg">
+                  <Users className="w-6 h-6 text-gray-600" />
                 </div>
               </div>
-              <p className="mt-2 text-xs text-gray-500">All consultations</p>
+              <p className="text-sm text-gray-500 mt-4">
+                All patients
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader className="border-b">
+      {/* Clean Consultation Requests */}
+      <Card className="shadow-sm border-gray-200">
+          <CardHeader className="border-b border-gray-100 bg-white">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">
-                New Consultation Requests
-              </CardTitle>
-              <div className="flex items-center space-x-2">
-                <span className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-full">
-                  {pendingRequests.length} New
-                </span>
+              <div>
+                <CardTitle className="text-lg font-medium text-gray-900">
+                  Consultation Requests
+                </CardTitle>
+                <p className="text-sm text-gray-500 mt-1">
+                  Review and manage patient requests
+                </p>
               </div>
+              {pendingRequests.length > 0 && (
+                <span className="px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-lg font-medium border border-blue-200">
+                  {pendingRequests.length} pending
+                </span>
+              )}
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {pendingRequests.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
-                <p>No pending consultation requests</p>
+              <div className="p-12 text-center">
+                <div className="w-12 h-12 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-gray-400" />
+                </div>
+                <h3 className="text-sm font-medium text-gray-900 mb-1">No pending requests</h3>
+                <p className="text-sm text-gray-500">
+                  All consultation requests have been reviewed
+                </p>
               </div>
             ) : (
-              <div className="divide-y">
-                {pendingRequests.map((request) => (
+              <div className="divide-y divide-gray-100">
+                {pendingRequests.map((request, index) => (
                   <div
                     key={request.id}
-                    className="p-4 hover:bg-gray-50 transition-colors"
+                    className="p-6 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex space-x-4">
-                        <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                          <span className="text-lg font-medium">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-sm font-medium text-gray-700">
                             {getPatientName(request)
                               .split(" ")
                               .map((n) => n[0])
@@ -466,59 +547,56 @@ export default function DoctorDashboard() {
                               .toUpperCase()}
                           </span>
                         </div>
-                        <div>
-                          <h4 className="font-medium text-gray-900">
-                            {getPatientName(request)}
-                          </h4>
-                          <div className="flex items-center mt-1 text-sm text-gray-500">
-                            <span className="capitalize">
-                              {request.gender?.toLowerCase()}
-                            </span>
-                            <span className="mx-2">•</span>
-                            <span>{request.age} years</span>
-                            <span className="mx-2">•</span>
-                            <span className="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-600">
-                              {getPatientDosha(request)} Dosha
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-3">
+                            <h4 className="text-sm font-medium text-gray-900">
+                              {getPatientName(request)}
+                            </h4>
+                            <span className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded border border-blue-200">
+                              {getPatientDosha(request)}
                             </span>
                           </div>
-                          <p className="mt-2 text-sm text-gray-600">
-                            <span className="font-medium">Symptoms:</span>{" "}
-                            {request.symptoms}
-                          </p>
+                          <div className="flex items-center mt-1 text-sm text-gray-500 space-x-4">
+                            <span>{getPatientGender(request)?.toLowerCase() || 'N/A'}, {getPatientAge(request)} years</span>
+                            <span className="flex items-center">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {new Date(request.createdAt || Date.now()).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-700">
+                              <span className="font-medium">Chief complaint:</span> {getPatientSymptoms(request)}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end space-y-2">
-                        <span className="text-xs text-gray-500">
-                          Requested on{" "}
-                          {new Date(request.createdAt || Date.now())
-                            .toISOString()
-                            .slice(0, 10)}
-                        </span>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSelectPatient(request)}
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                          >
-                            View Details
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 border-red-200 hover:bg-red-50"
-                            onClick={() => handleRejectRequest(request.id)}
-                          >
-                            Reject
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAcceptRequest(request.id)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            Accept
-                          </Button>
-                        </div>
+                      <div className="flex items-center space-x-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSelectPatient(request)}
+                          className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          Review
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRejectRequest(request.id)}
+                          className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                        >
+                          Decline
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAcceptRequest(request.id)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Accept
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -527,7 +605,6 @@ export default function DoctorDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }
