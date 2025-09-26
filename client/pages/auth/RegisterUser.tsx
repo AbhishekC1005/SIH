@@ -1,5 +1,3 @@
-// New file for frontend, e.g., Register.js
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
@@ -7,28 +5,69 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useAppState } from "@/context/app-state";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { QUIZ } from "@/data/Quiz";
 
-// —— Constants ——
-const bgUrl =
-  "https://images.pexels.com/photos/3621234/pexels-photo-3621234.jpeg";
+// —— Clean Google-style UI Components ——
+const Card = ({ children, className = "" }) => (
+  <div className={`rounded-xl bg-white shadow-sm border border-gray-100 ${className}`}>
+    {children}
+  </div>
+);
 
-// —— Schemas Aligned with 'Patient' Type ——
+const CardContent = ({ children, className = "" }) => (
+  <div className={`p-8 lg:p-12 ${className}`}>
+    {children}
+  </div>
+);
+
+const Button = ({ children, className = "", variant = "primary", ...props }) => {
+  const baseClasses = "px-6 py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm";
+  const variants = {
+    primary: "bg-gray-900 text-white hover:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5",
+    secondary: "bg-gray-100 text-gray-700 hover:bg-gray-200",
+    outline: "border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400",
+    ghost: "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+  };
+  
+  return (
+    <motion.button
+      whileHover={{ scale: props.disabled ? 1 : 1.02 }}
+      whileTap={{ scale: props.disabled ? 1 : 0.98 }}
+      className={`${baseClasses} ${variants[variant]} ${className}`}
+      {...props}
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+const Input = ({ className = "", ...props }) => (
+  <motion.input
+    whileFocus={{ scale: 1.01 }}
+    className={`w-full px-4 py-3 rounded-md border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-300 text-sm ${className}`}
+    {...props}
+  />
+);
+
+const Label = ({ children, className = "", ...props }) => (
+  <label className={`block text-sm font-medium text-gray-700 mb-2 ${className}`} {...props}>
+    {children}
+  </label>
+);
+
+const Select = ({ children, value, onValueChange, className = "" }) => (
+  <select
+    value={value}
+    onChange={(e) => onValueChange(e.target.value)}
+    className={`w-full px-4 py-3 rounded-md border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-300 text-sm ${className}`}
+  >
+    {children}
+  </select>
+);
+
+// —— Schemas (unchanged) ——
 const formSchema = z.object({
-  // BaseUser Fields
   name: z.string().min(2, "Name is required"),
   gender: z.enum(["male", "female", "prefer not to say"], {
     required_error: "Gender is required",
@@ -37,8 +76,6 @@ const formSchema = z.object({
   contact: z
     .string()
     .regex(/^\d{10}$/, "Contact number must be exactly 10 digits"),
-  // ✅ CHANGE: Updated address schema to match backend's expectation of a single object,
-  // which will then be converted to a single-element array on the frontend
   address: z.object({
     city: z.string().min(2, "City is required"),
     state: z.string().min(2, "State is required"),
@@ -46,59 +83,66 @@ const formSchema = z.object({
   }),
   email: z.string().email("Valid email required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-
-  // Quiz Fields
   answers: z.record(z.string(), z.number().min(1).max(3)),
-
-  // Medical Fields (transformed for backend)
   allergies: z
     .string()
     .optional()
     .transform((val) => (val ? val.split(",").map((s) => s.trim()) : [])),
-  // ✅ NEW: Added diseases field to match backend
   diseases: z
     .string()
     .optional()
     .transform((val) => (val ? val.split(",").map((s) => s.trim()) : [])),
-  // ✅ CHANGE: The old backend expects one field for both file and text.
-  // We'll rename the field to match the backend's expected file field name.
   medical_history: z
     .custom<File | undefined>()
     .refine((file) => !file || file.type === "application/pdf", {
       message: "Only PDF files are allowed",
     })
     .optional(),
-  // ✅ DELETED: The `medical_description` field is removed as the old backend does not use it.
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 // —— Animation Variants ——
 const stepVariants = {
-  initial: { opacity: 0, y: 16 },
-  enter: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -16 },
+  initial: { opacity: 0, x: 20 },
+  enter: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -20 },
 };
 
-// —— Reusable Form Field Components ——
+const fieldVariants = {
+  initial: { opacity: 0, y: 10 },
+  enter: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.05, duration: 0.4 }
+  })
+};
+
+// —— Form Field Components ——
 function TextField({
   name,
   label,
+  index = 0,
   ...props
-}: { name: keyof FormValues } & React.InputHTMLAttributes<HTMLInputElement> & {
-    label: string;
-  }) {
+}: { name: keyof FormValues; label: string; index?: number } & React.InputHTMLAttributes<HTMLInputElement>) {
   const {
     register,
     formState: { errors },
   } = useFormContext<FormValues>();
   const error = (errors as any)[name];
+  
   return (
-    <div className="grid gap-2">
+    <motion.div
+      variants={fieldVariants}
+      initial="initial"
+      animate="enter"
+      custom={index}
+      className="space-y-2"
+    >
       <Label htmlFor={name}>{label}</Label>
       <Input id={name} {...props} {...register(name)} />
-      {error && <p className="text-xs text-destructive">{error.message}</p>}
-    </div>
+      {error && <p className="text-xs text-red-600">{error.message}</p>}
+    </motion.div>
   );
 }
 
@@ -106,10 +150,12 @@ function SelectField({
   name,
   label,
   options,
+  index = 0,
 }: {
   name: keyof FormValues;
   label: string;
   options: { label: string; value: string }[];
+  index?: number;
 }) {
   const {
     setValue,
@@ -118,28 +164,29 @@ function SelectField({
   } = useFormContext<FormValues>();
   const value = watch(name);
   const error = (errors as any)[name];
+  
   return (
-    <div className="grid gap-2">
+    <motion.div
+      variants={fieldVariants}
+      initial="initial"
+      animate="enter"
+      custom={index}
+      className="space-y-2"
+    >
       <Label>{label}</Label>
       <Select
         value={value as string}
-        onValueChange={(v) =>
-          setValue(name, v as any, { shouldValidate: true })
-        }
+        onValueChange={(v) => setValue(name, v as any, { shouldValidate: true })}
       >
-        <SelectTrigger>
-          <SelectValue placeholder="Select" />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
+        <option value="">Select {label.toLowerCase()}</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
       </Select>
-      {error && <p className="text-xs text-destructive">{error.message}</p>}
-    </div>
+      {error && <p className="text-xs text-red-600">{error.message}</p>}
+    </motion.div>
   );
 }
 
@@ -149,10 +196,12 @@ function StepPersonal() {
     register,
     formState: { errors },
   } = useFormContext<FormValues>();
+  
   return (
-    <div className="space-y-4">
-      <TextField name="name" label="Name" placeholder="Your full name" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <TextField name="name" label="Full name" placeholder="Enter your full name" index={0} />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SelectField
           name="gender"
           label="Gender"
@@ -161,65 +210,93 @@ function StepPersonal() {
             { label: "Female", value: "female" },
             { label: "Prefer not to say", value: "prefer not to say" },
           ]}
+          index={1}
         />
-        <div className="grid gap-2">
-          <Label>Date of Birth</Label>
+        
+        <motion.div
+          variants={fieldVariants}
+          initial="initial"
+          animate="enter"
+          custom={2}
+          className="space-y-2"
+        >
+          <Label>Date of birth</Label>
           <div className="relative">
-            <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input type="date" className="pl-9" {...register("dob")} />
+            <CalendarIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input type="date" className="pl-10" {...register("dob")} />
           </div>
           {errors.dob && (
-            <p className="text-xs text-destructive">{errors.dob.message}</p>
+            <p className="text-xs text-red-600">{errors.dob.message}</p>
           )}
-        </div>
+        </motion.div>
       </div>
+      
       <TextField
         name="contact"
-        label="Contact Number"
-        placeholder="10-digit number"
+        label="Phone number"
+        placeholder="10-digit mobile number"
         inputMode="numeric"
+        index={3}
       />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="grid gap-2">
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <motion.div
+          variants={fieldVariants}
+          initial="initial"
+          animate="enter"
+          custom={4}
+          className="space-y-2"
+        >
           <Label>City</Label>
           <Input placeholder="City" {...register("address.city")} />
           {errors.address?.city && (
-            <p className="text-xs text-destructive">
-              {errors.address.city.message}
-            </p>
+            <p className="text-xs text-red-600">{errors.address.city.message}</p>
           )}
-        </div>
-        <div className="grid gap-2">
+        </motion.div>
+        
+        <motion.div
+          variants={fieldVariants}
+          initial="initial"
+          animate="enter"
+          custom={5}
+          className="space-y-2"
+        >
           <Label>State</Label>
           <Input placeholder="State" {...register("address.state")} />
           {errors.address?.state && (
-            <p className="text-xs text-destructive">
-              {errors.address.state.message}
-            </p>
+            <p className="text-xs text-red-600">{errors.address.state.message}</p>
           )}
-        </div>
-        <div className="grid gap-2">
+        </motion.div>
+        
+        <motion.div
+          variants={fieldVariants}
+          initial="initial"
+          animate="enter"
+          custom={6}
+          className="space-y-2"
+        >
           <Label>Country</Label>
           <Input placeholder="Country" {...register("address.country")} />
           {errors.address?.country && (
-            <p className="text-xs text-destructive">
-              {errors.address.country.message}
-            </p>
+            <p className="text-xs text-red-600">{errors.address.country.message}</p>
           )}
-        </div>
+        </motion.div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <TextField
           name="email"
           label="Email"
           type="email"
-          placeholder="you@example.com"
+          placeholder="your@email.com"
+          index={7}
         />
         <TextField
           name="password"
           label="Password"
           type="password"
-          placeholder="••••••••"
+          placeholder="Create a password"
+          index={8}
         />
       </div>
     </div>
@@ -242,17 +319,32 @@ function StepQuiz({
   const setAnswer = (qid: number, val: 1 | 2 | 3) =>
     setValue(`answers.${String(qid)}`, val);
   const canProceed = slice.every((q) => !!answers[String(q.id)]);
+  
   const handleNext = () => {
     if (!canProceed) return;
     if (index < 4) setIndex(index + 1);
     else onFinish();
   };
+  
   return (
-    <div className="space-y-6">
-      {slice.map((q) => (
-        <div key={q.id} className="rounded-lg border p-4">
-          <p className="font-medium mb-3">{q.q}</p>
-          <div className="grid gap-2">
+    <div className="space-y-8">
+      <div className="text-center">
+        <h3 className="text-lg font-normal text-gray-900 mb-2">Health assessment</h3>
+        <p className="text-gray-600 text-sm">
+          Questions {start + 1}–{Math.min(start + 2, QUIZ.length)} of {QUIZ.length}
+        </p>
+      </div>
+      
+      {slice.map((q, qIndex) => (
+        <motion.div
+          key={q.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: qIndex * 0.1 }}
+          className="space-y-4"
+        >
+          <p className="font-normal text-gray-900">{q.q}</p>
+          <div className="space-y-2">
             {[q.a1, q.a2, q.a3].map((label, i) => {
               const opt = (i + 1) as 1 | 2 | 3;
               const active = answers[String(q.id)] === opt;
@@ -261,7 +353,7 @@ function StepQuiz({
                   key={opt}
                   type="button"
                   variant={active ? "secondary" : "outline"}
-                  className={`justify-start h-10 ${active ? "ring-2 ring-primary" : ""}`}
+                  className={`w-full text-left justify-start ${active ? "ring-2 ring-gray-900" : ""}`}
                   onClick={() => setAnswer(q.id, opt)}
                 >
                   {label}
@@ -269,19 +361,20 @@ function StepQuiz({
               );
             })}
           </div>
-        </div>
+        </motion.div>
       ))}
-      <div className="flex items-center justify-between">
+      
+      <div className="flex items-center justify-between pt-6">
         <Button
           type="button"
           variant="ghost"
           onClick={() => setIndex(Math.max(0, index - 1))}
           disabled={index === 0}
         >
-          Previous
+          Back
         </Button>
         <Button type="button" onClick={handleNext} disabled={!canProceed}>
-          {index < 4 ? "Next" : "Finish Quiz"}
+          {index < 4 ? "Continue" : "Complete"}
         </Button>
       </div>
     </div>
@@ -297,27 +390,63 @@ function StepMedical({
     register,
     formState: { errors },
   } = useFormContext<FormValues>();
+  
   return (
-    <div className="space-y-4">
-      <div className="grid gap-2">
-        <Label>Allergies (comma-separated, if any)</Label>
-        <Input placeholder="e.g., peanuts, pollen" {...register("allergies")} />
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h3 className="text-lg font-normal text-gray-900 mb-2">Medical information</h3>
+        <p className="text-gray-600 text-sm">Optional details to personalize your care</p>
       </div>
-      <div className="grid gap-2">
-        <Label>Diseases (comma-separated, if any)</Label>
-        <Input placeholder="e.g., diabetes, hypertension" {...register("diseases")} />
-      </div>
-      <div className="grid gap-2">
-        <Label>Medical Document (PDF only, optional)</Label>
-        {/* ✅ CHANGE: The name now matches the backend's expected file field name */}
-        <Input type="file" accept="application/pdf" onChange={onPdfChange} />
+      
+      <motion.div
+        variants={fieldVariants}
+        initial="initial"
+        animate="enter"
+        custom={0}
+        className="space-y-2"
+      >
+        <Label>Allergies</Label>
+        <Input 
+          placeholder="e.g., peanuts, pollen (comma-separated)" 
+          {...register("allergies")} 
+        />
+        <p className="text-xs text-gray-500">Leave blank if none</p>
+      </motion.div>
+      
+      <motion.div
+        variants={fieldVariants}
+        initial="initial"
+        animate="enter"
+        custom={1}
+        className="space-y-2"
+      >
+        <Label>Medical conditions</Label>
+        <Input 
+          placeholder="e.g., diabetes, hypertension (comma-separated)" 
+          {...register("diseases")} 
+        />
+        <p className="text-xs text-gray-500">Leave blank if none</p>
+      </motion.div>
+      
+      <motion.div
+        variants={fieldVariants}
+        initial="initial"
+        animate="enter"
+        custom={2}
+        className="space-y-2"
+      >
+        <Label>Medical documents</Label>
+        <Input 
+          type="file" 
+          accept="application/pdf" 
+          onChange={onPdfChange}
+          className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+        />
+        <p className="text-xs text-gray-500">Upload reports or prescriptions (PDF only)</p>
         {errors.medical_history && (
-          <p className="text-xs text-destructive">
-            {errors.medical_history.message}
-          </p>
+          <p className="text-xs text-red-600">{errors.medical_history.message}</p>
         )}
-      </div>
-      {/* The medical description text area is REMOVED to be compatible with the old backend */}
+      </motion.div>
     </div>
   );
 }
@@ -380,7 +509,6 @@ export default function Register() {
 
   const handlePdfChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const file = e.currentTarget.files?.[0];
-    // ✅ CHANGE: The value is now set to medical_history, matching the backend's expected field
     setValue("medical_history", file, { shouldValidate: true });
   };
 
@@ -397,10 +525,7 @@ export default function Register() {
       return;
     }
 
-    // ✅ CHANGES: Construct FormData to match the old backend's expectations
     const formData = new FormData();
-
-    // Append non-file, non-array fields
     formData.append("name", values.name);
     formData.append("email", values.email);
     formData.append("password", values.password);
@@ -409,18 +534,14 @@ export default function Register() {
     formData.append("contact", values.contact);
     formData.append("ayurvedic_category", determineDosha(values.answers));
     formData.append("mode", "online");
-    // ✅ CHANGE: The backend expects an array, so we wrap the object in an array before stringifying
     formData.append("address", JSON.stringify([values.address]));
 
-    // Append array fields as comma-separated strings
     if (values.allergies && values.allergies.length > 0) {
       formData.append("allergies", values.allergies.join(","));
     }
     if (values.diseases && values.diseases.length > 0) {
       formData.append("diseases", values.diseases.join(","));
     }
-
-    // ✅ CHANGE: The old backend expects a single file with the field name 'medical_history'
     if (values.medical_history) {
       formData.append("medical_history", values.medical_history);
     }
@@ -436,32 +557,27 @@ export default function Register() {
         },
       );
 
-      console.log("Registration successful:", response.data);
-      
-      // Set user in app state before redirect
       const userData = response.data.data?.user || response.data.user;
       if (userData) {
         const user = {
           id: userData._id || userData.id,
           name: userData.name,
           email: userData.email,
-          role: userData.role || "patient", // Default to patient role
+          role: userData.role || "patient",
           dosha: userData.ayurvedic_category || userData.dosha || null,
         };
         
-        // Save user to localStorage immediately before redirect
         localStorage.setItem("app:currentUser", JSON.stringify(user));
         setCurrentUser(user);
+        
+        setTimeout(() => {
+          if (user.role === "doctor") {
+            window.location.assign("/doctor");
+          } else {
+            window.location.assign("/dashboard");
+          }
+        }, 100);
       }
-      
-      // Small delay to ensure localStorage is written before redirect
-      setTimeout(() => {
-        if (user.role === "doctor") {
-          window.location.assign("/doctor");
-        } else {
-          window.location.assign("/dashboard");
-        }
-      }, 100);
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||
@@ -474,134 +590,185 @@ export default function Register() {
   };
 
   return (
-    <div
-      className="min-h-screen w-full bg-fixed bg-cover bg-center"
-      style={{ backgroundImage: `url(${bgUrl})` }}
-    >
-      <div className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-r from-[rgba(0,0,0,0.65)] via-[rgba(0,0,0,0.2)] to-transparent" />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <div className="flex min-h-screen">
+        {/* Left Column - Subtle Illustration */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-2xl"
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+          className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-gray-100 to-gray-50 items-center justify-center p-12"
         >
-          <Card className="rounded-2xl border bg-white shadow-sm">
-            <CardContent className="p-6 sm:p-8">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight">
-                    Create your account
-                  </h1>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Sign up as a patient
+          <div className="max-w-sm text-center">
+            {/* Abstract wellness shape */}
+            <div className="mb-8 flex justify-center">
+              <div className="relative">
+                <div className="w-32 h-32 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full opacity-60"></div>
+                <div className="absolute top-4 left-4 w-24 h-24 bg-gradient-to-br from-white to-gray-100 rounded-full"></div>
+                <div className="absolute top-8 left-8 w-16 h-16 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full opacity-40"></div>
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-light text-gray-800 mb-4">
+              Welcome to Swasthsetu
+            </h2>
+            <p className="text-gray-600 leading-relaxed text-sm">
+              Create your account to begin your personalized wellness journey with 
+              our Ayurvedic health platform.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Right Column - Registration Form */}
+        <div className="w-full lg:w-3/5 flex items-center justify-center p-6 lg:p-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="w-full max-w-lg"
+          >
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-light text-gray-900 mb-2">
+                Create account
+              </h1>
+              <p className="text-gray-600 text-sm">
+                Sign up for your wellness account
+              </p>
+            </div>
+
+            <Card>
+              <CardContent>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+                  >
+                    <p className="text-sm text-red-700">{error}</p>
+                  </motion.div>
+                )}
+
+                {/* Progress Indicator */}
+                <div className="mb-8">
+                  <div className="flex justify-between items-center mb-4">
+                    {["Personal", "Assessment", "Medical"].map((label, i) => (
+                      <div key={label} className="flex items-center">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 ${
+                            i < activeStep
+                              ? "bg-gray-900 text-white"
+                              : i === activeStep
+                              ? "bg-gray-100 text-gray-900 ring-2 ring-gray-900"
+                              : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {i + 1}
+                        </div>
+                        {i < 2 && (
+                          <div
+                            className={`w-12 h-px mx-3 transition-colors duration-300 ${
+                              i < activeStep ? "bg-gray-900" : "bg-gray-200"
+                            }`}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    Step {activeStep + 1} of 3
                   </p>
                 </div>
-                <a
-                  href="/login"
-                  className="text-sm underline-offset-4 hover:underline"
-                >
-                  Already registered? Sign in
-                </a>
-              </div>
 
-              {error && (
-                <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                  {error}
+                <FormProvider {...methods}>
+                  <form onSubmit={handleSubmit(finalizeRegistration)}>
+                    <AnimatePresence mode="wait" initial={false}>
+                      {activeStep === 0 && (
+                        <motion.div
+                          key="step-1"
+                          variants={stepVariants}
+                          initial="initial"
+                          animate="enter"
+                          exit="exit"
+                          transition={{ duration: 0.3 }}
+                        >
+                          <StepPersonal />
+                          <div className="mt-8 flex justify-end">
+                            <Button
+                              type="button"
+                              onClick={nextFromPersonal}
+                            >
+                              Continue
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                      
+                      {activeStep === 1 && (
+                        <motion.div
+                          key="step-2"
+                          variants={stepVariants}
+                          initial="initial"
+                          animate="enter"
+                          exit="exit"
+                          transition={{ duration: 0.3 }}
+                        >
+                          <StepQuiz
+                            index={quizScreen}
+                            setIndex={setQuizScreen}
+                            onFinish={() => setActiveStep(2)}
+                          />
+                        </motion.div>
+                      )}
+                      
+                      {activeStep === 2 && (
+                        <motion.div
+                          key="step-3"
+                          variants={stepVariants}
+                          initial="initial"
+                          animate="enter"
+                          exit="exit"
+                          transition={{ duration: 0.3 }}
+                        >
+                          <StepMedical onPdfChange={handlePdfChange} />
+                          <div className="mt-8 flex items-center justify-between">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => setActiveStep(1)}
+                            >
+                              Back
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={isLoading}
+                              className="flex items-center space-x-2"
+                            >
+                              {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                              <span>{isLoading ? "Creating account..." : "Create account"}</span>
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </form>
+                </FormProvider>
+
+                <div className="mt-8 text-center">
+                  <p className="text-sm text-gray-500">
+                    Already have an account?{" "}
+                    <a
+                      href="/login"
+                      className="text-gray-900 hover:underline font-medium transition-colors duration-300"
+                    >
+                      Sign in
+                    </a>
+                  </p>
                 </div>
-              )}
-
-              {/* Stepper header */}
-              <div className="mb-6 grid grid-cols-3 gap-2">
-                {["Personal", "Quiz", "Medical"].map((label, i) => (
-                  <div
-                    key={label}
-                    className={`rounded-full border px-3 py-2 text-center text-xs sm:text-sm transition-colors ${i < activeStep ? "bg-muted" : i === activeStep ? "bg-accent" : "bg-card"}`}
-                  >
-                    {label}
-                  </div>
-                ))}
-              </div>
-
-              <FormProvider {...methods}>
-                <form
-                  onSubmit={handleSubmit(finalizeRegistration)}
-                  className="space-y-6"
-                >
-                  <AnimatePresence mode="wait" initial={false}>
-                    {activeStep === 0 && (
-                      <motion.div
-                        key="step-1"
-                        variants={stepVariants}
-                        initial="initial"
-                        animate="enter"
-                        exit="exit"
-                        transition={{ duration: 0.25 }}
-                      >
-                        <StepPersonal />
-                        <div className="mt-6 flex justify-end">
-                          <Button
-                            type="button"
-                            className="rounded-full"
-                            onClick={nextFromPersonal}
-                          >
-                            Continue to Quiz
-                          </Button>
-                        </div>
-                      </motion.div>
-                    )}
-                    {activeStep === 1 && (
-                      <motion.div
-                        key="step-2"
-                        variants={stepVariants}
-                        initial="initial"
-                        animate="enter"
-                        exit="exit"
-                        transition={{ duration: 0.25 }}
-                      >
-                        <StepQuiz
-                          index={quizScreen}
-                          setIndex={setQuizScreen}
-                          onFinish={() => setActiveStep(2)}
-                        />
-                      </motion.div>
-                    )}
-                    {activeStep === 2 && (
-                      <motion.div
-                        key="step-3"
-                        variants={stepVariants}
-                        initial="initial"
-                        animate="enter"
-                        exit="exit"
-                        transition={{ duration: 0.25 }}
-                      >
-                        <StepMedical onPdfChange={handlePdfChange} />
-                        <div className="mt-6 flex items-center justify-between">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => setActiveStep(1)}
-                          >
-                            Back to Quiz
-                          </Button>
-                          <Button
-                            type="submit"
-                            className="rounded-full"
-                            disabled={isLoading}
-                          >
-                            {isLoading
-                              ? "Creating Account..."
-                              : "Create Account"}
-                          </Button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </form>
-              </FormProvider>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

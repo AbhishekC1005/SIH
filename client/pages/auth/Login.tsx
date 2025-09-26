@@ -1,40 +1,43 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, Loader2, XCircle } from "lucide-react";
+import { Loader2, XCircle } from "lucide-react";
 import axios from 'axios';
 
-// --- START: Mocked Shadcn UI Components and App State Context ---
+// --- START: Clean Google-like UI Components ---
 const Card = ({ children, className }) => (
-  <div className={`rounded-2xl border bg-white shadow-sm ${className}`}>
+  <div className={`rounded-3xl bg-white shadow-xl border border-gray-100 ${className}`}>
     {children}
   </div>
 );
 
 const CardContent = ({ children, className }) => (
-  <div className={`p-8 ${className}`}>
+  <div className={`p-12 ${className}`}>
     {children}
   </div>
 );
 
 const Button = ({ children, className, onClick, disabled }) => (
-  <button
-    className={`h-10 w-full rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+  <motion.button
+    whileHover={{ scale: disabled ? 1 : 1.02 }}
+    whileTap={{ scale: disabled ? 1 : 0.98 }}
+    className={`h-12 w-full rounded-full bg-gray-900 text-white font-medium hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl ${className}`}
     onClick={onClick}
     disabled={disabled}
   >
     {children}
-  </button>
+  </motion.button>
 );
 
 const Input = ({ className, ...props }) => (
-  <input
-    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+  <motion.input
+    whileFocus={{ scale: 1.02 }}
+    className={`flex h-14 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent focus:bg-white transition-all duration-300 ${className}`}
     {...props}
   />
 );
 
 const Label = ({ children, className }) => (
-  <label className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`}>
+  <label className={`text-sm font-medium text-gray-700 mb-2 block ${className}`}>
     {children}
   </label>
 );
@@ -63,29 +66,35 @@ const useAppState = () => {
   }
   return context;
 };
-// --- END: Mocked Shadcn UI Components and App State Context ---
 
 const ErrorModal = ({ message, onClose }) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
   >
     <motion.div
       initial={{ scale: 0.9, y: 50 }}
       animate={{ scale: 1, y: 0 }}
       exit={{ scale: 0.9, y: 50 }}
-      className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-lg"
+      className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl"
     >
-      <div className="flex justify-center mb-4">
-        <XCircle className="h-12 w-12 text-red-500" />
+      <div className="flex justify-center mb-6">
+        <div className="p-3 rounded-full bg-red-50">
+          <XCircle className="h-8 w-8 text-red-500" />
+        </div>
       </div>
-      <h3 className="text-xl font-semibold mb-2 text-red-700">Login Error</h3>
-      <p className="text-sm text-gray-600 mb-4">{message}</p>
-      <Button onClick={onClose} className="w-1/2 rounded-full" disabled={undefined}>
-        Close
-      </Button>
+      <h3 className="text-xl font-semibold mb-3 text-gray-900">Unable to sign in</h3>
+      <p className="text-gray-600 mb-6 leading-relaxed">{message}</p>
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={onClose}
+        className="px-8 py-3 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-colors duration-300"
+      >
+        Try again
+      </motion.button>
     </motion.div>
   </motion.div>
 );
@@ -104,7 +113,6 @@ export function Login() {
     return r === "doctor" ? "doctor" : "patient";
   }, []);
 
-  // The backend server is running on port 8000
   const API_URL = role === "doctor" ? "/api/doctor" : "/api/patient";
 
   async function handleLogin() {
@@ -124,20 +132,16 @@ export function Login() {
       const response = await axios.post(`${API_URL}/${loginEndpoint}`, { email, password });
 
       const data = response.data;
-      console.log("Login response data:", data); // Debug log
       const user = {
         id: data.data.user._id,
         name: data.data.user.name,
         email: data.data.user.email,
-        role: data.data.user.role, // Keep the original role (patient or doctor)
+        role: data.data.user.role,
       };
-      console.log("User object:", user); // Debug log
       
-      // Save user to localStorage immediately before redirect
       localStorage.setItem("app:currentUser", JSON.stringify(user));
       setCurrentUser(user);
 
-      // Small delay to ensure localStorage is written before redirect
       setTimeout(() => {
         if (user.role === "doctor") {
           window.location.assign("/doctor");
@@ -161,94 +165,120 @@ export function Login() {
     }
   }
 
-  const bgUrl =
-    "https://images.pexels.com/photos/3621234/pexels-photo-3621234.jpeg";
-
   return (
     <>
-      <div
-        className="min-h-screen w-full bg-fixed bg-cover bg-center font-sans text-gray-800"
-        style={{ backgroundImage: `url(${bgUrl})` }}
-      >
-        <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.65)_0%,rgba(0,0,0,0.45)_28%,rgba(0,0,0,0.2)_52%,transparent_82%)]" />
-        <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-10">
+      {/* Clean gradient background */}
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-gray-100 font-sans">
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="h-full w-full" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }} />
+        </div>
+
+        <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="w-full max-w-md"
           >
-            <Card className="rounded-2xl border bg-white shadow-lg ">
-              <CardContent className="p-8">
-                <div className="mb-6 text-center">
-                  <h1 className="text-2xl font-semibold tracking-tight">
-                    Welcome back {role === "doctor" ? "Doctor" : "User"}
-                  </h1>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Log in to your {role} account
+            {/* Brand header */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-center mb-8"
+            >
+              <h1 className="text-3xl font-light text-gray-900 mb-2">
+                Swasthsetu
+              </h1>
+              <p className="text-gray-500 text-sm font-light">
+                स्वास्थ्य सेतु
+              </p>
+            </motion.div>
+
+            <Card>
+              <CardContent>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="mb-8 text-center"
+                >
+                  <h2 className="text-2xl font-light text-gray-900 mb-2">
+                    Welcome back
+                  </h2>
+                  <p className="text-gray-500 text-sm">
+                    Sign in to your {role} account
                   </p>
-                </div>
+                </motion.div>
 
-                <div className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label className={undefined}>Email</Label>
-                    <div className="relative">
-                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                      <Input
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-9 focus-visible:ring-2"
-                      />
-                    </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="space-y-6"
+                >
+                  <div>
+                    <Label>Email address</Label>
+                    <Input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
                   </div>
-                  <div className="grid gap-2">
-                    <Label className={undefined}>Password</Label>
-                    <div className="relative">
-                      <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-9 focus-visible:ring-2"
-                      />
-                    </div>
+                  
+                  <div>
+                    <Label>Password</Label>
+                    <Input
+                      type="password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
                   </div>
 
-                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                  <div className="pt-2">
                     <Button
                       onClick={handleLogin}
-                      disabled={isLoading} className={undefined}                    >
+                      disabled={isLoading}
+                    >
                       {isLoading ? (
-                        <>
+                        <div className="flex items-center justify-center">
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging in...
-                        </>
+                          Signing in...
+                        </div>
                       ) : (
-                        "Log in"
+                        "Sign in"
                       )}
                     </Button>
-                  </motion.div>
-                </div>
+                  </div>
+                </motion.div>
 
-                <div className="mt-6 text-center text-sm text-gray-500">
-                  Don’t have an account?{" "}
-                  <a
-                    className="underline-offset-4 hover:underline text-emerald-600 font-medium"
-                    href={
-                      role === "doctor" ? "/register-doctor" : "/register-user"
-                    }
-                  >
-                    Register as {role}
-                  </a>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  className="mt-8 text-center"
+                >
+                  <p className="text-gray-500 text-sm">
+                    Don't have an account?{" "}
+                    <a
+                      className="text-gray-900 hover:underline font-medium transition-colors duration-300"
+                      href={role === "doctor" ? "/register-doctor" : "/register-user"}
+                    >
+                      Create account
+                    </a>
+                  </p>
+                </motion.div>
               </CardContent>
             </Card>
           </motion.div>
         </div>
       </div>
+      
       <AnimatePresence>
         {showModal && <ErrorModal message={error} onClose={() => setShowModal(false)} />}
       </AnimatePresence>
