@@ -71,13 +71,13 @@ export default function RegisterDoctor() {
       return;
     }
     const doctorId = `d_${Date.now()}`;
-    setCurrentUser({
+    const user = {
       id: doctorId,
       name: `Dr. ${name}`,
       email,
-      role: "doctor",
-    });
-    setDoctorProfile({
+      role: "doctor" as const,
+    };
+    const doctorProfile = {
       id: doctorId,
       name,
       age: age ? Number(age) : null,
@@ -89,9 +89,20 @@ export default function RegisterDoctor() {
       email,
       address: location,
       bio,
-    });
+    };
+    
+    // Save to localStorage immediately before redirect
+    localStorage.setItem("app:currentUser", JSON.stringify(user));
+    localStorage.setItem(`app:doctorProfile:${doctorId}`, JSON.stringify(doctorProfile));
     localStorage.setItem(`app:doctor-map:${doctorId}`, doctorId);
-    window.location.assign("/doctor");
+    
+    setCurrentUser(user);
+    setDoctorProfile(doctorProfile);
+    
+    // Small delay to ensure localStorage is written before redirect
+    setTimeout(() => {
+      window.location.assign("/doctor");
+    }, 100);
   };
 
   return (

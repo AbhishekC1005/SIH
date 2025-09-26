@@ -16,13 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,7 +43,7 @@ import {
   Menu,
   ChevronDown,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppState } from "@/context/app-state";
 import { ChatWidget } from "@/components/app/ChatWidget";
 
@@ -58,6 +52,24 @@ export const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+
+  // Keyboard shortcut to toggle assistant (Ctrl/Cmd + K)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        setAssistantOpen(prev => !prev);
+      }
+      // ESC to close assistant
+      if (event.key === 'Escape' && assistantOpen) {
+        setAssistantOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [assistantOpen]);
 
   const isDoctor = currentUser?.role === "doctor";
   const { doctors } = useAppState();
@@ -96,11 +108,11 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Modern Slim Sidebar */}
       <div
         className={cn(
-          "bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out flex flex-col",
+          "bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out flex flex-col flex-shrink-0",
           sidebarExpanded ? "w-64" : "w-16"
         )}
         onMouseEnter={() => setSidebarExpanded(true)}
@@ -218,18 +230,60 @@ export const AppLayout: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar />
+      {/* Main Content Area */}
+      <div className={cn(
+        "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+        assistantOpen ? "lg:mr-96 mr-0" : "mr-0"
+      )}>
+        <Topbar assistantOpen={assistantOpen} setAssistantOpen={setAssistantOpen} />
         <main className="flex-1 overflow-auto bg-gray-50">
           <Outlet />
         </main>
       </div>
+
+      {/* Assistant Panel - Slides in from right */}
+      <div className={cn(
+        "fixed top-0 right-0 h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-40",
+        "w-96 lg:w-96 w-full max-w-md flex flex-col",
+        assistantOpen ? "translate-x-0" : "translate-x-full"
+      )}>
+        {/* Assistant Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+          <div className="flex items-center space-x-2">
+            <MessageCircle className="w-5 h-5 text-blue-600" />
+            <h2 className="text-lg font-semibold text-gray-900">AI Assistant</h2>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAssistantOpen(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </Button>
+        </div>
+
+        {/* Assistant Content */}
+        <div className="flex-1 overflow-hidden">
+          <ChatWidget mode="panel" />
+        </div>
+      </div>
+
+      {/* Overlay for mobile */}
+      {assistantOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-25 z-30 lg:hidden"
+          onClick={() => setAssistantOpen(false)}
+        />
+      )}
     </div>
   );
 };
 
-const Topbar: React.FC = () => {
+const Topbar: React.FC<{
+  assistantOpen: boolean;
+  setAssistantOpen: (open: boolean) => void;
+}> = ({ assistantOpen, setAssistantOpen }) => {
   const { currentUser } = useAppState();
   const location = useLocation();
 
@@ -270,27 +324,24 @@ const Topbar: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Assistant
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="w-[480px] p-0 bg-white border-gray-200"
-            >
-              <SheetHeader className="sr-only">
-                <SheetTitle>Assistant</SheetTitle>
-              </SheetHeader>
-              <ChatWidget mode="panel" />
-            </SheetContent>
-          </Sheet>
+          <Button
+            size="sm"
+            variant={assistantOpen ? "default" : "outline"}
+            onClick={() => setAssistantOpen(!assistantOpen)}
+            className={cn(
+              "transition-all duration-200 relative group",
+              assistantOpen 
+                ? "bg-blue-600 text-white hover:bg-blue-700" 
+                : "border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+            )}
+            title="Toggle Assistant (Ctrl+K)"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            {assistantOpen ? "Close Assistant" : "Assistant"}
+            <span className="ml-2 text-xs opacity-60 hidden sm:inline">
+              ⌘K
+            </span>
+          </Button>
         </div>
       </div>
     </header>

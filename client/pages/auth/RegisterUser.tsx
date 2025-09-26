@@ -6,6 +6,7 @@ import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { useAppState } from "@/context/app-state";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -323,6 +324,7 @@ function StepMedical({
 
 // —— Main Component ——
 export default function Register() {
+  const { setCurrentUser } = useAppState();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeStep, setActiveStep] = useState<0 | 1 | 2>(0);
@@ -435,8 +437,31 @@ export default function Register() {
       );
 
       console.log("Registration successful:", response.data);
-      // On success, redirect to the dashboard
-      window.location.assign("/dashboard");
+      
+      // Set user in app state before redirect
+      const userData = response.data.data?.user || response.data.user;
+      if (userData) {
+        const user = {
+          id: userData._id || userData.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role || "patient", // Default to patient role
+          dosha: userData.ayurvedic_category || userData.dosha || null,
+        };
+        
+        // Save user to localStorage immediately before redirect
+        localStorage.setItem("app:currentUser", JSON.stringify(user));
+        setCurrentUser(user);
+      }
+      
+      // Small delay to ensure localStorage is written before redirect
+      setTimeout(() => {
+        if (user.role === "doctor") {
+          window.location.assign("/doctor");
+        } else {
+          window.location.assign("/dashboard");
+        }
+      }, 100);
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||

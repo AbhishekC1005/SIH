@@ -49,7 +49,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
 
 const UserGuard: React.FC = () => {
   const { currentUser } = useAppState();
-  if (currentUser?.role !== "user") return <Navigate to="/doctor" replace />;
+  if (currentUser?.role !== "patient") return <Navigate to="/doctor" replace />;
   return <Outlet />;
 };
 

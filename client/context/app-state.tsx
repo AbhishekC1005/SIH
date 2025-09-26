@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 
-export type Role = "user" | "doctor";
+export type Role = "patient" | "doctor";
 
 export type User = {
   id: string;
@@ -495,7 +495,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (!currentUser) return;
-    if (currentUser.role === "user" && !userProfile) {
+    if (currentUser.role === "patient" && !userProfile) {
       _setUserProfile(
         createBasicPatientProfile(
           `P-${currentUser.id}`,

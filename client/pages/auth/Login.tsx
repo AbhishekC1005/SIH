@@ -98,14 +98,14 @@ export function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // The backend server is running on port 8000
-  const API_URL = "/api/patient";
-
   const role = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     const r = params.get("role");
-    return r === "doctor" ? "doctor" : "user";
+    return r === "doctor" ? "doctor" : "patient";
   }, []);
+
+  // The backend server is running on port 8000
+  const API_URL = role === "doctor" ? "/api/doctor" : "/api/patient";
 
   async function handleLogin() {
     setError(null);
@@ -120,18 +120,31 @@ export function Login() {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/login-patient`, { email, password });
+      const loginEndpoint = role === "doctor" ? "login-doctor" : "login-patient";
+      const response = await axios.post(`${API_URL}/${loginEndpoint}`, { email, password });
 
       const data = response.data;
-      setCurrentUser({
+      console.log("Login response data:", data); // Debug log
+      const user = {
         id: data.data.user._id,
         name: data.data.user.name,
         email: data.data.user.email,
-        role: data.data.user.role,
-      });
+        role: data.data.user.role, // Keep the original role (patient or doctor)
+      };
+      console.log("User object:", user); // Debug log
+      
+      // Save user to localStorage immediately before redirect
+      localStorage.setItem("app:currentUser", JSON.stringify(user));
+      setCurrentUser(user);
 
-      // Redirect to the dashboard page after successful login
-      window.location.assign("/dashboard");
+      // Small delay to ensure localStorage is written before redirect
+      setTimeout(() => {
+        if (user.role === "doctor") {
+          window.location.assign("/doctor");
+        } else {
+          window.location.assign("/dashboard");
+        }
+      }, 100);
 
     } catch (err) {
       console.error("Login error:", err);
