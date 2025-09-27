@@ -179,62 +179,37 @@ export default function RegisterDoctor() {
         errorMessage = err.message || errorMessage;
       }
       
-      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      <div className="flex min-h-screen">
-        {/* Left Column - Professional Illustration */}
+    <div className="h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-hidden">
+      <div className="flex h-screen">
+        {/* Left Column - Full Height Image */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
-          className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-gray-100 to-gray-50 items-center justify-center p-12"
+          className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-gray-100 to-gray-50 items-center justify-center p-0 relative overflow-hidden"
         >
-          <div className="max-w-sm text-center">
-            {/* Professional medical icons */}
-            <div className="mb-8 flex justify-center space-x-4">
-              <div className="p-4 bg-white rounded-full shadow-sm">
-                <Stethoscope className="h-8 w-8 text-gray-700" />
-              </div>
-              <div className="p-4 bg-white rounded-full shadow-sm">
-                <Award className="h-8 w-8 text-gray-600" />
-              </div>
-              <div className="p-4 bg-white rounded-full shadow-sm">
-                <MapPin className="h-8 w-8 text-gray-500" />
-              </div>
-            </div>
-            
-            <h2 className="text-2xl font-light text-gray-800 mb-4">
-              Join as a Healthcare Provider
-            </h2>
-            <p className="text-gray-600 leading-relaxed text-sm mb-6">
-              Create your professional profile to connect with patients and 
-              provide expert Ayurvedic care through our platform.
-            </p>
-            <div className="space-y-2 text-xs text-gray-500">
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                <span>Verified medical license required</span>
-              </div>
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                <span>Connect with patients seeking Ayurvedic care</span>
-              </div>
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                <span>Professional practice management tools</span>
-              </div>
-            </div>
+          <div className="absolute inset-0 w-full h-full">
+            <img 
+              src="/images/Gemini_Generated_Image_uwnah8uwnah8uwna.png" 
+              alt="Healthcare professional illustration" 
+              className="w-full h-full object-cover object-center"
+              style={{ 
+                height: '100%', 
+                width: '100%',
+                minHeight: '100vh'
+              }}
+            />
           </div>
         </motion.div>
 
         {/* Right Column - Registration Form */}
-        <div className="w-full lg:w-3/5 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full lg:w-3/5 flex items-start justify-center p-6 lg:p-12 overflow-y-auto mt-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -243,16 +218,30 @@ export default function RegisterDoctor() {
           >
             {/* Header */}
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-light text-gray-900 mb-2">
+              <h1 className="text-3xl font-light text-green-900 mb-3 font-serif">
                 Create doctor account
               </h1>
-              <p className="text-gray-600 text-sm">
+              <p className="text-green-800/70 text-sm leading-relaxed">
                 Join our network of healthcare professionals
               </p>
             </div>
 
-            <Card>
-              <CardContent>
+            {/* Back Button */}
+            <div className="flex justify-start mb-4">
+              <Button
+                variant="ghost"
+                onClick={() => window.location.href = '/'}
+                className="flex items-center gap-2 text-green-700 hover:text-green-900 hover:bg-green-50 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+              </Button>
+            </div>
+
+            <Card className="shadow-xl border-green-100/30 bg-white/90 backdrop-blur-md rounded-2xl">
+              <CardContent className="p-8 lg:p-10 space-y-6">
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}

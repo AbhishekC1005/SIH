@@ -24,7 +24,7 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-gray-50 border-t border-gray-200">
+    <footer className="bg-gradient-to-br from-green-800 via-emerald-800 to-green-900 border-t border-green-700">
       {/* Main Footer Content */}
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
@@ -36,8 +36,8 @@ export const Footer: React.FC = () => {
             transition={{ duration: 0.6 }}
             className="md:col-span-1"
           >
-            <h3 className="text-xl font-light text-gray-900 mb-4">Swasthsetu</h3>
-            <p className="text-gray-600 leading-relaxed font-light text-sm">
+            <h3 className="text-xl font-light text-white mb-4">Swasthsetu</h3>
+            <p className="text-green-100 leading-relaxed font-light text-sm">
               Your bridge to holistic wellness through the perfect blend 
               of ancient wisdom and modern technology.
             </p>
@@ -52,7 +52,7 @@ export const Footer: React.FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <h4 className="text-sm font-medium text-gray-900 mb-4 capitalize">
+              <h4 className="text-sm font-medium text-white mb-4 capitalize">
                 {category}
               </h4>
               <ul className="space-y-3">
@@ -60,7 +60,7 @@ export const Footer: React.FC = () => {
                   <li key={link.name}>
                     <a
                       href={link.href}
-                      className="text-gray-600 hover:text-gray-900 transition-colors duration-300 text-sm font-light"
+                      className="text-green-100 hover:text-white transition-colors duration-300 text-sm font-light"
                     >
                       {link.name}
                     </a>
@@ -78,24 +78,24 @@ export const Footer: React.FC = () => {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.4 }}
-        className="border-t border-gray-200"
+        className="border-t border-green-700"
       >
         <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Copyright */}
-            <div className="text-gray-500 text-sm font-light">
+            <div className="text-green-200 text-sm font-light">
               © {new Date().getFullYear()} Swasthsetu. All rights reserved.
             </div>
 
             {/* Additional Links */}
             <div className="flex items-center gap-6">
-              <a href="#privacy" className="text-gray-500 hover:text-gray-700 transition-colors duration-300 text-sm font-light">
+              <a href="#privacy" className="text-green-200 hover:text-white transition-colors duration-300 text-sm font-light">
                 Privacy
               </a>
-              <a href="#terms" className="text-gray-500 hover:text-gray-700 transition-colors duration-300 text-sm font-light">
+              <a href="#terms" className="text-green-200 hover:text-white transition-colors duration-300 text-sm font-light">
                 Terms
               </a>
-              <a href="#cookies" className="text-gray-500 hover:text-gray-700 transition-colors duration-300 text-sm font-light">
+              <a href="#cookies" className="text-green-200 hover:text-white transition-colors duration-300 text-sm font-light">
                 Cookies
               </a>
             </div>

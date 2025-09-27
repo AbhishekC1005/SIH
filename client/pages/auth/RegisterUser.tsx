@@ -645,37 +645,37 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      <div className="flex min-h-screen">
-        {/* Left Column - Subtle Illustration */}
+    <div className="h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-hidden">
+      <div className="flex h-screen">
+        {/* Left Column - Full Height Image */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
-          className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-gray-100 to-gray-50 items-center justify-center p-12"
+          className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-yellow-50 to-green-50 items-center justify-center p-0 relative overflow-hidden"
         >
-          <div className="max-w-sm text-center">
-            {/* Abstract wellness shape */}
-            <div className="mb-8 flex justify-center">
-              <div className="relative">
-                <div className="w-32 h-32 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full opacity-60"></div>
-                <div className="absolute top-4 left-4 w-24 h-24 bg-gradient-to-br from-white to-gray-100 rounded-full"></div>
-                <div className="absolute top-8 left-8 w-16 h-16 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full opacity-40"></div>
-              </div>
-            </div>
-
-            <h2 className="text-2xl font-light text-gray-800 mb-4">
-              Welcome to Swasthsetu
+          <div className="absolute inset-0 w-full h-full">
+            <img 
+              src="/images/Gemini_Generated_Image_uwnah8uwnah8uwna.png" 
+              alt="Wellness healthcare illustration" 
+              className="w-full h-full object-cover object-center"
+              style={{ 
+                height: '100%', 
+                width: '100%',
+                minHeight: '100vh'
+              }}
+            />
+          </div>
+          
+          {/* Optional overlay content */}
+          <div className="relative z-10 max-w-sm text-center px-8">
+            <h2 className="text-2xl font-light text-green-900 mb-4 font-serif">
             </h2>
-            <p className="text-gray-600 leading-relaxed text-sm">
-              Create your account to begin your personalized wellness journey with
-              our Ayurvedic health platform.
-            </p>
           </div>
         </motion.div>
 
         {/* Right Column - Registration Form */}
-        <div className="w-full lg:w-3/5 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full lg:w-3/5 flex items-start justify-center p-6 lg:p-12 overflow-y-auto mt-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -684,16 +684,30 @@ export default function Register() {
           >
             {/* Header */}
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-light text-gray-900 mb-2">
+              <h1 className="text-3xl font-light text-green-900 mb-3 font-serif">
                 Create account
               </h1>
-              <p className="text-gray-600 text-sm">
-                Sign up for your wellness account
+              <p className="text-green-800/70 text-sm leading-relaxed">
+                Begin your wellness journey with Swasthsetu
               </p>
             </div>
 
-            <Card>
-              <CardContent>
+            {/* Back Button */}
+            <div className="flex justify-start mb-4">
+              <Button
+                variant="ghost"
+                onClick={() => window.location.href = '/'}
+                className="flex items-center gap-2 text-green-700 hover:text-green-900 hover:bg-green-50 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+              </Button>
+            </div>
+
+            <Card className="shadow-xl border-green-100/30 bg-white/90 backdrop-blur-md rounded-2xl">
+              <CardContent className="p-8 lg:p-10 space-y-6">
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -710,25 +724,25 @@ export default function Register() {
                     {["Personal", "Assessment", "Medical"].map((label, i) => (
                       <div key={label} className="flex items-center">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 ${i < activeStep
-                            ? "bg-gray-900 text-white"
+                          className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 shadow-sm ${i < activeStep
+                            ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/25"
                             : i === activeStep
-                              ? "bg-gray-100 text-gray-900 ring-2 ring-gray-900"
-                              : "bg-gray-100 text-gray-400"
+                              ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-900 ring-2 ring-green-600 shadow-md"
+                              : "bg-green-50 text-green-400"
                             }`}
                         >
                           {i + 1}
                         </div>
                         {i < 2 && (
                           <div
-                            className={`w-12 h-px mx-3 transition-colors duration-300 ${i < activeStep ? "bg-gray-900" : "bg-gray-200"
+                            className={`w-16 h-px mx-3 transition-colors duration-300 ${i < activeStep ? "bg-gradient-to-r from-green-600 to-emerald-600" : "bg-green-200"
                               }`}
                           />
                         )}
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 text-center">
+                  <p className="text-sm text-green-700/70 text-center font-medium">
                     Step {activeStep + 1} of 3
                   </p>
                 </div>
@@ -750,6 +764,7 @@ export default function Register() {
                             <Button
                               type="button"
                               onClick={nextFromPersonal}
+                              className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium rounded-full hover:from-green-700 hover:to-emerald-700 transition-all duration-400 shadow-lg hover:shadow-xl hover:shadow-green-500/25"
                             >
                               Continue
                             </Button>
@@ -789,13 +804,14 @@ export default function Register() {
                               type="button"
                               variant="ghost"
                               onClick={() => setActiveStep(1)}
+                              className="text-green-700/60 hover:text-green-800 hover:bg-green-50 transition-all duration-300"
                             >
                               Back
                             </Button>
                             <Button
                               type="submit"
                               disabled={isLoading}
-                              className="flex items-center space-x-2"
+                              className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium rounded-full hover:from-green-700 hover:to-emerald-700 transition-all duration-400 shadow-lg hover:shadow-xl hover:shadow-green-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                               <span>{isLoading ? "Creating account..." : "Create account"}</span>
@@ -808,11 +824,11 @@ export default function Register() {
                 </FormProvider>
 
                 <div className="mt-8 text-center">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-green-700/60">
                     Already have an account?{" "}
                     <a
                       href="/login"
-                      className="text-gray-900 hover:underline font-medium transition-colors duration-300"
+                      className="text-green-800 hover:text-green-900 font-medium transition-colors duration-300 underline decoration-green-300 hover:decoration-green-500"
                     >
                       Sign in
                     </a>
