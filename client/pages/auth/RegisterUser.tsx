@@ -29,7 +29,7 @@ const Button = ({ children, className = "", variant = "primary", ...props }) => 
     outline: "border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400",
     ghost: "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
   };
-  
+
   return (
     <motion.button
       whileHover={{ scale: props.disabled ? 1 : 1.02 }}
@@ -42,12 +42,15 @@ const Button = ({ children, className = "", variant = "primary", ...props }) => 
   );
 };
 
-const Input = ({ className = "", ...props }) => (
-  <motion.input
-    whileFocus={{ scale: 1.01 }}
-    className={`w-full px-4 py-3 rounded-md border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-300 text-sm ${className}`}
-    {...props}
-  />
+const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { className?: string }>(
+  ({ className = "", ...props }, ref) => (
+    <motion.input
+      ref={ref}
+      whileFocus={{ scale: 1.01 }}
+      className={`w-full px-4 py-3 rounded-md border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-300 text-sm ${className}`}
+      {...props}
+    />
+  )
 );
 
 const Label = ({ children, className = "", ...props }) => (
@@ -83,6 +86,8 @@ const formSchema = z.object({
   }),
   email: z.string().email("Valid email required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  height: z.string().optional(),
+  weight: z.string().optional(),
   answers: z.record(z.string(), z.number().min(1).max(3)),
   allergies: z
     .string()
@@ -130,7 +135,7 @@ function TextField({
     formState: { errors },
   } = useFormContext<FormValues>();
   const error = (errors as any)[name];
-  
+
   return (
     <motion.div
       variants={fieldVariants}
@@ -164,7 +169,7 @@ function SelectField({
   } = useFormContext<FormValues>();
   const value = watch(name);
   const error = (errors as any)[name];
-  
+
   return (
     <motion.div
       variants={fieldVariants}
@@ -196,11 +201,11 @@ function StepPersonal() {
     register,
     formState: { errors },
   } = useFormContext<FormValues>();
-  
+
   return (
     <div className="space-y-6">
       <TextField name="name" label="Full name" placeholder="Enter your full name" index={0} />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SelectField
           name="gender"
@@ -212,7 +217,7 @@ function StepPersonal() {
           ]}
           index={1}
         />
-        
+
         <motion.div
           variants={fieldVariants}
           initial="initial"
@@ -230,7 +235,7 @@ function StepPersonal() {
           )}
         </motion.div>
       </div>
-      
+
       <TextField
         name="contact"
         label="Phone number"
@@ -238,7 +243,7 @@ function StepPersonal() {
         inputMode="numeric"
         index={3}
       />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <motion.div
           variants={fieldVariants}
@@ -253,7 +258,7 @@ function StepPersonal() {
             <p className="text-xs text-red-600">{errors.address.city.message}</p>
           )}
         </motion.div>
-        
+
         <motion.div
           variants={fieldVariants}
           initial="initial"
@@ -267,7 +272,7 @@ function StepPersonal() {
             <p className="text-xs text-red-600">{errors.address.state.message}</p>
           )}
         </motion.div>
-        
+
         <motion.div
           variants={fieldVariants}
           initial="initial"
@@ -282,21 +287,38 @@ function StepPersonal() {
           )}
         </motion.div>
       </div>
-      
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <TextField
+          name="height"
+          label="Height (cm)"
+          type="number"
+          placeholder="170"
+          index={7}
+        />
+        <TextField
+          name="weight"
+          label="Weight (kg)"
+          type="number"
+          placeholder="65"
+          index={8}
+        />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <TextField
           name="email"
           label="Email"
           type="email"
           placeholder="your@email.com"
-          index={7}
+          index={9}
         />
         <TextField
           name="password"
           label="Password"
           type="password"
           placeholder="Create a password"
-          index={8}
+          index={10}
         />
       </div>
     </div>
@@ -319,13 +341,13 @@ function StepQuiz({
   const setAnswer = (qid: number, val: 1 | 2 | 3) =>
     setValue(`answers.${String(qid)}`, val);
   const canProceed = slice.every((q) => !!answers[String(q.id)]);
-  
+
   const handleNext = () => {
     if (!canProceed) return;
     if (index < 4) setIndex(index + 1);
     else onFinish();
   };
-  
+
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -334,7 +356,7 @@ function StepQuiz({
           Questions {start + 1}–{Math.min(start + 2, QUIZ.length)} of {QUIZ.length}
         </p>
       </div>
-      
+
       {slice.map((q, qIndex) => (
         <motion.div
           key={q.id}
@@ -363,7 +385,7 @@ function StepQuiz({
           </div>
         </motion.div>
       ))}
-      
+
       <div className="flex items-center justify-between pt-6">
         <Button
           type="button"
@@ -390,14 +412,14 @@ function StepMedical({
     register,
     formState: { errors },
   } = useFormContext<FormValues>();
-  
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h3 className="text-lg font-normal text-gray-900 mb-2">Medical information</h3>
         <p className="text-gray-600 text-sm">Optional details to personalize your care</p>
       </div>
-      
+
       <motion.div
         variants={fieldVariants}
         initial="initial"
@@ -406,13 +428,13 @@ function StepMedical({
         className="space-y-2"
       >
         <Label>Allergies</Label>
-        <Input 
-          placeholder="e.g., peanuts, pollen (comma-separated)" 
-          {...register("allergies")} 
+        <Input
+          placeholder="e.g., peanuts, pollen (comma-separated)"
+          {...register("allergies")}
         />
         <p className="text-xs text-gray-500">Leave blank if none</p>
       </motion.div>
-      
+
       <motion.div
         variants={fieldVariants}
         initial="initial"
@@ -421,13 +443,13 @@ function StepMedical({
         className="space-y-2"
       >
         <Label>Medical conditions</Label>
-        <Input 
-          placeholder="e.g., diabetes, hypertension (comma-separated)" 
-          {...register("diseases")} 
+        <Input
+          placeholder="e.g., diabetes, hypertension (comma-separated)"
+          {...register("diseases")}
         />
         <p className="text-xs text-gray-500">Leave blank if none</p>
       </motion.div>
-      
+
       <motion.div
         variants={fieldVariants}
         initial="initial"
@@ -436,9 +458,9 @@ function StepMedical({
         className="space-y-2"
       >
         <Label>Medical documents</Label>
-        <Input 
-          type="file" 
-          accept="application/pdf" 
+        <Input
+          type="file"
+          accept="application/pdf"
           onChange={onPdfChange}
           className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
         />
@@ -453,7 +475,7 @@ function StepMedical({
 
 // —— Main Component ——
 export default function Register() {
-  const { setCurrentUser } = useAppState();
+  const { setCurrentUser, addNotification } = useAppState();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [activeStep, setActiveStep] = useState<0 | 1 | 2>(0);
@@ -469,9 +491,11 @@ export default function Register() {
       address: { city: "", state: "", country: "" },
       email: "",
       password: "",
+      height: "",
+      weight: "",
       answers: {},
-      allergies: [],
-      diseases: [],
+      allergies: "",
+      diseases: "",
       medical_history: undefined,
     },
     mode: "onChange",
@@ -485,9 +509,11 @@ export default function Register() {
       "gender",
       "dob",
       "contact",
-      "address",
+      "address.city",
+      "address.state",
+      "address.country",
       "email",
-      "password",
+      "password"
     ]);
     if (ok) setActiveStep(1);
   };
@@ -516,6 +542,13 @@ export default function Register() {
     setIsLoading(true);
     setError(null);
 
+    // Validate required fields
+    if (!values.name || !values.email || !values.password || !values.dob || !values.gender || !values.contact) {
+      setError("Please fill in all required fields.");
+      setIsLoading(false);
+      return;
+    }
+
     if (Object.keys(values.answers).length !== QUIZ.length) {
       setFormError("answers", {
         message: `Please answer all ${QUIZ.length} quiz questions.`,
@@ -536,17 +569,38 @@ export default function Register() {
     formData.append("mode", "online");
     formData.append("address", JSON.stringify([values.address]));
 
-    if (values.allergies && values.allergies.length > 0) {
-      formData.append("allergies", values.allergies.join(","));
+    if (values.height) {
+      formData.append("height", values.height);
     }
-    if (values.diseases && values.diseases.length > 0) {
-      formData.append("diseases", values.diseases.join(","));
+    if (values.weight) {
+      formData.append("weight", values.weight);
+    }
+    if (values.allergies) {
+      formData.append("allergies", values.allergies);
+    }
+    if (values.diseases) {
+      formData.append("diseases", values.diseases);
     }
     if (values.medical_history) {
       formData.append("medical_history", values.medical_history);
     }
 
     try {
+      console.log('Submitting registration with data:', {
+        name: values.name,
+        email: values.email,
+        gender: values.gender,
+        dob: values.dob,
+        contact: values.contact,
+        address: values.address,
+        height: values.height,
+        weight: values.weight,
+        ayurvedic_category: determineDosha(values.answers),
+        allergies: values.allergies,
+        diseases: values.diseases,
+        hasFile: !!values.medical_history
+      });
+
       const response = await axios.post(
         "/api/patient/register-patient",
         formData,
@@ -557,33 +611,34 @@ export default function Register() {
         },
       );
 
-      const userData = response.data.data?.user || response.data.user;
-      if (userData) {
-        const user = {
-          id: userData._id || userData.id,
-          name: userData.name,
-          email: userData.email,
-          role: userData.role || "patient",
-          dosha: userData.ayurvedic_category || userData.dosha || null,
-        };
-        
-        localStorage.setItem("app:currentUser", JSON.stringify(user));
-        setCurrentUser(user);
-        
-        setTimeout(() => {
-          if (user.role === "doctor") {
-            window.location.assign("/doctor");
-          } else {
-            window.location.assign("/dashboard");
-          }
-        }, 100);
-      }
+      // Registration successful - redirect to login page
+      console.log('Patient registration successful:', response.data);
+
+      // Show success message
+      addNotification({
+        type: "success",
+        title: "Registration successful!",
+        message: "Your account has been created. Please log in to continue.",
+      });
+
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        window.location.assign("/login?role=patient&registered=true");
+      }, 1500);
     } catch (err: any) {
+      console.error('Registration error:', err);
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "An unexpected error occurred.";
+        "An unexpected error occurred during registration.";
       setError(errorMessage);
+
+      // Show error notification
+      addNotification({
+        type: "warning",
+        title: "Registration failed",
+        message: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -608,12 +663,12 @@ export default function Register() {
                 <div className="absolute top-8 left-8 w-16 h-16 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full opacity-40"></div>
               </div>
             </div>
-            
+
             <h2 className="text-2xl font-light text-gray-800 mb-4">
               Welcome to Swasthsetu
             </h2>
             <p className="text-gray-600 leading-relaxed text-sm">
-              Create your account to begin your personalized wellness journey with 
+              Create your account to begin your personalized wellness journey with
               our Ayurvedic health platform.
             </p>
           </div>
@@ -655,21 +710,19 @@ export default function Register() {
                     {["Personal", "Assessment", "Medical"].map((label, i) => (
                       <div key={label} className="flex items-center">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 ${
-                            i < activeStep
-                              ? "bg-gray-900 text-white"
-                              : i === activeStep
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 ${i < activeStep
+                            ? "bg-gray-900 text-white"
+                            : i === activeStep
                               ? "bg-gray-100 text-gray-900 ring-2 ring-gray-900"
                               : "bg-gray-100 text-gray-400"
-                          }`}
+                            }`}
                         >
                           {i + 1}
                         </div>
                         {i < 2 && (
                           <div
-                            className={`w-12 h-px mx-3 transition-colors duration-300 ${
-                              i < activeStep ? "bg-gray-900" : "bg-gray-200"
-                            }`}
+                            className={`w-12 h-px mx-3 transition-colors duration-300 ${i < activeStep ? "bg-gray-900" : "bg-gray-200"
+                              }`}
                           />
                         )}
                       </div>
@@ -703,7 +756,7 @@ export default function Register() {
                           </div>
                         </motion.div>
                       )}
-                      
+
                       {activeStep === 1 && (
                         <motion.div
                           key="step-2"
@@ -720,7 +773,7 @@ export default function Register() {
                           />
                         </motion.div>
                       )}
-                      
+
                       {activeStep === 2 && (
                         <motion.div
                           key="step-3"

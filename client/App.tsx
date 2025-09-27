@@ -32,6 +32,7 @@ import { lazy, Suspense } from "react";
 import RegisterUser from "./pages/auth/RegisterUser.tsx";
 import RegisterDoctor from "./pages/auth/RegisterDoctor.tsx";
 import Login from "./pages/auth/Login.tsx";
+import TestRegistration from "./pages/auth/TestRegistration.tsx";
 const DoctorMessagesLazy = lazy(
   () => import("./pages/doctor/DoctorMessages.tsx"),
 );
@@ -66,6 +67,7 @@ const AppRoutes = () => (
     <Route path="/login" element={<Login />} />
     <Route path="/register-user" element={<RegisterUser />} />
     <Route path="/register-doctor" element={<RegisterDoctor />} />
+    <Route path="/test-registration" element={<TestRegistration />} />
     <Route
       element={
         <ProtectedRoute>
