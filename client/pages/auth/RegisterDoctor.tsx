@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useAppState } from "@/context/app-state";
 import { CheckCircle2, Loader2, Stethoscope, Award, MapPin } from "lucide-react";
+import axios from "axios";
 
 // —— Clean Google-style UI Components ——
 const Card = ({ children, className = "" }) => (
@@ -79,6 +80,7 @@ export default function RegisterDoctor() {
   const [age, setAge] = useState<string>("");
   const [gender, setGender] = useState<"Male" | "Female" | "Other" | "">("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [hospital, setHospital] = useState("");
   const [specialty, setSpecialty] = useState("");
@@ -89,11 +91,13 @@ export default function RegisterDoctor() {
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const canVerify = useMemo(() => licenseNo.trim().length >= 6, [licenseNo]);
   const canSubmit = useMemo(
-    () => !!name && !!email && !!hospital && !!licenseNo && verified,
-    [name, email, hospital, licenseNo, verified],
+    () => !!name && !!email && !!password && !!hospital && !!licenseNo && verified,
+    [name, email, password, hospital, licenseNo, verified],
   );
 
   const onVerify = () => {
@@ -115,46 +119,70 @@ export default function RegisterDoctor() {
     }, 1200);
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
+
     if (!canSubmit) {
       setError("Please complete the form and verify your license.");
+      setIsLoading(false);
       return;
     }
-    const doctorId = `d_${Date.now()}`;
-    const user = {
-      id: doctorId,
-      name: `Dr. ${name}`,
-      email,
-      role: "doctor" as const,
-    };
-    const doctorProfile = {
-      id: doctorId,
-      name,
-      age: age ? Number(age) : null,
-      gender: gender || null,
-      licenseNo,
-      hospital,
-      specialty,
-      phone,
-      email,
-      address: location,
-      bio,
-    };
-    
-    // Save to localStorage immediately before redirect
-    localStorage.setItem("app:currentUser", JSON.stringify(user));
-    localStorage.setItem(`app:doctorProfile:${doctorId}`, JSON.stringify(doctorProfile));
-    localStorage.setItem(`app:doctor-map:${doctorId}`, doctorId);
-    
-    setCurrentUser(user);
-    setDoctorProfile(doctorProfile);
-    
-    // Small delay to ensure localStorage is written before redirect
-    setTimeout(() => {
-      window.location.assign("/doctor");
-    }, 100);
+
+    try {
+      // Prepare the data for the API call
+      const doctorData = {
+        name,
+        email: email.toLowerCase(),
+        password,
+        dob: age ? `${new Date().getFullYear() - parseInt(age)}-01-01` : new Date().toISOString().split('T')[0], // Convert age to approximate DOB
+        gender: gender ? gender.toLowerCase() : 'prefer not to say',
+        contact: phone || '0000000000',
+        address: location ? { city: location, state: '', country: '' } : { city: '', state: '', country: '' },
+        licenseNo,
+        hospital,
+        specialty: specialty || 'General Practice',
+        phone: phone || '0000000000',
+        bio: bio || ''
+      };
+
+      console.log('Sending doctor registration data:', doctorData);
+
+      // Make API call to register doctor
+      const response = await axios.post('/api/doctor/register-doctor', doctorData);
+
+      console.log('Doctor registration response:', response.data);
+
+      // Registration successful - show success message and redirect to login page
+      console.log('Doctor registration successful:', response.data);
+      setSuccess(true);
+      
+      // Show success message and redirect to login
+      setTimeout(() => {
+        window.location.assign("/login?role=doctor&registered=true");
+      }, 2000);
+
+    } catch (err: any) {
+      console.error("Doctor registration error:", err);
+      
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      
+      if (err.response) {
+        // Server responded with error status
+        errorMessage = err.response.data?.message || `Server error: ${err.response.status}`;
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage = "Could not connect to the server. Please check your internet connection.";
+      } else {
+        // Something else happened
+        errorMessage = err.message || errorMessage;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -235,6 +263,22 @@ export default function RegisterDoctor() {
                   </motion.div>
                 )}
 
+                {success && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800">Account created successfully!</p>
+                        <p className="text-xs text-green-700 mt-1">Redirecting to login page...</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 <form onSubmit={onSubmit} className="space-y-6">
                   {/* Personal Information */}
                   <div className="space-y-6">
@@ -311,22 +355,41 @@ export default function RegisterDoctor() {
                       </motion.div>
                     </div>
 
-                    <motion.div
-                      variants={fieldVariants}
-                      initial="initial"
-                      animate="enter"
-                      custom={4}
-                      className="space-y-2"
-                    >
-                      <Label>Email address</Label>
-                      <Input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@hospital.org"
-                        required
-                      />
-                    </motion.div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <motion.div
+                        variants={fieldVariants}
+                        initial="initial"
+                        animate="enter"
+                        custom={4}
+                        className="space-y-2"
+                      >
+                        <Label>Email address</Label>
+                        <Input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@hospital.org"
+                          required
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        variants={fieldVariants}
+                        initial="initial"
+                        animate="enter"
+                        custom={5}
+                        className="space-y-2"
+                      >
+                        <Label>Password</Label>
+                        <Input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Create a secure password"
+                          required
+                        />
+                      </motion.div>
+                    </div>
                   </div>
 
                   {/* Professional Information */}
@@ -340,7 +403,7 @@ export default function RegisterDoctor() {
                         variants={fieldVariants}
                         initial="initial"
                         animate="enter"
-                        custom={5}
+                        custom={6}
                         className="space-y-2"
                       >
                         <Label>Hospital/Clinic</Label>
@@ -356,7 +419,7 @@ export default function RegisterDoctor() {
                         variants={fieldVariants}
                         initial="initial"
                         animate="enter"
-                        custom={6}
+                        custom={7}
                         className="space-y-2"
                       >
                         <Label>Specialty</Label>
@@ -372,7 +435,7 @@ export default function RegisterDoctor() {
                       variants={fieldVariants}
                       initial="initial"
                       animate="enter"
-                      custom={7}
+                      custom={8}
                       className="space-y-2"
                     >
                       <Label>Location</Label>
@@ -387,7 +450,7 @@ export default function RegisterDoctor() {
                       variants={fieldVariants}
                       initial="initial"
                       animate="enter"
-                      custom={8}
+                      custom={9}
                       className="space-y-2"
                     >
                       <Label>Medical license number</Label>
@@ -439,7 +502,7 @@ export default function RegisterDoctor() {
                       variants={fieldVariants}
                       initial="initial"
                       animate="enter"
-                      custom={9}
+                      custom={10}
                       className="space-y-2"
                     >
                       <Label>Professional bio (optional)</Label>
@@ -462,8 +525,15 @@ export default function RegisterDoctor() {
                     >
                       Back
                     </Button>
-                    <Button type="submit" disabled={!canSubmit}>
-                      Create doctor account
+                    <Button type="submit" disabled={!canSubmit || isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create doctor account"
+                      )}
                     </Button>
                   </div>
                 </form>
