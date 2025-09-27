@@ -9,6 +9,7 @@ import React, {
 export type Role = "patient" | "doctor";
 
 export type User = {
+  [x: string]: any;
   id: string;
   name: string;
   email: string;
