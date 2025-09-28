@@ -167,7 +167,7 @@ export const Hero: React.FC<{
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
-            className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 lg:mb-8"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8"
           >
             {/* Patient Button - Clean white design */}
             <motion.button
@@ -177,13 +177,13 @@ export const Hero: React.FC<{
               whileHover={{ x: 8, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onRegisterUser}
-              className="group w-full sm:w-auto flex items-center justify-between bg-green-900/90 backdrop-blur-sm hover:bg-green-900 text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-green-800/30"
+              className="group w-full sm:w-auto flex items-center justify-between bg-green-900/90 backdrop-blur-sm hover:bg-green-900 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-green-800/30"
             >
               <div className="flex items-center space-x-4">
                 <div className="w-2 h-2 bg-white rounded-full"></div>
                 <div className="text-left">
-                  <div className="font-sans font-semibold text-lg sm:text-xl text-white">Get Started</div>
-                  <div className="font-sans text-sm sm:text-base text-gray-100">Begin your wellness journey</div>
+                  <div className="font-sans font-semibold text-base sm:text-lg text-white">Get Started</div>
+                  <div className="font-sans text-xs sm:text-sm text-gray-100">Begin your wellness journey</div>
                 </div>
               </div>
               <div className="text-gray-200 group-hover:text-white transition-colors duration-300">
@@ -201,13 +201,13 @@ export const Hero: React.FC<{
               whileHover={{ x: 8, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onRegisterDoctor}
-              className="group w-full sm:w-auto flex items-center justify-between bg-green-800/10 backdrop-blur-md hover:bg-green-800/20 text-green-900 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-green-700/20"
+              className="group w-full sm:w-auto flex items-center justify-between bg-green-800/10 backdrop-blur-md hover:bg-green-800/20 text-green-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-green-700/20"
             >
               <div className="flex items-center space-x-4">
                 <div className="w-2 h-2 bg-green-900/80 rounded-full"></div>
                 <div className="text-left">
-                  <div className="font-sans font-semibold text-lg sm:text-xl text-green-900">Join as Doctor</div>
-                  <div className="font-sans text-sm sm:text-base text-green-800/70">Share your expertise</div>
+                  <div className="font-sans font-semibold text-base sm:text-lg text-green-900">Join as Doctor</div>
+                  <div className="font-sans text-xs sm:text-sm text-green-800/70">Share your expertise</div>
                 </div>
               </div>
               <div className="text-green-800/60 group-hover:text-green-900/90 transition-colors duration-300">

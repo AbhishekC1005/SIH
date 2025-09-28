@@ -1,4 +1,34 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+
+// Global styles to hide scrollbars
+const hideScrollbars = `
+  /* Hide scrollbars for all elements */
+  * {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  *::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+  
+  /* Hide scrollbars but keep functionality */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+// Inject styles into document head
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = hideScrollbars;
+  document.head.appendChild(styleSheet);
+}
 import {
   Sidebar,
   SidebarContent,
@@ -251,7 +281,7 @@ export const AppLayout: React.FC = () => {
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
           <div className="flex items-center space-x-2">
             <MessageCircle className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">AI Assistant</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Setu</h2>
           </div>
           <Button
             variant="ghost"
@@ -334,10 +364,10 @@ const Topbar: React.FC<{
                 ? "bg-blue-600 text-white hover:bg-blue-700" 
                 : "border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
             )}
-            title="Toggle Assistant (Ctrl+K)"
+            title="Toggle Setu (Ctrl+K)"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            {assistantOpen ? "Close Assistant" : "Assistant"}
+            {assistantOpen ? "Close Setu" : "Setu"}
             <span className="ml-2 text-xs opacity-60 hidden sm:inline">
               ⌘K
             </span>

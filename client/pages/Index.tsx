@@ -36,7 +36,7 @@ export default function Index() {
               <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">S</span>
               </div>
-              <span className="text-xl font-serif font-light text-green-900">Swasthsetu</span>
+              <span className="text-xl font-serif font-light text-green-900">Swasthasetu</span>
             </motion.div>
 
             {/* Desktop Navigation */}
