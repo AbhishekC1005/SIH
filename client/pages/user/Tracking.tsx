@@ -15,7 +15,6 @@ import { Utensils, CalendarDays, Info } from "lucide-react";
 interface Meal {
   breakfast: string;
   lunch: string;
-  snack: string;
   dinner: string;
 }
 
@@ -43,7 +42,7 @@ interface MealDetails {
   instructions: string[];
 }
 
-type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+type MealType = 'breakfast' | 'lunch' | 'dinner';
 
 interface MealPlan {
   day: string;
@@ -57,13 +56,13 @@ interface MealPlan {
 
 // Sample weekly meal plan
 const weeklyMealPlan: MealPlan[] = [
-  { day: 'Monday', meals: { breakfast: 'Oatmeal with berries and nuts', lunch: 'Grilled chicken salad with olive oil dressing', snack: 'Greek yogurt with honey', dinner: 'Baked salmon with quinoa and steamed vegetables' } },
-  { day: 'Tuesday', meals: { breakfast: 'Scrambled eggs with whole grain toast', lunch: 'Quinoa bowl with chickpeas and vegetables', snack: 'Handful of mixed nuts', dinner: 'Grilled chicken with sweet potato and broccoli' } },
-  { day: 'Wednesday', meals: { breakfast: 'Greek yogurt with granola and fruit', lunch: 'Turkey and avocado wrap with side salad', snack: 'Cottage cheese with pineapple', dinner: 'Stir-fried tofu with brown rice and vegetables' } },
-  { day: 'Thursday', meals: { breakfast: 'Smoothie with spinach, banana, and protein powder', lunch: 'Grilled fish with quinoa and roasted vegetables', snack: 'Apple slices with almond butter', dinner: 'Lean beef with mashed cauliflower and green beans' } },
-  { day: 'Friday', meals: { breakfast: 'Avocado toast with poached eggs', lunch: 'Chicken and vegetable stir-fry with brown rice', snack: 'Protein shake with banana', dinner: 'Baked cod with roasted sweet potatoes and asparagus' } },
-  { day: 'Saturday', meals: { breakfast: 'Pancakes with fresh fruit and maple syrup', lunch: 'Grilled chicken Caesar salad', snack: 'Hummus with vegetable sticks', dinner: 'Homemade vegetable lasagna with side salad' } },
-  { day: 'Sunday', meals: { breakfast: 'Omelet with vegetables and feta cheese', lunch: 'Grilled salmon with quinoa and roasted vegetables', snack: 'Handful of almonds and dried fruit', dinner: 'Grilled steak with mashed potatoes and green beans' } },
+  { day: 'Sunday', meals: { breakfast: 'Omelet with vegetables and feta cheese', lunch: 'Grilled salmon with quinoa and roasted vegetables', dinner: 'Grilled steak with mashed potatoes and green beans' } },
+  { day: 'Monday', meals: { breakfast: 'Oatmeal with berries and nuts', lunch: 'Grilled chicken salad with olive oil dressing', dinner: 'Baked salmon with quinoa and steamed vegetables' } },
+  { day: 'Tuesday', meals: { breakfast: 'Scrambled eggs with whole grain toast', lunch: 'Quinoa bowl with chickpeas and vegetables', dinner: 'Grilled chicken with sweet potato and broccoli' } },
+  { day: 'Wednesday', meals: { breakfast: 'Greek yogurt with granola and fruit', lunch: 'Turkey and avocado wrap with side salad', dinner: 'Stir-fried tofu with brown rice and vegetables' } },
+  { day: 'Thursday', meals: { breakfast: 'Smoothie with spinach, banana, and protein powder', lunch: 'Grilled fish with quinoa and roasted vegetables', dinner: 'Lean beef with mashed cauliflower and green beans' } },
+  { day: 'Friday', meals: { breakfast: 'Avocado toast with poached eggs', lunch: 'Chicken and vegetable stir-fry with brown rice', dinner: 'Baked cod with roasted sweet potatoes and asparagus' } },
+  { day: 'Saturday', meals: { breakfast: 'Pancakes with fresh fruit and maple syrup', lunch: 'Grilled chicken Caesar salad', dinner: 'Homemade vegetable lasagna with side salad' } },
 ];
 
 // MealCard component
@@ -95,9 +94,7 @@ export default function Tracking() {
   const appState = useAppState();
   const [reminders, setReminders] = useState(false);
   const [notif, setNotif] = useState<string | null>(null);
-  const [selectedDayIndex, setSelectedDayIndex] = useState(
-    new Date().getDay() - 1 >= 0 ? new Date().getDay() - 1 : 6
-  );
+  const [selectedDayIndex, setSelectedDayIndex] = useState(new Date().getDay()); // Start with today (0=Sunday, 1=Monday, etc.)
   const [selectedMeal, setSelectedMeal] = useState<{type: MealType; details: MealDetails} | null>(null);
   
   // Provide default values if appState is not available yet
@@ -255,60 +252,20 @@ export default function Tracking() {
         "Grill vegetables until tender, about 8-10 minutes.",
         "Serve with lemon wedges."
       ]
-    },
-    snack: {
-      title: "Spiced Yogurt with Nuts",
-      description: "A protein-rich snack with digestive spices to keep you full between meals.",
-      ayurvedicInfo: {
-        dosha: "Balances Vata and Pitta when spiced, can increase Kapha",
-        qualities: "Cooling, heavy, moist, nourishing",
-        benefits: [
-          "Supports gut health (contains probiotics)",
-          "Nourishes all tissues (Dhatus)",
-          "Calms Pitta dosha",
-          "Enhances digestion when spiced"
-        ],
-        bestTime: "Mid-morning or afternoon",
-        spices: "Cumin, ginger, black salt (aids digestion)"
-      },
-      modernNutrition: {
-        calories: 280,
-        protein: "15g",
-        carbs: "22g",
-        fat: "14g",
-        probiotics: "Live active cultures",
-        keyNutrients: [
-          "High in calcium and protein",
-          "Source of probiotics for gut health",
-          "Provides healthy fats and protein",
-          "Contains magnesium and B-vitamins"
-        ]
-      },
-      ingredients: [
-        "1 cup Greek yogurt",
-        "1/4 cup mixed nuts (almonds, walnuts)",
-        "1 tsp honey",
-        "1/4 tsp cinnamon"
-      ],
-      instructions: [
-        "Scoop Greek yogurt into a bowl.",
-        "Top with mixed nuts.",
-        "Drizzle with honey and sprinkle with cinnamon."
-      ]
     }
   };
 
   // Define the week data with proper typing
   const week = useMemo(() => {
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const today = new Date();
     const currentDay = today.getDay(); // 0 (Sunday) to 6 (Saturday)
     const todayShort = today.toLocaleDateString('en-US', { weekday: 'short' });
     
     return days.map((day, idx) => {
       const date = new Date(today);
-      // Adjust to start the week from Monday
-      const dayOffset = currentDay === 0 ? 6 : currentDay - 1; // Convert to 0 (Monday) to 6 (Sunday)
+      // Start the week from Sunday
+      const dayOffset = currentDay; // 0 = Sunday, 1 = Monday, etc.
       date.setDate(today.getDate() - dayOffset + idx);
       
       return {
@@ -594,11 +551,13 @@ export default function Tracking() {
           >
             <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
               <CalendarDays className="w-5 h-5 text-blue-500" />
-              {weeklyMealPlan[selectedDayIndex].day}'s Meals
+              {week[selectedDayIndex].day}, {week[selectedDayIndex].monthName} {week[selectedDayIndex].date}'s Meals
             </h3>
             
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-              {Object.entries(weeklyMealPlan[selectedDayIndex].meals).map(([mealType, description]) => (
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(weeklyMealPlan[selectedDayIndex].meals)
+                .filter(([mealType]) => mealType !== 'snack')
+                .map(([mealType, description]) => (
                 <div 
                   key={mealType}
                   className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
@@ -616,8 +575,7 @@ export default function Tracking() {
                     <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
                       <span className="text-xs font-medium text-gray-500">
                         {mealType === 'breakfast' ? '8:00 AM' : 
-                         mealType === 'lunch' ? '1:00 PM' :
-                         mealType === 'snack' ? '4:00 PM' : '8:00 PM'}
+                         mealType === 'lunch' ? '1:00 PM' : '8:00 PM'}
                       </span>
                       <button 
                         onClick={() => setSelectedMeal({ 

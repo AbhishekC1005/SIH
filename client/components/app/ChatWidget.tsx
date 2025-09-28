@@ -676,20 +676,10 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
       <button
         onClick={handleSend}
         disabled={!input.trim()}
-        className="w-full group relative h-12 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 overflow-hidden shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+        className="w-full h-10 bg-gray-600 text-white font-medium rounded-lg flex items-center justify-center gap-2"
       >
-        {/* Animated background effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        
-        {/* Send icon with animation */}
-        <div className="relative flex items-center justify-center w-6 h-6 bg-white/20 rounded-lg backdrop-blur-sm">
-          <Send className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-200" />
-        </div>
-        
-        <span className="relative text-sm tracking-wide">Send</span>
-        
-        {/* Ripple effect on hover */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400/10 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <Send className="h-4 w-4" />
+        <span>Send Message</span>
       </button>
     </div>
   );

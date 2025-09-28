@@ -746,11 +746,10 @@ export default function DoctorDietGenerator() {
                     onClick={() => {
                       if (!plan) return;
                       // Save flat plan into matching patient request if found
-                      const q = (patientId || patientName).trim().toLowerCase();
                       const match = requests.find(
                         (r) =>
-                          r.userId.toLowerCase() === q ||
-                          (r.patientName || "").toLowerCase().includes(q),
+                          (r.patientName || "").toLowerCase() ===
+                          fetchedName?.trim().toLowerCase(),
                       );
                       if (match) {
                         setRequests(
