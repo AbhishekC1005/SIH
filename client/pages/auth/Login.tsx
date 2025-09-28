@@ -191,7 +191,7 @@ export function Login() {
               className="text-center mb-8"
             >
               <h1 className="text-3xl font-light text-gray-900 mb-2">
-                Swasthsetu
+                Swasthasetu
               </h1>
               <p className="text-gray-500 text-sm font-light">
                 स्वास्थ्य सेतु
