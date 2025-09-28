@@ -97,7 +97,7 @@ export default function Dashboard() {
     { 
       title: "Dosha", 
       icon: Bot, 
-      value: currentUser?.dosha || "Unclassified", 
+      value: currentUser?.dosha || "Kapha", 
       subtitle: "Complete quiz to personalize",
       bgGradient: "from-emerald-500 to-teal-400",
       iconColor: "text-white"

@@ -270,6 +270,12 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const [doctors] = useState<Doctor[]>([
     {
+      id: "d0",
+      name: "Dr. Victor Doom",
+      specialty: "Metabolic Care",
+      rating: 4.9,
+    },
+    {
       id: "d1",
       name: "Dr. Anaya Verma",
       specialty: "Ayurvedic Diet",
