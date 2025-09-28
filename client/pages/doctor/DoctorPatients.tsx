@@ -1,7 +1,6 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// FIX: Reverting to alias import to resolve persistent compilation errors.
-import { useAppState } from "@/context/app-state"; 
+import { useAppState } from "@/context/app-state";
 import {
   Card,
   CardContent,
@@ -29,9 +28,6 @@ import {
   Heart,
   Plus,
   MoreHorizontal,
-  RefreshCw,
-  Loader2, // For loading spinner
-  AlertTriangle // For error icon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,32 +38,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-
-// Define the expected structure of a Patient fetched from the API
-interface Patient {
-  _id: string; // MongoDB ID for the patient
-  name: string;
-  email: string;
-  ayurvedic_category: 'vata' | 'pitta' | 'kapha' | string;
-  contact: string;
-  createdAt: string;
-  // ... other patient fields
-}
-
 export default function DoctorPatients() {
-  // Removed unused dependency 'requests' and 'fetchRequests' if not used for patient data
-  const { currentUser } = useAppState(); 
+  const { currentUser, doctors, requests } = useAppState();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [patients, setPatients] = useState<Patient[]>([]); // State for fetched patients
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // --- Utility Functions (Local Storage for last viewed) ---
-  const doctorProfileId = currentUser?._id; // Use MongoDB ID for doctor ID
+  const getDoctorProfileId = () => {
+    const key = `app:doctor-map:${currentUser?.id || "anon"}`;
+    let mapped = localStorage.getItem(key);
+    if (!mapped) {
+      mapped = doctors[0]?.id || "d1";
+      localStorage.setItem(key, mapped);
+    }
+    return mapped;
+  };
+  const doctorProfileId = getDoctorProfileId();
 
   type LastViewedMap = Record<string, number>;
-  const lvKey = `app:patients:lastViewed:${doctorProfileId || "anon"}`;
+  const lvKey = `app:patients:lastViewed:${doctorProfileId}`;
   const readLV = (): LastViewedMap => {
     try {
       return JSON.parse(localStorage.getItem(lvKey) || "{}");
@@ -82,71 +70,22 @@ export default function DoctorPatients() {
     m[id] = Date.now();
     writeLV(m);
   };
-  // ---------------------------------------------------------------------------------------------
 
-  /**
-   * Fetches assigned patients from the backend API.
-   * This function needs to be called on page load and whenever a new patient is added/data needs refreshing.
-   */
-  const fetchAssignedPatients = useCallback(async () => {
-    // CRITICAL FIX: Ensure loading state is turned off if doctor is not logged in.
-    if (!doctorProfileId) {
-      console.warn("User not authenticated or doctor ID missing. Cannot fetch patients.");
-      setError("Doctor profile not found. Please log in.");
-      setIsLoading(false); 
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      // NOTE: Axios handles this withCredentials automatically; using fetch needs attention to headers/cookies
-      const response = await fetch('/api/doctor/patients', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Authentication (JWT/Cookie) is handled automatically by the browser/setup
-        },
+  // Get all patients for this doctor
+  const myPatients = useMemo(
+    () => {
+      console.log("DoctorPatients - Filtering patients:", {
+        doctorProfileId,
+        currentUserId: currentUser?.id,
+        allRequests: requests.map(r => ({ id: r.id, doctorId: r.doctorId, status: r.status, patientName: r.patientName }))
       });
-
-      if (!response.ok) {
-        // Read the error message from the response body for better debugging
-        const errorData = await response.json().catch(() => ({ message: `HTTP Error ${response.status}` }));
-        throw new Error(errorData.message || `Failed to fetch assigned patients: Status ${response.status}`);
-      }
-
-      const result = await response.json();
       
-      // Check for success and expected data structure
-      if (result.success && Array.isArray(result.data)) {
-        setPatients(result.data);
-      } else {
-         throw new Error(result.message || "Invalid data structure received from the server (missing 'success' or 'data' array).");
-      }
-
-    } catch (err: any) {
-      // LOG THE FULL ERROR HERE for debugging in the browser console
-      console.error("Error fetching patients:", err); 
-      // Fallback error message for network issues or unexpected errors
-      setError(err.message || "An unknown network error occurred."); 
-    } finally {
-      setIsLoading(false);
-    }
-  }, [doctorProfileId]);
-
-  // Initial fetch on mount and on doctor ID change
-  useEffect(() => {
-    if (doctorProfileId) {
-      fetchAssignedPatients();
-    } else {
-      // Ensure loading stops even if the user is not authenticated yet
-      setIsLoading(false); 
-    }
-    // ensure lv exists
-    if (!localStorage.getItem(lvKey)) writeLV({});
-  }, [doctorProfileId, fetchAssignedPatients, lvKey]);
-
-  // --- Stat and Filter Logic uses the fetched `patients` state ---
+      return requests.filter(
+        (r) => r.doctorId === doctorProfileId && r.status === "accepted",
+      );
+    },
+    [requests, doctorProfileId, currentUser?.id],
+  );
 
   // Calculate statistics based on available data
   const stats = useMemo(() => {
@@ -155,15 +94,14 @@ export default function DoctorPatients() {
     monthAgo.setMonth(monthAgo.getMonth() - 1);
 
     // Count patients added in the last month
-    const recentPatients = patients.filter((p) => {
-      // Assuming 'createdAt' is available on the Patient object
-      const patientDate = new Date(p.createdAt); 
+    const recentPatients = myPatients.filter((p) => {
+      const patientDate = new Date(p.createdAt);
       return patientDate > monthAgo;
     });
 
     // Count patients who might need follow-up (using last viewed as a proxy)
-    const needsFollowUp = patients.filter((p) => {
-      const lastViewed = readLV()[p._id]; // Use _id for API data
+    const needsFollowUp = myPatients.filter((p) => {
+      const lastViewed = readLV()[p.id];
       if (!lastViewed) return true; // Never viewed
       const lastViewDate = new Date(lastViewed);
       const weekAgo = new Date(now);
@@ -172,64 +110,37 @@ export default function DoctorPatients() {
     }).length;
 
     return {
-      total: patients.length,
+      total: myPatients.length,
       recent: recentPatients.length,
       needsFollowUp,
     };
-  }, [patients]); 
+  }, [myPatients]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const lv = readLV();
-    const arr = patients.filter((p) => {
-      const name = (p.name || `Patient ${p._id}`).toLowerCase(); // Use p.name and p._id
+    const arr = myPatients.filter((r) => {
+      const name = (r.patientName || `Patient ${r.userId}`).toLowerCase();
       return q ? name.includes(q) : true;
     });
     return arr.sort((a, b) => {
-      const la = lv[a._id]; // Use _id
-      const lb = lv[b._id]; // Use _id
+      const la = lv[a.id];
+      const lb = lv[b.id];
       if (la && lb) return lb - la;
       if (la && !lb) return -1;
       if (!la && lb) return 1;
-      const na = (a.name || `Patient ${a._id}`).toLowerCase(); // Use p.name
-      const nb = (b.name || `Patient ${b._id}`).toLowerCase(); // Use p.name
+      const na = (a.patientName || `Patient ${a.userId}`).toLowerCase();
+      const nb = (b.patientName || `Patient ${b.userId}`).toLowerCase();
       return na.localeCompare(nb);
     });
-  }, [query, patients]); 
+  }, [query, myPatients]);
 
-  // --- Rendering logic ---
+  useEffect(() => {
+    // ensure lv exists
+    if (!localStorage.getItem(lvKey)) writeLV({});
+  }, [lvKey]);
 
-  if (isLoading) {
-    return (
-      <div className="p-6 max-w-7xl mx-auto flex justify-center items-center h-96">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-        <p className="ml-4 text-lg text-gray-600">Loading patients...</p>
-      </div>
-    );
-  }
 
-  if (error) {
-    return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <Card className="border-red-400 bg-red-50">
-          <CardContent className="p-6 flex items-center">
-            <AlertTriangle className="h-6 w-6 text-red-600 mr-4" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-red-800">Error Loading Data</h3>
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-            <Button
-                variant="outline"
-                onClick={fetchAssignedPatients}
-                className="ml-4 border-red-400 text-red-700 hover:bg-red-100"
-            >
-                <RefreshCw className="h-4 w-4 mr-2" /> Retry
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -254,15 +165,6 @@ export default function DoctorPatients() {
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          {/* Added Refresh button */}
-          <Button
-            variant="outline"
-            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-            onClick={fetchAssignedPatients}
-            disabled={isLoading}
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => navigate("/doctor/patients/add")}
@@ -365,10 +267,10 @@ export default function DoctorPatients() {
                         Patient
                       </TableHead>
                       <TableHead className="px-4 py-4 font-medium text-gray-700">
-                        Date Added
+                        Last Visit
                       </TableHead>
                       <TableHead className="px-4 py-4 font-medium text-gray-700">
-                        Constitution
+                        Status
                       </TableHead>
                       <TableHead className="px-6 py-4 text-right font-medium text-gray-700">
                         Actions
@@ -377,12 +279,12 @@ export default function DoctorPatients() {
                   </TableHeader>
                   <TableBody>
                     {filtered.map((patient) => (
-                      <TableRow key={patient._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                      <TableRow key={patient.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center space-x-3">
                             <Avatar className="h-10 w-10">
                               <AvatarFallback className="bg-gray-100 text-gray-700 font-medium">
-                                {patient.name
+                                {patient.patientName
                                   ?.split(" ")
                                   .map((n) => n[0])
                                   .join("")
@@ -391,12 +293,11 @@ export default function DoctorPatients() {
                             </Avatar>
                             <div>
                               <div className="font-medium text-gray-900">
-                                {patient.name || `Patient ${patient._id}`}
+                                {patient.patientName || `Patient ${patient.userId}`}
                               </div>
                               <div className="text-sm text-gray-500 flex items-center">
                                 <Heart className="h-3 w-3 mr-1 text-gray-400" />
-                                {/* Use ayurvedic_category from API data */}
-                                {patient.ayurvedic_category?.toUpperCase() || "N/A"} 
+                                {patient.patientDosha || "No constitution data"}
                               </div>
                             </div>
                           </div>
@@ -415,19 +316,10 @@ export default function DoctorPatients() {
                           </div>
                         </TableCell>
                         <TableCell className="px-4 py-4">
-                            <Badge 
-                                className={`
-                                    text-xs font-semibold px-2 py-1 rounded-full
-                                    ${
-                                        patient.ayurvedic_category === 'vata' ? 'bg-blue-100 text-blue-800' :
-                                        patient.ayurvedic_category === 'pitta' ? 'bg-red-100 text-red-800' :
-                                        patient.ayurvedic_category === 'kapha' ? 'bg-green-100 text-green-800' :
-                                        'bg-gray-100 text-gray-800'
-                                    }
-                                `}
-                            >
-                                {patient.ayurvedic_category?.toUpperCase() || "N/A"}
-                            </Badge>
+                          <Badge className="bg-green-50 text-green-700 border border-green-200 hover:bg-green-100">
+                            <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                            Active
+                          </Badge>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-right">
                           <div className="flex justify-end space-x-2">
@@ -435,10 +327,9 @@ export default function DoctorPatients() {
                               variant="outline"
                               size="sm"
                               className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                              onClick={() => {
-                                markViewed(patient._id); // Mark viewed
-                                navigate(`/doctor/patients/${patient._id}`); // Use _id for navigation
-                              }}
+                              onClick={() =>
+                                navigate(`/doctor/patients/${patient.id}`)
+                              }
                             >
                               View
                             </Button>
@@ -455,7 +346,7 @@ export default function DoctorPatients() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => navigate(`/doctor/patients/${patient._id}`)}>View Profile</DropdownMenuItem>
+                                <DropdownMenuItem>View Profile</DropdownMenuItem>
                                 <DropdownMenuItem>Message</DropdownMenuItem>
                                 <DropdownMenuItem>View History</DropdownMenuItem>
                                 <DropdownMenuItem className="text-red-600">
@@ -474,12 +365,12 @@ export default function DoctorPatients() {
               {/* Mobile Card View */}
               <div className="md:hidden divide-y divide-gray-100">
                 {filtered.map((patient) => (
-                  <div key={patient._id} className="p-4 hover:bg-gray-50 transition-colors">
+                  <div key={patient.id} className="p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3 flex-1">
                         <Avatar className="h-12 w-12">
                           <AvatarFallback className="bg-gray-100 text-gray-700 font-medium">
-                            {patient.name
+                            {patient.patientName
                               ?.split(" ")
                               .map((n) => n[0])
                               .join("")
@@ -488,11 +379,11 @@ export default function DoctorPatients() {
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 truncate">
-                            {patient.name || `Patient ${patient._id}`}
+                            {patient.patientName || `Patient ${patient.userId}`}
                           </div>
                           <div className="text-sm text-gray-500 flex items-center mt-1">
                             <Heart className="h-3 w-3 mr-1 text-gray-400" />
-                            {patient.ayurvedic_category?.toUpperCase() || "N/A"}
+                            {patient.patientDosha || "No constitution data"}
                           </div>
                           <div className="text-sm text-gray-500 flex items-center mt-1">
                             <Calendar className="h-3 w-3 mr-1 text-gray-400" />
@@ -505,27 +396,14 @@ export default function DoctorPatients() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 ml-4">
-                        <Badge 
-                            className={`
-                                text-xs font-semibold px-2 py-1 rounded-full
-                                ${
-                                    patient.ayurvedic_category === 'vata' ? 'bg-blue-100 text-blue-800' :
-                                    patient.ayurvedic_category === 'pitta' ? 'bg-red-100 text-red-800' :
-                                    patient.ayurvedic_category === 'kapha' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
-                                }
-                            `}
-                        >
-                            {patient.ayurvedic_category?.toUpperCase() || "N/A"}
+                        <Badge className="bg-green-50 text-green-700 border border-green-200">
+                          Active
                         </Badge>
                         <Button
                           variant="outline"
                           size="sm"
                           className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                          onClick={() => {
-                            markViewed(patient._id);
-                            navigate(`/doctor/patients/${patient._id}`);
-                          }}
+                          onClick={() => navigate(`/doctor/patients/${patient.id}`)}
                         >
                           View
                         </Button>
@@ -542,7 +420,7 @@ export default function DoctorPatients() {
               </div>
               <h3 className="mt-4 text-lg font-medium text-gray-900">No patients found</h3>
               <p className="mt-2 text-sm text-gray-500">
-                You currently have no assigned patients in your practice.
+                When you accept patient requests, they'll appear here.
               </p>
               <Button
                 className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"

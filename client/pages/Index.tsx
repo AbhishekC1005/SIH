@@ -223,7 +223,7 @@ export default function Index() {
               className="w-full max-w-4xl mr-auto px-4 sm:px-6 lg:px-12"
             >
               <Hero
-                onLoginUser={() => window.location.assign("/login?role=patient")}
+                onLoginUser={() => window.location.assign("/login?role=doctor")}
                 onRegisterUser={() => window.location.assign("/register-user")}
                 onRegisterDoctor={() => window.location.assign("/register-doctor")}
               />
