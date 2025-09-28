@@ -94,6 +94,7 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
   const { markMealTaken, updateWater } = useAppState();
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
   const offsetRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
   const [pos, setPos] = useState<{ x: number; y: number }>(() => {
@@ -124,9 +125,40 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
   // Working indicator state
   const [isWorking, setIsWorking] = useState(false);
 
+  // Immediate scroll to latest message
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, open]);
+    const scrollToLatestMessage = () => {
+      // Use the direct ref to messages container
+      const messagesContainer = messagesContainerRef.current;
+      if (!messagesContainer) return;
+      
+      // Force scroll to bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      
+      // Multiple attempts to ensure it works
+      setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }, 50);
+      
+      setTimeout(() => {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }, 200);
+    };
+    
+    // Trigger scroll when messages array changes, listening starts, or working starts
+    if (messages.length > 0 || isListening || isWorking) {
+      scrollToLatestMessage();
+    }
+  }, [messages, isListening, isWorking]);
+  
+  // Scroll when chat opens
+  useEffect(() => {
+    if (open && messagesContainerRef.current) {
+      setTimeout(() => {
+        messagesContainerRef.current!.scrollTop = messagesContainerRef.current!.scrollHeight;
+      }, 100);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!isFloating) return;
@@ -493,7 +525,10 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
   );
 
   const Body = (
-    <div className="flex-1 space-y-3 overflow-y-auto p-4 text-sm bg-gradient-to-b from-gray-50 to-white">
+    <div 
+      ref={messagesContainerRef}
+      className="flex-1 space-y-3 overflow-y-auto p-4 text-sm bg-gradient-to-b from-gray-50 to-white"
+    >
       {messages.map((m, i) => (
         <div
           key={i}
