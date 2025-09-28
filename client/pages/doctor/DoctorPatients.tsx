@@ -165,19 +165,19 @@ export default function DoctorPatients() {
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
             onClick={() => navigate("/doctor/patients/add")}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Patient
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Clean Stats Cards */}
       <div className="grid gap-6 md:grid-cols-3 mb-8">
-        <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow">
+        <Card className="shadow-sm border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -198,7 +198,7 @@ export default function DoctorPatients() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow">
+        <Card className="shadow-sm border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -219,7 +219,7 @@ export default function DoctorPatients() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-gray-200 hover:shadow-md transition-shadow">
+        <Card className="shadow-sm border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -279,7 +279,7 @@ export default function DoctorPatients() {
                   </TableHeader>
                   <TableBody>
                     {filtered.map((patient) => (
-                      <TableRow key={patient.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                      <TableRow key={patient.id} className="border-b border-gray-100 hover:bg-transparent">
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center space-x-3">
                             <Avatar className="h-10 w-10">
@@ -316,33 +316,29 @@ export default function DoctorPatients() {
                           </div>
                         </TableCell>
                         <TableCell className="px-4 py-4">
-                          <Badge className="bg-green-50 text-green-700 border border-green-200 hover:bg-green-100">
+                          <Badge className="bg-green-50 text-green-700 border border-green-200">
                             <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
                             Active
                           </Badge>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-right">
                           <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                            <button
+                              className="border border-gray-300 text-gray-700 px-3 py-1 rounded text-sm"
                               onClick={() =>
                                 navigate(`/doctor/patients/${patient.id}`)
                               }
                             >
                               View
-                            </Button>
+                            </button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                                <button
+                                  className="h-8 w-8 p-0 text-gray-500 flex items-center justify-center"
                                 >
                                   <span className="sr-only">Open menu</span>
                                   <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                                </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -365,7 +361,7 @@ export default function DoctorPatients() {
               {/* Mobile Card View */}
               <div className="md:hidden divide-y divide-gray-100">
                 {filtered.map((patient) => (
-                  <div key={patient.id} className="p-4 hover:bg-gray-50 transition-colors">
+                  <div key={patient.id} className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3 flex-1">
                         <Avatar className="h-12 w-12">
@@ -399,14 +395,12 @@ export default function DoctorPatients() {
                         <Badge className="bg-green-50 text-green-700 border border-green-200">
                           Active
                         </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                        <button
+                          className="border border-gray-300 text-gray-700 px-3 py-1 rounded text-sm"
                           onClick={() => navigate(`/doctor/patients/${patient.id}`)}
                         >
                           View
-                        </Button>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -422,12 +416,12 @@ export default function DoctorPatients() {
               <p className="mt-2 text-sm text-gray-500">
                 When you accept patient requests, they'll appear here.
               </p>
-              <Button
-                className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+              <button
+                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md"
                 onClick={() => navigate("/doctor/patients/add")}
               >
                 Add New Patient
-              </Button>
+              </button>
             </div>
           )}
         </CardContent>
