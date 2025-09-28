@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 
 // Speech Recognition type declaration
 declare global {
@@ -30,6 +30,25 @@ type ChatMessage = {
   text?: string;
   image?: string;
   ts: number;
+};
+
+// Typewriter effect component
+const TypewriterText: React.FC<{ text: string; speed?: number }> = ({ text, speed = 30 }) => {
+  const [displayText, setDisplayText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text, speed]);
+  
+  return <>{displayText}</>;
 };
 
 export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
@@ -454,12 +473,14 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
                       "text-sm",
                       m.role === "user" ? "text-blue-100" : "text-gray-600"
                     )}>
-                      {m.text}
+                      {m.role === "bot" ? <TypewriterText text={m.text || ""} /> : m.text}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-sm leading-relaxed">{m.text}</div>
+                <div className="text-sm leading-relaxed">
+                  {m.role === "bot" ? <TypewriterText text={m.text || ""} /> : m.text}
+                </div>
               )}
               
               {/* Role indicator */}

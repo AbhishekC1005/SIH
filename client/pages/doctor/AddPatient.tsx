@@ -151,12 +151,21 @@ function SelectField({
 
 export default function AddPatient() {
   const navigate = useNavigate();
-  const { currentUser, addNotification } = useAppState() as any; 
+  const { currentUser, addNotification, setRequests, requests, doctors } = useAppState() as any;
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [medicalHistoryFile, setMedicalHistoryFile] = useState<File | null>(null); // New state for file name
 
-  const doctorId = currentUser?._id || currentUser?.id;
+  const getDoctorProfileId = () => {
+    const key = `app:doctor-map:${currentUser?.id || "anon"}`;
+    let mapped = localStorage.getItem(key);
+    if (!mapped) {
+      mapped = doctors[0]?.id || "d1";
+      localStorage.setItem(key, mapped);
+    }
+    return mapped;
+  };
+  const doctorId = getDoctorProfileId();
 
   const methods = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
@@ -202,28 +211,80 @@ export default function AddPatient() {
       return;
     }
 
-    // ⭐ START OF SIMULATION LOGIC ⭐
-    console.log("Simulating patient addition...");
-    console.log("Submitted data:", values);
-    
-    // Simulate an artificial delay to show the loading state
-    setTimeout(() => {
-        // Here, we simulate a successful response
-        console.log("Simulated patient registration successful!");
+    // Create new patient request
+    const newPatient: any = {
+      id: `req_${Date.now()}`,
+      userId: `u_${Date.now()}`,
+      doctorId: doctorId,
+      status: "accepted",
+      createdAt: new Date().toISOString(),
+      acceptedDate: new Date().toISOString(),
+      patientName: values.name,
+      patientDosha: values.ayurvedic_category.charAt(0).toUpperCase() + values.ayurvedic_category.slice(1),
+      age: values.dob ? new Date().getFullYear() - new Date(values.dob).getFullYear() : null,
+      gender: values.gender === "prefer not to say" ? "Other" : values.gender.charAt(0).toUpperCase() + values.gender.slice(1),
+      symptoms: values.diseases || "No specific symptoms reported",
+      weight: values.weight ? parseInt(values.weight) : null,
+      height: values.height ? parseInt(values.height) : null,
+      emergencyContact: values.contact,
+      lifestyle: "Information to be collected during consultation",
+      documents: medicalHistoryFile ? [{ name: medicalHistoryFile.name, url: "#", type: "pdf" }] : [],
+      patientProfile: {
+        id: `P-${Date.now()}`,
+        name: values.name,
+        dosha: values.ayurvedic_category.charAt(0).toUpperCase() + values.ayurvedic_category.slice(1),
+        age: values.dob ? new Date().getFullYear() - new Date(values.dob).getFullYear() : null,
+        gender: values.gender === "prefer not to say" ? "Other" : values.gender.charAt(0).toUpperCase() + values.gender.slice(1),
+        phone: values.contact,
+        address: `${values.address.city}, ${values.address.state}, ${values.address.country}`,
+        height: values.height ? parseInt(values.height) : null,
+        weight: values.weight ? parseInt(values.weight) : null,
+        lifestyle: "",
+        medicalHistory: "",
+        allergies: values.allergies || "",
+        conditions: values.diseases || "",
+        medications: "",
+        habits: "",
+        sleepPattern: "",
+        digestion: null,
+        emergencyContact: values.contact,
+        notes: "",
+        documents: medicalHistoryFile ? [{ name: medicalHistoryFile.name, url: "#", type: "pdf" }] : [],
+      },
+      plan: [
+        {
+          time: "08:00",
+          name: "Breakfast",
+          calories: 350,
+          waterMl: 250,
+        },
+        {
+          time: "13:00",
+          name: "Lunch",
+          calories: 500,
+          waterMl: 300,
+        },
+        {
+          time: "19:00",
+          name: "Dinner",
+          calories: 400,
+          waterMl: 250,
+        },
+      ],
+    };
 
-        addNotification({
-            type: "success",
-            title: "Patient added successfully!",
-            message: `${values.name} has been assigned to you.`,
-        });
+    // Add the new patient to the requests array
+    setRequests((prev: any[]) => [...prev, newPatient]);
 
-        // Navigate after the "successful" submission
-        navigate("/doctor/patients"); 
+    // Show success notification
+    addNotification({
+      type: "success",
+      title: "Patient added successfully!",
+      message: `${values.name} has been assigned to you.`,
+    });
 
-        // Always reset loading state
-        setIsLoading(false);
-    }, 1500); // 1.5 second delay
-    // ⭐ END OF SIMULATION LOGIC ⭐
+    // Navigate back to patients page
+    navigate("/doctor/patients");
   };
 
   return (
