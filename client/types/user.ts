@@ -26,7 +26,7 @@ export interface BaseUser {
 // Patient type extending the base user with the new 'mode' field
 export interface Patient extends BaseUser {
   role: "patient";
-  ayurvedic_category: "vata" | "pitta" | "kapha";
+  ayurvedic_category: "vata" | "pitta" | "kapha" | "pittakapha" | "vatakapha" | "vatapitta";
   medical_history?: string[];
   diseases?: string[];
   assigned_doctor?: string;
