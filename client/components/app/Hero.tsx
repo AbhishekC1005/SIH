@@ -13,8 +13,9 @@ export const Hero: React.FC<{
     <section
       key="hero-v2"
       aria-label="Hero"
-      className="relative min-h-[60vh] lg:min-h-screen w-full flex items-end pt-16 lg:pt-20"
+      className="relative min-h-[60vh] lg:min-h-screen w-full flex items-end pt-16 lg:pt-20 overflow-hidden"
     >
+
       {/* Content positioned at bottom-left */}
       <div className="w-full px-6 sm:px-8 lg:px-16 pb-16 sm:pb-20 lg:pb-28">
         <div className="w-full">
@@ -36,9 +37,9 @@ export const Hero: React.FC<{
               <div
                 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-light select-none pointer-events-none transform -rotate-3"
                 style={{
-                  WebkitTextStroke: '1px rgba(128, 128, 128, 0.1)',
+                  WebkitTextStroke: '1px rgba(21, 128, 59, 0.3)',
                   color: 'transparent',
-                  textShadow: '0 0 30px rgba(128, 128, 128, 0.05)'
+                  textShadow: '0 0 30px rgba(21, 128, 59, 0.2)'
                 }}
               >
                 स्वास्थ्य सेतु
@@ -54,7 +55,7 @@ export const Hero: React.FC<{
             >
               <motion.div
                 animate={{
-                  opacity: [0.1, 0.3, 0.1],
+                  opacity: [0.2, 0.5, 0.2],
                   scale: [1, 1.02, 1],
                 }}
                 transition={{
@@ -62,7 +63,7 @@ export const Hero: React.FC<{
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
-                className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-light select-none pointer-events-none transform -rotate-3 text-gray-600/10 blur-sm"
+                className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-light select-none pointer-events-none transform -rotate-3 text-green-600/30 blur-sm"
               >
                 स्वास्थ्य सेतु
               </motion.div>
@@ -86,7 +87,7 @@ export const Hero: React.FC<{
                 }}
                 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-light select-none pointer-events-none transform -rotate-3"
                 style={{
-                  background: 'linear-gradient(45deg, transparent 30%, rgba(128, 128, 128, 0.05) 50%, transparent 70%)',
+                  background: 'linear-gradient(45deg, transparent 30%, rgba(21, 128, 59, 0.15) 50%, transparent 70%)',
                   backgroundSize: '200% 200%',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -114,7 +115,7 @@ export const Hero: React.FC<{
                 transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
                 className="inline-block"
               >
-                Swasthsetu
+                Swasthasetu
               </motion.span>
             </motion.h1>
 
@@ -244,7 +245,7 @@ export const Hero: React.FC<{
                   className="text-green-900 font-sans text-sm font-semibold relative"
                   whileHover={{ color: "#15803b" }}
                 >
-                  Sign in
+                  Sign in 
                   {/* Animated underline */}
                   <motion.div
                     className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"

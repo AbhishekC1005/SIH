@@ -160,14 +160,6 @@ export default function Index() {
       {/* Hero Section with Enhanced Background */}
       <div id="hero" className="min-h-screen w-full bg-white relative overflow-hidden">
         
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img 
-            src="/images/Gemini_Generated_Image_un1uzzun1uzzun1u.png" 
-            alt="Wellness healthcare background" 
-            className="w-full h-full object-cover object-center"
-          />
-        </div>
         
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-white/80"></div>
@@ -221,14 +213,14 @@ export default function Index() {
           />
         </div>
         
-        <div className="relative z-10 flex min-h-screen flex-col lg:flex-row">
+        <div className="relative z-30 flex min-h-screen flex-col lg:flex-row">
           {/* Left side - Hero content */}
-          <div className="flex-1 flex items-center min-h-[60vh] lg:min-h-screen p-0 bg-white">
+          <div className="flex-1 flex items-center min-h-[60vh] lg:min-h-screen p-0 bg-transparent">
             <motion.div 
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-12"
+              className="w-full max-w-4xl mr-auto px-4 sm:px-6 lg:px-12"
             >
               <Hero
                 onLoginUser={() => window.location.assign("/login?role=patient")}
@@ -238,6 +230,21 @@ export default function Index() {
             </motion.div>
           </div>
           
+          {/* Right side - Image */}
+          <div className="flex-1 flex items-start justify-start min-h-[60vh] lg:min-h-screen p-0 bg-transparent">
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="w-full max-w-6xl px-4 sm:px-6 lg:px-8 -mt-8 lg:-mt-12"
+            >
+              <img 
+                src="/images/1759052846626.png" 
+                alt="Wellness healthcare illustration" 
+                className="w-full h-auto object-cover scale-125"
+              />
+            </motion.div>
+          </div>
         </div>
       </div>
 
