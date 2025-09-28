@@ -124,66 +124,9 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
   // Working indicator state
   const [isWorking, setIsWorking] = useState(false);
 
-  // Enhanced autoscroll with loading indicators
   useEffect(() => {
-    const scrollToBottom = () => {
-      const messagesContainer = containerRef.current;
-      if (!messagesContainer) return;
-      
-      // Show scroll indicator
-      const scrollIndicator = messagesContainer.querySelector('.scroll-indicator');
-      const loadingOverlay = messagesContainer.querySelector('.loading-overlay');
-      
-      if (scrollIndicator) {
-        scrollIndicator.classList.add('opacity-100');
-      }
-      
-      if (loadingOverlay) {
-        loadingOverlay.classList.add('opacity-100');
-      }
-      
-      // Force scroll to bottom with multiple attempts
-      const scrollNow = () => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      };
-      
-      // Immediate scroll
-      scrollNow();
-      
-      // Scroll after content renders
-      setTimeout(scrollNow, 100);
-      
-      // Final scroll after animations
-      setTimeout(scrollNow, 300);
-      
-      // Hide indicators after scrolling
-      setTimeout(() => {
-        if (scrollIndicator) {
-          scrollIndicator.classList.remove('opacity-100');
-        }
-        if (loadingOverlay) {
-          loadingOverlay.classList.remove('opacity-100');
-        }
-      }, 400);
-    };
-    
-    // Trigger scroll when messages change or chat opens
-    if (messages.length > 0 || open) {
-      scrollToBottom();
-    }
-  }, [messages, open, isWorking, isListening]);
-  
-  // Additional scroll when working state changes
-  useEffect(() => {
-    if (isWorking) {
-      const messagesContainer = containerRef.current;
-      if (messagesContainer) {
-        setTimeout(() => {
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }, 200);
-      }
-    }
-  }, [isWorking]);
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, open]);
 
   useEffect(() => {
     if (!isFloating) return;
@@ -550,22 +493,7 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
   );
 
   const Body = (
-    <div 
-      ref={containerRef}
-      className="flex-1 space-y-3 overflow-y-auto p-4 text-sm bg-gradient-to-b from-gray-50 to-white relative"
-    >
-      {/* Scroll Indicator */}
-      <div className="absolute top-2 right-2 z-10">
-        <div className="scroll-indicator w-2 h-2 bg-blue-500 rounded-full opacity-0 transition-opacity duration-300"></div>
-      </div>
-      
-      {/* Loading overlay */}
-      <div className="loading-overlay absolute inset-0 bg-white/5 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 z-20">
-        <div className="absolute top-4 right-4 flex items-center gap-2 bg-white/90 px-3 py-2 rounded-lg shadow-lg">
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-          <span className="text-xs text-gray-600 font-medium">Scrolling to latest...</span>
-        </div>
-      </div>
+    <div className="flex-1 space-y-3 overflow-y-auto p-4 text-sm bg-gradient-to-b from-gray-50 to-white">
       {messages.map((m, i) => (
         <div
           key={i}
