@@ -81,6 +81,16 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
       ts: Date.now() - 42000,
     },
   ]);
+  
+  // Sequential responses for the chat bot
+  const sequentialResponses = [
+    "Hey Dr.doom what can I do for you...",
+    "The patient dashboard for Neha Gupta is now open and visible on the screen.\nIs there anything else I can do for you, Dr. Doom?",
+    "The weekly diet plan for Neha Gupta has been generated and now you can modify or save it for them.\nIs there any further action required of me, Doctor?",
+    "The diet plan has been successfully exported to a PDF. It is now available to share with Neha."
+  ];
+  
+  const [currentResponseIndex, setCurrentResponseIndex] = useState(0);
   const { markMealTaken, updateWater } = useAppState();
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -110,6 +120,9 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
   // Text-to-speech state
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
+  
+  // Working indicator state
+  const [isWorking, setIsWorking] = useState(false);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -358,12 +371,48 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
     setInput("");
 
     const t = text.toLowerCase();
+    console.log("User input:", text);
+    console.log("Lowercase input:", t);
+    
     let reply = "Noted. How else can I help?";
-    if (t.includes("water")) {
+    
+    // Special case: greetings trigger the first response
+    if (t.includes("hi") || t.includes("hello") || t.includes("hey") || t.includes("hii")) {
+      if (currentResponseIndex === 0) {
+        reply = sequentialResponses[0];
+        setCurrentResponseIndex(1);
+        console.log("Greeting detected - starting sequence with first response");
+      }
+    }
+    // Check for sequential response triggers - more flexible detection
+    else if (t.includes("sequence") || t.includes("next") || t.includes("continue") || 
+        t.includes("start") || t.includes("begin") || t.includes("go") || 
+        t.includes("response") || t.includes("dr") || t.includes("doctor") ||
+        t.includes("doom") || t.includes("neha")) {
+      console.log("Sequential response triggered");
+      console.log("Current index:", currentResponseIndex);
+      console.log("Total responses:", sequentialResponses.length);
+      
+      if (currentResponseIndex < sequentialResponses.length) {
+        reply = sequentialResponses[currentResponseIndex];
+        console.log("Reply set to:", reply);
+        setCurrentResponseIndex(prev => {
+          console.log("Updating index from", prev, "to", prev + 1);
+          return prev + 1;
+        });
+      } else {
+        reply = "All sequential responses have been completed. Starting over from the beginning.";
+        setCurrentResponseIndex(0);
+        console.log("Resetting index to 0");
+      }
+    } else if (t.includes("reset") || t.includes("start over")) {
+      reply = "Sequential responses reset. Starting from the beginning.";
+      setCurrentResponseIndex(0);
+      console.log("Manual reset - index set to 0");
+    } else if (t.includes("water")) {
       updateWater(250);
       reply = "Logged 250ml water. Keep hydrating!";
-    }
-    if (
+    } else if (
       t.includes("ate my lunch") ||
       t.includes("lunch done") ||
       t.includes("meal done")
@@ -371,15 +420,20 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
       markMealTaken();
       reply =
         "Great! I marked your lunch as taken. Want a light herbal tea later?";
-    }
-    if (t.includes("tip") || t.includes("advice")) {
+    } else if (t.includes("tip") || t.includes("advice")) {
       reply =
         "Choose warm, cooked meals. Avoid iced drinks. Ginger and cumin can aid digestion.";
     }
 
+    // Show working indicator immediately
+    setIsWorking(true);
+    
+    // After 2 seconds, show the actual response
     setTimeout(() => {
       const botMessage = { role: "bot" as const, text: reply, ts: Date.now() };
       setMessages((m) => [...m, botMessage]);
+      
+      setIsWorking(false);
       
       // Only speak the bot response if the input was voice
       if (wasVoiceInput) {
@@ -387,7 +441,7 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
         // Reset voice input flag after speaking
         setWasVoiceInput(false);
       }
-    }, 400);
+    }, 2000);
   };
 
   const toggleSpeech = () => {
@@ -517,6 +571,24 @@ export const ChatWidget: React.FC<{ mode?: "floating" | "panel" }> = ({
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
                 <span className="text-xs text-gray-500">Listening...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Working indicator */}
+      {isWorking && (
+        <div className="flex justify-start animate-in slide-in-from-bottom-2 duration-300">
+          <div className="max-w-[85%]">
+            <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+                <span className="text-xs text-gray-500">Working...</span>
               </div>
             </div>
           </div>
